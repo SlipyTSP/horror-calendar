@@ -8,9 +8,10 @@ const path = require('path');
 const { getHorrorReleases } = require('./tmdb');
 const { generateICS } = require('./calendar');
 
-// Ruta donde se guarda el archivo .ics generado
+// Rutas donde se guardan los archivos generados
 const OUTPUT_DIR = path.join(__dirname, '..', 'output');
-const OUTPUT_FILE = path.join(OUTPUT_DIR, 'horror.ics');
+const ICS_FILE = path.join(OUTPUT_DIR, 'horror.ics');
+const JSON_FILE = path.join(OUTPUT_DIR, 'releases.json');
 
 async function main() {
   console.log('🎬 Horror Calendar — Generador de calendario de estrenos de terror\n');
@@ -49,11 +50,20 @@ async function main() {
     console.log(`  Se excluyeron ${excluded} películas sin descripción ni plataformas.`);
   }
 
-  // Paso 3: Asegurarnos de que el directorio output/ existe y guardar el archivo
-  fs.mkdirSync(OUTPUT_DIR, { recursive: true });
-  fs.writeFileSync(OUTPUT_FILE, ics, 'utf-8');
+  // Paso 3: Generar releases.json con los datos de las películas
+  const releasesJson = JSON.stringify({
+    generated: new Date().toISOString(),
+    total: releases.length,
+    releases,
+  }, null, 2);
 
-  console.log(`Archivo guardado en: ${OUTPUT_FILE}`);
+  // Paso 4: Asegurarnos de que el directorio output/ existe y guardar los archivos
+  fs.mkdirSync(OUTPUT_DIR, { recursive: true });
+  fs.writeFileSync(ICS_FILE, ics, 'utf-8');
+  fs.writeFileSync(JSON_FILE, releasesJson, 'utf-8');
+
+  console.log(`Archivo .ics guardado en: ${ICS_FILE}`);
+  console.log(`Archivo .json guardado en: ${JSON_FILE}`);
   console.log(`\n✅ Calendario generado con ${total} eventos.`);
 }
 
