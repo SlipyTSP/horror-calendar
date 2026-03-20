@@ -6,6 +6,13 @@ const crypto = require('crypto');
 // Nombre del calendario que se muestra en iOS/Google Calendar
 const CALENDAR_NAME = '🎬 Estrenos de Terror';
 
+// Emojis para cada tipo de estreno — se usan en SUMMARY y DESCRIPTION
+const RELEASE_EMOJI = {
+  theatrical: '🎬',
+  digital: '📺',
+  physical: '💿',
+};
+
 /**
  * Escapa caracteres especiales según RFC 5545 (sección 3.3.11)
  * Los valores de texto deben escapar: backslash, punto y coma, coma y saltos de línea
@@ -59,23 +66,100 @@ function nowUTC() {
 }
 
 /**
+ * Genera la línea de "dónde se estrena" según el tipo y los proveedores
+ * - Theatrical → "🎬 En cines"
+ * - Digital con proveedores → "📺 Streaming: Netflix, HBO Max..."
+ * - Digital sin proveedores → "📺 Estreno digital"
+ * - Physical → "💿 Formato físico"
+ * - Sin tipo pero con proveedores → "📺 Streaming: ..."
+ * - Sin nada → null (se omite)
+ *
+ * @param {string|null} releaseType - Tipo de estreno (theatrical, digital, physical)
+ * @param {string[]} providers - Lista de plataformas
+ * @returns {string|null} Línea descriptiva o null
+ */
+function buildWhereLine(releaseType, providers) {
+  const hasProviders = providers && providers.length > 0;
+
+  if (releaseType === 'theatrical') {
+    // Estreno en cines — si además tiene proveedores, los mencionamos
+    if (hasProviders) {
+      return `🎬 En cines | 📺 También en: ${providers.join(', ')}`;
+    }
+    return '🎬 En cines';
+  }
+
+  if (releaseType === 'digital') {
+    if (hasProviders) {
+      return `📺 Streaming: ${providers.join(', ')}`;
+    }
+    return '📺 Estreno digital';
+  }
+
+  if (releaseType === 'physical') {
+    return '💿 Formato físico';
+  }
+
+  // Sin tipo conocido pero con proveedores de streaming
+  if (hasProviders) {
+    return `📺 Streaming: ${providers.join(', ')}`;
+  }
+
+  // No tenemos información de dónde se estrena
+  return null;
+}
+
+/**
  * Construye el bloque DESCRIPTION para un evento
- * Incluye: sinopsis, plataformas (si las hay) y enlace a TMDB
+ * Incluye: sinopsis, línea de dónde se estrena y enlace a TMDB
  * @param {object} release - Datos de la película
  * @returns {string} Texto escapado para el campo DESCRIPTION
  */
 function buildDescription(release) {
-  const parts = [release.overview];
+  const parts = [];
 
-  // Añadimos las plataformas si hay alguna disponible
-  if (release.providers && release.providers.length > 0) {
-    parts.push(`Plataformas: ${release.providers.join(', ')}`);
+  // Sinopsis (ya validada en shouldInclude, pero protegemos por si acaso)
+  if (release.overview) {
+    parts.push(release.overview);
+  }
+
+  // Línea de dónde se estrena (cines, streaming, digital, etc.)
+  const whereLine = buildWhereLine(release.releaseType, release.providers);
+  if (whereLine) {
+    parts.push(whereLine);
   }
 
   // Enlace directo a la ficha en TMDB
   parts.push(`Más info: ${release.tmdbUrl}`);
 
   return escapeText(parts.join('\n\n'));
+}
+
+/**
+ * Genera el SUMMARY del evento con el emoji del tipo de estreno
+ * Ejemplo: "Baby Bird 🎬" o "The Ring 📺"
+ * @param {string} title - Título de la película
+ * @param {string|null} releaseType - Tipo de estreno
+ * @returns {string} Título con emoji
+ */
+function buildSummary(title, releaseType) {
+  const emoji = RELEASE_EMOJI[releaseType] || '';
+  return emoji ? `${title} ${emoji}` : title;
+}
+
+/**
+ * Determina si una película debe incluirse en el calendario
+ * Se excluyen películas que no tienen ni descripción ni plataformas conocidas
+ * @param {object} release - Datos de la película
+ * @returns {boolean} true si debe incluirse
+ */
+function shouldInclude(release) {
+  const hasOverview = Boolean(release.overview);
+  const hasProviders = release.providers && release.providers.length > 0;
+  const hasReleaseType = Boolean(release.releaseType);
+
+  // Excluimos si no tiene descripción Y tampoco sabemos dónde se estrena
+  return hasOverview || hasProviders || hasReleaseType;
 }
 
 /**
@@ -128,7 +212,7 @@ function buildEvent(release) {
   const dtstamp = nowUTC();
   const uid = generateUID(release.title, release.releaseDate);
   const dtstart = formatDateValue(release.releaseDate);
-  const summary = escapeText(release.title);
+  const summary = escapeText(buildSummary(release.title, release.releaseType));
   const description = buildDescription(release);
   const url = release.tmdbUrl;
 
@@ -151,6 +235,9 @@ function buildEvent(release) {
 /**
  * Función principal: genera el contenido .ics completo
  *
+ * Filtra las películas que no tienen información útil (sin descripción
+ * ni plataformas conocidas) antes de generar los eventos.
+ *
  * Cabeceras del calendario:
  * - VERSION:2.0 → versión de iCalendar (RFC 5545)
  * - PRODID → identificador del producto que genera el calendario
@@ -160,10 +247,14 @@ function buildEvent(release) {
  * - REFRESH-INTERVAL / X-PUBLISHED-TTL → le dice a iOS que refresque
  *   el calendario cada 24 horas (P1D = Period 1 Day)
  *
- * @param {Array<{title: string, releaseDate: string, overview: string, providers: string[], tmdbUrl: string}>} releases
- * @returns {string} Contenido del archivo .ics completo
+ * @param {Array<{title: string, releaseDate: string, overview: string, providers: string[], releaseType: string|null, tmdbUrl: string}>} releases
+ * @returns {{ ics: string, total: number, excluded: number }} Contenido .ics y estadísticas
  */
 function generateICS(releases) {
+  // Filtramos películas sin información útil
+  const included = releases.filter(shouldInclude);
+  const excluded = releases.length - included.length;
+
   const header = [
     'BEGIN:VCALENDAR',
     'VERSION:2.0',
@@ -179,12 +270,14 @@ function generateICS(releases) {
 
   const footer = ['END:VCALENDAR'];
 
-  // Generamos un VEVENT por cada película
-  const events = releases.map(buildEvent);
+  // Generamos un VEVENT por cada película incluida
+  const events = included.map(buildEvent);
 
   // RFC 5545 exige terminaciones de línea CRLF (\r\n)
   const parts = [...header, ...events, ...footer];
-  return parts.join('\r\n') + '\r\n';
+  const ics = parts.join('\r\n') + '\r\n';
+
+  return { ics, total: included.length, excluded };
 }
 
 module.exports = { generateICS };

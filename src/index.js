@@ -29,10 +29,11 @@ async function main() {
   // Mostramos un resumen de las primeras películas encontradas
   const preview = releases.slice(0, 5);
   for (const movie of preview) {
+    const typeEmoji = { theatrical: '🎬', digital: '📺', physical: '💿' }[movie.releaseType] || '❓';
     const providers = movie.providers.length > 0
       ? ` (${movie.providers.join(', ')})`
       : '';
-    console.log(`  📅 ${movie.releaseDate} — ${movie.title}${providers}`);
+    console.log(`  ${typeEmoji} ${movie.releaseDate} — ${movie.title}${providers}`);
   }
   if (releases.length > 5) {
     console.log(`  ... y ${releases.length - 5} más.\n`);
@@ -40,16 +41,20 @@ async function main() {
     console.log();
   }
 
-  // Paso 2: Generar el contenido del archivo .ics
+  // Paso 2: Generar el contenido del archivo .ics (filtra películas sin info útil)
   console.log('Generando archivo .ics...');
-  const icsContent = generateICS(releases);
+  const { ics, total, excluded } = generateICS(releases);
+
+  if (excluded > 0) {
+    console.log(`  Se excluyeron ${excluded} películas sin descripción ni plataformas.`);
+  }
 
   // Paso 3: Asegurarnos de que el directorio output/ existe y guardar el archivo
   fs.mkdirSync(OUTPUT_DIR, { recursive: true });
-  fs.writeFileSync(OUTPUT_FILE, icsContent, 'utf-8');
+  fs.writeFileSync(OUTPUT_FILE, ics, 'utf-8');
 
   console.log(`Archivo guardado en: ${OUTPUT_FILE}`);
-  console.log(`\n✅ Calendario generado con ${releases.length} eventos.`);
+  console.log(`\n✅ Calendario generado con ${total} eventos.`);
 }
 
 // Ejecutamos y capturamos cualquier error para mostrar un mensaje claro

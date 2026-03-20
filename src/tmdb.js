@@ -6,10 +6,24 @@ const BASE_URL = 'https://api.themoviedb.org/3';
 // Género 27 = Horror en TMDB
 const HORROR_GENRE_ID = 27;
 
-// Tipos de estreno que nos interesan:
-// 1 = Premiere, 2 = Theatrical (limited), 3 = Theatrical, 4 = Digital,
-// 5 = Physical, 6 = TV
-// Incluimos todos para cubrir cines y plataformas online
+// Tipos de estreno en TMDB (endpoint /movie/{id}/release_dates)
+// 1 = Premiere, 2 = Theatrical (limited), 3 = Theatrical,
+// 4 = Digital, 5 = Physical, 6 = TV
+const RELEASE_TYPE = {
+  PREMIERE: 1,
+  THEATRICAL_LIMITED: 2,
+  THEATRICAL: 3,
+  DIGITAL: 4,
+  PHYSICAL: 5,
+  TV: 6,
+};
+
+// Agrupamos los tipos en categorías para mostrar en el calendario
+// "theatrical" = se estrena en cines, "digital" = plataformas online/streaming
+const THEATRICAL_TYPES = [RELEASE_TYPE.PREMIERE, RELEASE_TYPE.THEATRICAL_LIMITED, RELEASE_TYPE.THEATRICAL];
+const DIGITAL_TYPES = [RELEASE_TYPE.DIGITAL, RELEASE_TYPE.TV];
+
+// Incluimos todos los tipos en el filtro de discover/movie
 const RELEASE_TYPES = '1|2|3|4|5|6';
 
 /**
@@ -97,6 +111,63 @@ async function getWatchProviders(movieId, region) {
 }
 
 /**
+ * Obtiene el tipo de estreno de una película para una región dada
+ * Consulta /movie/{id}/release_dates y busca en orden: ES, GB, FR, DE, US
+ * (Europa primero, US como último recurso para mayor cobertura)
+ *
+ * Devuelve una categoría simplificada:
+ * - "theatrical" → estreno en cines (tipos 1, 2, 3)
+ * - "digital"    → estreno digital/streaming (tipos 4, 6)
+ * - "physical"   → estreno físico (tipo 5)
+ * - null         → no se pudo determinar
+ *
+ * @param {number} movieId - ID de la película en TMDB
+ * @param {string} region - Código de región principal (ES, MX, AR, etc.)
+ * @returns {Promise<string|null>} Categoría de estreno
+ */
+async function getReleaseType(movieId, region) {
+  try {
+    const data = await tmdbGet(`/movie/${movieId}/release_dates`);
+    const results = data.results || [];
+
+    // Buscamos en orden: región principal, Europa occidental, US como último recurso
+    const regionsToCheck = [region, 'GB', 'FR', 'DE', 'US'];
+    for (const reg of regionsToCheck) {
+      const entry = results.find((r) => r.iso_3166_1 === reg);
+      if (!entry || !entry.release_dates?.length) continue;
+
+      const types = entry.release_dates.map((rd) => rd.type);
+
+      // Priorizamos: si hay estreno en cines, eso es lo principal
+      if (types.some((t) => THEATRICAL_TYPES.includes(t))) return 'theatrical';
+      // Si no, comprobamos digital/streaming
+      if (types.some((t) => DIGITAL_TYPES.includes(t))) return 'digital';
+      // Estreno solo en formato físico
+      if (types.includes(RELEASE_TYPE.PHYSICAL)) return 'physical';
+    }
+
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Intenta obtener la sinopsis en inglés como fallback cuando no hay
+ * descripción en el idioma principal
+ * @param {number} movieId - ID de la película en TMDB
+ * @returns {Promise<string>} Sinopsis en inglés o cadena vacía
+ */
+async function getEnglishOverview(movieId) {
+  try {
+    const data = await tmdbGet(`/movie/${movieId}`, { language: 'en-US' });
+    return data.overview || '';
+  } catch {
+    return '';
+  }
+}
+
+/**
  * Recorre todas las páginas de resultados de discover/movie
  * TMDB pagina los resultados (máx 20 por página)
  * @param {Record<string, string>} params - Parámetros de la consulta
@@ -124,11 +195,17 @@ async function fetchAllPages(params) {
  * Función principal: obtiene los estrenos de películas de terror
  * en los próximos 90 días (cines + plataformas online)
  *
+ * Para cada película obtiene:
+ * - Proveedores de streaming (watch/providers)
+ * - Tipo de estreno: theatrical, digital o physical (release_dates)
+ * - Sinopsis en inglés como fallback si no hay en el idioma principal
+ *
  * @returns {Promise<Array<{
  *   title: string,
  *   releaseDate: string,
  *   overview: string,
  *   providers: string[],
+ *   releaseType: string|null,
  *   tmdbUrl: string
  * }>>} Array de películas con sus datos
  */
@@ -156,22 +233,42 @@ async function getHorrorReleases() {
   // Obtenemos todas las películas paginadas
   const movies = await fetchAllPages(params);
 
-  // Para cada película, consultamos también sus proveedores de streaming
+  // Para cada película consultamos proveedores, tipo de estreno y sinopsis fallback
+  // Usamos Promise.all para paralelizar las peticiones por película
   const releases = await Promise.all(
     movies.map(async (movie) => {
-      const providers = await getWatchProviders(movie.id, region);
+      // Lanzamos las 3 consultas en paralelo para cada película
+      const [providers, releaseType, englishOverview] = await Promise.all([
+        getWatchProviders(movie.id, region),
+        getReleaseType(movie.id, region),
+        // Solo pedimos la sinopsis en inglés si no hay en el idioma principal
+        movie.overview ? Promise.resolve('') : getEnglishOverview(movie.id),
+      ]);
+
+      // Usamos la sinopsis original, o la inglesa como fallback
+      const overview = movie.overview || englishOverview;
 
       return {
         title: movie.title,
         releaseDate: movie.release_date,
-        overview: movie.overview || 'Sin descripción disponible.',
+        overview,
         providers,
+        releaseType,
         tmdbUrl: `https://www.themoviedb.org/movie/${movie.id}`,
       };
     })
   );
 
-  return releases;
+  // Filtro suave: excluimos solo películas sin absolutamente ninguna información
+  // - Incluir si tiene providers en ES (streaming confirmado)
+  // - Incluir si tiene releaseType (estreno confirmado en ES/GB/FR/DE/US)
+  // - Incluir si al menos tiene sinopsis (puede ser relevante para España)
+  // - Excluir solo si no tiene nada: sin releaseType, sin providers y sin overview
+  const filtered = releases.filter((r) =>
+    r.releaseType !== null || r.providers.length > 0 || r.overview
+  );
+
+  return filtered;
 }
 
 module.exports = { getHorrorReleases };
