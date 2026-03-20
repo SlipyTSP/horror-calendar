@@ -1,0 +1,107 @@
+# Workflow de GitHub Actions para Horror Calendar
+# Genera el archivo .ics con estrenos de terror y lo publica en GitHub Pages
+
+name: Actualizar Calendario de Terror
+
+on:
+  # Ejecución automática cada lunes a las 6:00 AM UTC
+  schedule:
+    - cron: '0 6 * * 1'
+
+  # Permite ejecutar el workflow manualmente desde la pestaña Actions
+  workflow_dispatch:
+
+# Permisos necesarios para publicar en GitHub Pages
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Evita ejecuciones simultáneas — si ya hay una corriendo, la nueva espera
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  generate-and-deploy:
+    runs-on: ubuntu-latest
+
+    # Configuramos el entorno de GitHub Pages
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      # Paso 1: Clonar el repositorio
+      - name: Checkout del repositorio
+        uses: actions/checkout@v4
+
+      # Paso 2: Configurar Node.js 20
+      - name: Configurar Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      # Paso 3: Instalar dependencias
+      - name: Instalar dependencias
+        run: npm ci
+
+      # Paso 4: Ejecutar el script para generar el .ics
+      # La API key se lee desde los secretos del repositorio (Settings > Secrets)
+      - name: Generar calendario .ics
+        run: npm start
+        env:
+          TMDB_API_KEY: ${{ secrets.TMDB_API_KEY }}
+          TMDB_LANGUAGE: es-ES
+          TMDB_REGION: ES
+
+      # Paso 5: Preparar los archivos para GitHub Pages
+      # Copiamos el .ics a un directorio limpio y añadimos un index.html
+      # con instrucciones de suscripción
+      - name: Preparar directorio para Pages
+        run: |
+          mkdir -p _site
+          cp output/horror.ics _site/horror.ics
+          cat > _site/index.html << 'HTMLEOF'
+          <!DOCTYPE html>
+          <html lang="es">
+          <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>🎬 Estrenos de Terror</title>
+            <style>
+              body { font-family: system-ui, sans-serif; max-width: 600px; margin: 2rem auto; padding: 0 1rem; }
+              code { background: #f0f0f0; padding: 0.2em 0.4em; border-radius: 4px; word-break: break-all; }
+              a { color: #b91c1c; }
+            </style>
+          </head>
+          <body>
+            <h1>🎬 Estrenos de Terror</h1>
+            <p>Calendario de próximos estrenos de películas de terror.</p>
+            <h2>Suscribirse desde iOS</h2>
+            <ol>
+              <li>Abre <strong>Ajustes</strong> → <strong>Calendario</strong> → <strong>Cuentas</strong></li>
+              <li>Pulsa <strong>Añadir cuenta</strong> → <strong>Otro</strong> → <strong>Añadir calendario suscrito</strong></li>
+              <li>Pega esta URL:</li>
+            </ol>
+            <p><code id="cal-url"></code></p>
+            <p><a href="horror.ics">Descargar archivo .ics</a></p>
+            <script>
+              const base = window.location.href.replace(/\/$/, '');
+              document.getElementById('cal-url').textContent = base + '/horror.ics';
+            </script>
+          </body>
+          </html>
+          HTMLEOF
+
+      # Paso 6: Subir los archivos como artefacto de Pages
+      - name: Subir artefacto de Pages
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+      # Paso 7: Desplegar en GitHub Pages
+      - name: Desplegar en GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

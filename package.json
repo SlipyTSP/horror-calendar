@@ -1,0 +1,24 @@
+{
+  "name": "horror-calendar",
+  "version": "1.0.0",
+  "description": "Genera un calendario .ics con estrenos de películas de terror desde TMDB, publicado en GitHub Pages para suscripción desde iOS",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "test": "node --test src/**/*.test.js"
+  },
+  "keywords": [
+    "horror",
+    "movies",
+    "calendar",
+    "ics",
+    "tmdb"
+  ],
+  "license": "MIT",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "dependencies": {
+    "dotenv": "^17.3.1"
+  }
+}
