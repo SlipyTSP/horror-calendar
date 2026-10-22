@@ -1,0 +1,11 @@
+# Normalize line endings: LF in the repository and in every checkout
+* text=auto eol=lf
+
+# iCalendar files require CRLF (RFC 5545): never normalize them
+*.ics -text
+
+# Binary assets
+*.png binary
+*.jpg binary
+*.ico binary
+*.woff2 binary

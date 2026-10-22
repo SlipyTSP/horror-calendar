@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PROTOTIPO — Selector de calendarios | Estrenos de Terror</title>
+<style>
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  :root{
+    --bg:#0a0a0a; --surface:#141414; --surface-2:#1a1a1a; --border:#2a1a1a;
+    --text:#e8e0e0; --muted:#8a7a7a; --red:#8b0000; --red-b:#c41e1e;
+    --glow:rgba(139,0,0,.3);
+  }
+  body{font-family:system-ui,sans-serif;background:var(--bg);color:var(--text);line-height:1.6;min-height:100vh}
+  .proto-banner{background:#3a2a00;color:#ffd966;text-align:center;padding:.5rem 1rem;font-size:.85rem;border-bottom:1px solid #5a4a10}
+  .container{max-width:800px;margin:0 auto;padding:2rem 1.5rem 4rem}
+  header{text-align:center;padding:2rem 0 1rem}
+  h1{color:var(--red-b);font-size:clamp(2rem,6vw,3rem);text-shadow:0 0 40px var(--glow);letter-spacing:.02em}
+  .subtitle{color:var(--muted);margin-top:.5rem}
+  h2{color:var(--red-b);font-size:1.3rem;margin-bottom:1rem}
+  section{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:1.5rem;margin:1.5rem 0}
+
+  .selector-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:.6rem}
+  .sel{display:flex;align-items:center;gap:.7rem;padding:.7rem .9rem;background:var(--surface-2);
+       border:1px solid var(--border);border-radius:8px;cursor:pointer;transition:border-color .15s;user-select:none}
+  .sel:hover{border-color:var(--red)}
+  .sel input{accent-color:var(--red-b);width:1.05rem;height:1.05rem;cursor:pointer}
+  .sel .name{font-weight:600;font-size:.92rem}
+  .sel .count{margin-left:auto;font-size:.75rem;color:var(--muted);background:rgba(255,255,255,.05);
+              padding:.1rem .5rem;border-radius:10px;white-space:nowrap}
+  .sel.cinema{border-color:rgba(139,0,0,.45)}
+
+  .subs{display:flex;flex-direction:column;gap:.8rem}
+  .sub-card{display:flex;flex-wrap:wrap;align-items:center;gap:.8rem;padding: .9rem 1rem;
+            background:var(--surface-2);border:1px solid var(--border);border-radius:8px}
+  .sub-card .cal-name{font-weight:600;min-width:9rem}
+  .webcal{display:inline-block;background:var(--red);color:#fff;text-decoration:none;font-weight:600;
+          font-size:.85rem;padding:.5rem 1rem;border-radius:6px;transition:background .15s}
+  .webcal:hover{background:var(--red-b);box-shadow:0 0 14px var(--glow)}
+  .url{flex:1 1 220px;font-family:monospace;font-size:.72rem;color:var(--muted);background:rgba(0,0,0,.4);
+       border:1px solid var(--border);border-radius:6px;padding:.45rem .6rem;word-break:break-all;user-select:all}
+  .empty{color:var(--muted);font-style:italic;padding:.5rem 0}
+
+  .movie{background:var(--surface-2);border:1px solid var(--border);border-radius:10px;padding:1rem 1.2rem;margin-bottom:.8rem}
+  .movie-top{display:flex;justify-content:space-between;gap:.8rem;align-items:flex-start;flex-wrap:wrap}
+  .movie h3{font-size:1.02rem;color:#fff}
+  .badges{display:flex;gap:.4rem;flex-wrap:wrap}
+  .badge{font-size:.72rem;font-weight:600;padding:.15rem .55rem;border-radius:4px;white-space:nowrap}
+  .b-cine{background:rgba(139,0,0,.25);color:#ff6b6b;border:1px solid rgba(139,0,0,.4)}
+  .b-plat{background:rgba(100,50,150,.25);color:#b88be6;border:1px solid rgba(100,50,150,.4)}
+  .b-rent{background:rgba(100,100,100,.25);color:#aaa;border:1px solid rgba(100,100,100,.4)}
+  .movie .date{font-size:.83rem;color:var(--red-b);font-weight:500;margin:.25rem 0}
+  .movie p{font-size:.87rem;color:var(--muted)}
+  footer{text-align:center;color:var(--muted);font-size:.78rem;margin-top:2.5rem;border-top:1px solid var(--border);padding-top:1.5rem}
+</style>
+</head>
+<body>
+<div class="proto-banner">PROTOTIPO DE UX — datos de ejemplo, los botones de suscripción no apuntan a calendarios reales</div>
+<div class="container">
+  <header>
+    <h1>Estrenos de Terror</h1>
+    <p class="subtitle">Elige qué quieres seguir. Cada opción es un calendario independiente.</p>
+  </header>
+
+  <section>
+    <h2>1 · Elige tus calendarios</h2>
+    <div class="selector-grid" id="selector"></div>
+  </section>
+
+  <section>
+    <h2>2 · Suscríbete a lo elegido</h2>
+    <div class="subs" id="subs"><p class="empty">Marca arriba al menos un calendario.</p></div>
+  </section>
+
+  <section>
+    <h2>Próximos estrenos (según tu selección)</h2>
+    <div id="movies"></div>
+  </section>
+
+  <footer>Prototipo Cowork · 2026-07-05 · La versión real derivará contadores y lista de releases.json</footer>
+</div>
+
+<script>
+const BASE = 'https://slipytsp.github.io/horror-calendar/';
+
+// Calendarios disponibles (en la versión real: cines + plataformas de config/platforms)
+const CALS = [
+  { slug:'cines',        name:'Cines (España)', cinema:true },
+  { slug:'netflix',      name:'Netflix' },
+  { slug:'prime-video',  name:'Prime Video' },
+  { slug:'max',          name:'Max' },
+  { slug:'movistar-plus',name:'Movistar Plus+' },
+  { slug:'filmin',       name:'Filmin' },
+  { slug:'disney-plus',  name:'Disney+' },
+  { slug:'skyshowtime',  name:'SkyShowtime' },
+  { slug:'apple-tv-plus',name:'Apple TV+' },
+  { slug:'digital',      name:'Todo lo digital' },
+];
+
+// Estrenos de EJEMPLO (la versión real los carga de releases.json)
+const MOVIES = [
+  { title:'La Casa Vacía',        date:'2026-07-10', type:'theatrical', slugs:['cines'], rent:false,
+    ov:'Ejemplo de estreno en cines en España.' },
+  { title:'Ritual Nocturno',      date:'2026-07-14', type:'digital', slugs:['netflix','digital'], rent:false,
+    ov:'Ejemplo de estreno directo en Netflix.' },
+  { title:'El Faro del Fin',      date:'2026-07-18', type:'digital', slugs:['filmin','digital'], rent:false,
+    ov:'Ejemplo de estreno en Filmin.' },
+  { title:'Sombras del Ayer',     date:'2026-07-24', type:'theatrical', slugs:['cines'], rent:false,
+    ov:'Ejemplo de estreno en cines.' },
+  { title:'La Cosecha',           date:'2026-08-02', type:'digital', slugs:['prime-video','digital'], rent:false,
+    ov:'Ejemplo de estreno en Prime Video.' },
+  { title:'Voces en el Sótano',   date:'2026-08-07', type:'digital', slugs:['digital'], rent:true,
+    ov:'Ejemplo de estreno digital solo en alquiler/compra: entra en "Todo lo digital" pero en ninguna plataforma.' },
+  { title:'Sombras del Ayer',     date:'2026-08-21', type:'digital', slugs:['max','digital'], rent:false,
+    ov:'La misma película de cines llega a Max: segundo evento, fecha y calendario distintos.' },
+  { title:'El Último Tren',       date:'2026-09-04', type:'theatrical', slugs:['cines'], rent:false,
+    ov:'Ejemplo de estreno en cines.' },
+];
+
+const KEY = 'horror-cal-selection-proto';
+let selected = new Set(JSON.parse(localStorage.getItem(KEY) || '["cines"]'));
+
+const counts = {};
+CALS.forEach(c => counts[c.slug] = MOVIES.filter(m => m.slugs.includes(c.slug)).length);
+
+function save(){ localStorage.setItem(KEY, JSON.stringify([...selected])); }
+
+function renderSelector(){
+  document.getElementById('selector').innerHTML = CALS.map(c => `
+    <label class="sel ${c.cinema ? 'cinema':''}">
+      <input type="checkbox" data-slug="${c.slug}" ${selected.has(c.slug)?'checked':''}>
+      <span class="name">${c.name}</span>
+      <span class="count">${counts[c.slug]} estrenos</span>
+    </label>`).join('');
+  document.querySelectorAll('#selector input').forEach(i =>
+    i.addEventListener('change', () => {
+      i.checked ? selected.add(i.dataset.slug) : selected.delete(i.dataset.slug);
+      save(); renderSubs(); renderMovies();
+    }));
+}
+
+function renderSubs(){
+  const el = document.getElementById('subs');
+  const sel = CALS.filter(c => selected.has(c.slug));
+  if(!sel.length){ el.innerHTML = '<p class="empty">Marca arriba al menos un calendario.</p>'; return; }
+  el.innerHTML = sel.map(c => {
+    const url = BASE + 'horror-' + c.slug + '.ics';
+    return `<div class="sub-card">
+      <span class="cal-name">${c.name}</span>
+      <a class="webcal" href="webcal://${url.replace(/^https?:\/\//,'')}"
+         onclick="alert('Prototipo: aquí iOS abriría la suscripción de ${c.name.replace(/'/g,"\\'")}');return false;">Suscribirse</a>
+      <code class="url">${url}</code>
+    </div>`;
+  }).join('');
+}
+
+function renderMovies(){
+  const el = document.getElementById('movies');
+  const list = MOVIES
+    .filter(m => m.slugs.some(s => selected.has(s)))
+    .sort((a,b) => a.date.localeCompare(b.date));
+  if(!list.length){ el.innerHTML = '<p class="empty">Nada que mostrar con la selección actual.</p>'; return; }
+  el.innerHTML = list.map(m => {
+    const date = new Date(m.date+'T00:00:00')
+      .toLocaleDateString('es-ES',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+    const badges = m.slugs.filter(s => s!=='digital').map(s => {
+      const c = CALS.find(x => x.slug===s);
+      return `<span class="badge ${s==='cines'?'b-cine':'b-plat'}">${c?c.name:s}</span>`;
+    }).join('') + (m.rent ? '<span class="badge b-rent">Alquiler/compra</span>' : '');
+    return `<article class="movie">
+      <div class="movie-top"><h3>${m.title}</h3><div class="badges">${badges}</div></div>
+      <div class="date">${date}</div><p>${m.ov}</p>
+    </article>`;
+  }).join('');
+}
+
+renderSelector(); renderSubs(); renderMovies();
+</script>
+</body>
+</html>

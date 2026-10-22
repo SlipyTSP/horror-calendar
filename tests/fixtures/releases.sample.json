@@ -1,0 +1,117 @@
+{
+  "schema": 1,
+  "generated": "2026-11-02T06:03:00.000Z",
+  "region": "ES",
+  "window": { "from": "2026-11-02", "to": "2027-01-31" },
+  "calendars": [
+    { "slug": "cines", "file": "horror-cines.ics", "name": "Cines", "kind": "cinema", "count": 3 },
+    { "slug": "netflix", "file": "horror-netflix.ics", "name": "Netflix", "kind": "platform", "count": 1 },
+    { "slug": "prime-video", "file": "horror-prime-video.ics", "name": "Prime Video", "kind": "platform", "count": 1 },
+    { "slug": "hbo-max", "file": "horror-hbo-max.ics", "name": "HBO Max", "kind": "platform", "count": 1 },
+    { "slug": "movistar-plus", "file": "horror-movistar-plus.ics", "name": "Movistar Plus+", "kind": "platform", "count": 0 },
+    { "slug": "filmin", "file": "horror-filmin.ics", "name": "Filmin", "kind": "platform", "count": 1 },
+    { "slug": "disney-plus", "file": "horror-disney-plus.ics", "name": "Disney+", "kind": "platform", "count": 0 },
+    { "slug": "skyshowtime", "file": "horror-skyshowtime.ics", "name": "SkyShowtime", "kind": "platform", "count": 0 },
+    { "slug": "apple-tv-plus", "file": "horror-apple-tv-plus.ics", "name": "Apple TV+", "kind": "platform", "count": 0 },
+    { "slug": "digital", "file": "horror-digital.ics", "name": "Digital", "kind": "aggregate", "count": 5 },
+    { "slug": "all", "file": "horror.ics", "name": "Todo", "kind": "legacy", "count": 8 }
+  ],
+  "releases": [
+    {
+      "id": 900001,
+      "title": "La Casa Vacía",
+      "originalTitle": "The Empty House",
+      "releaseDate": "2026-11-06",
+      "type": "theatrical",
+      "calendars": ["cines"],
+      "providers": { "flatrate": [], "rentBuy": [] },
+      "posterPath": "/sample-900001.jpg",
+      "overview": "Una familia hereda una casa en la que nadie ha vivido jamás; cada noche aparece una habitación nueva.",
+      "tmdbUrl": "https://www.themoviedb.org/movie/900001"
+    },
+    {
+      "id": 900002,
+      "title": "Ritual Nocturno",
+      "originalTitle": "Night Ritual",
+      "releaseDate": "2026-11-13",
+      "type": "digital",
+      "calendars": ["digital", "netflix"],
+      "providers": { "flatrate": ["Netflix"], "rentBuy": [] },
+      "posterPath": "/sample-900002.jpg",
+      "overview": "Un grupo de estudiantes graba un ritual para una asignatura; la grabación sigue cambiando después de entregarla.",
+      "tmdbUrl": "https://www.themoviedb.org/movie/900002"
+    },
+    {
+      "id": 900003,
+      "title": "Voces en el Sótano",
+      "originalTitle": "Voices Below",
+      "releaseDate": "2026-11-20",
+      "type": "digital",
+      "calendars": ["digital"],
+      "providers": { "flatrate": [], "rentBuy": ["Apple TV", "Rakuten TV"] },
+      "posterPath": "/sample-900003.jpg",
+      "overview": "Un técnico de mantenimiento descubre que el sótano del edificio responde a las preguntas que se hacen en voz alta.",
+      "tmdbUrl": "https://www.themoviedb.org/movie/900003"
+    },
+    {
+      "id": 900004,
+      "title": "Sombras del Ayer",
+      "originalTitle": "Yesterday's Shadows",
+      "releaseDate": "2026-11-27",
+      "type": "theatrical",
+      "calendars": ["cines"],
+      "providers": { "flatrate": [], "rentBuy": [] },
+      "posterPath": "/sample-900004.jpg",
+      "overview": "Las sombras de un pueblo costero llegan un día tarde; la de la protagonista acaba de dejar de llegar.",
+      "tmdbUrl": "https://www.themoviedb.org/movie/900004"
+    },
+    {
+      "id": 900005,
+      "title": "La Cosecha",
+      "originalTitle": "The Harvest",
+      "releaseDate": "2026-12-04",
+      "type": "digital",
+      "calendars": ["digital", "prime-video", "filmin"],
+      "providers": { "flatrate": ["Amazon Prime Video", "Filmin"], "rentBuy": ["Google Play Movies"] },
+      "posterPath": null,
+      "overview": "En una comarca agrícola la cosecha de este año madura de noche y solo cuando nadie mira.",
+      "tmdbUrl": "https://www.themoviedb.org/movie/900005"
+    },
+    {
+      "id": 900006,
+      "title": "El Faro del Fin",
+      "originalTitle": "El Faro del Fin",
+      "releaseDate": "2026-12-18",
+      "type": "digital",
+      "calendars": ["digital"],
+      "providers": { "flatrate": ["Atresplayer"], "rentBuy": [] },
+      "posterPath": null,
+      "overview": "",
+      "tmdbUrl": "https://www.themoviedb.org/movie/900006"
+    },
+    {
+      "id": 900004,
+      "title": "Sombras del Ayer",
+      "originalTitle": "Yesterday's Shadows",
+      "releaseDate": "2027-01-15",
+      "type": "digital",
+      "calendars": ["digital", "hbo-max"],
+      "providers": { "flatrate": ["HBO Max"], "rentBuy": ["Apple TV"] },
+      "posterPath": "/sample-900004.jpg",
+      "overview": "Las sombras de un pueblo costero llegan un día tarde; la de la protagonista acaba de dejar de llegar.",
+      "tmdbUrl": "https://www.themoviedb.org/movie/900004"
+    },
+    {
+      "id": 900007,
+      "title": "El Último Tren",
+      "originalTitle": "The Last Train",
+      "releaseDate": "2027-01-29",
+      "type": "theatrical",
+      "calendars": ["cines"],
+      "providers": { "flatrate": [], "rentBuy": [] },
+      "posterPath": "/sample-900007.jpg",
+      "overview": "El último tren de la noche lleva años saliendo con un vagón más de los que tiene.",
+      "tmdbUrl": "https://www.themoviedb.org/movie/900007"
+    }
+  ]
+}
