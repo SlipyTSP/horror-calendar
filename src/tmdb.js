@@ -67,7 +67,7 @@ function resolveSettings(env = {}, now = new Date(), warn = console.warn) {
   return {
     apiKey: String(env.TMDB_API_KEY ?? '').trim(),
     language: String(env.TMDB_LANGUAGE ?? '').trim() || 'es-ES',
-    region: String(env.TMDB_REGION ?? '').trim() || 'ES',
+    region: String(env.TMDB_REGION ?? '').trim().toUpperCase() || 'ES',
     windowDays,
     maxPages,
     from: isoDate(now),

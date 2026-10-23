@@ -468,3 +468,20 @@ test('invalid settings become ::warning:: lines in the run log', async () => {
   const { log } = await run(createFixtureFetch(), { env: { ...ENV, WINDOW_DAYS: 'nope' } });
   assert.ok(log.lines.some((l) => /^::warning::WINDOW_DAYS="nope".*using 90/.test(l)));
 });
+
+test('TMDB_REGION is upper-cased: "es" queries region=ES and reads results.ES and iso_3166_1 "ES"', async () => {
+  const routes = smallRoutes({ digital: [movie(5, '2026-11-20')] });
+  routes['/movie/5/watch/providers'] = { fixture: 'case_watch_providers_es.json' };
+  routes['/movie/5/release_dates'] = {
+    body: { id: 5, results: [{ iso_3166_1: 'ES', release_dates: [{ type: 4, release_date: '2026-11-20T00:00:00.000Z', note: 'Netflix' }] }] },
+  };
+  const mockFetch = createFixtureFetch({ routes });
+  const { releases, region } = await run(mockFetch, { env: { ...ENV, TMDB_REGION: ' es ' } });
+
+  assert.equal(region, 'ES');
+  for (const call of mockFetch.calls.filter((c) => c.key.startsWith('/discover/movie'))) {
+    assert.equal(new URL(call.url).searchParams.get('region'), 'ES');
+  }
+  assert.deepEqual(releases[0].providers.flatrate, ['Netflix', 'Filmin', 'Netflix basic with Ads']);
+  assert.equal(releases[0].releaseNote, 'Netflix');
+});
