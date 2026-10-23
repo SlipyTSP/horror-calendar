@@ -1,4 +1,5 @@
-// Prints a Markdown table of output/releases.json, one row per release.
+// Prints Markdown tables of output/releases.json: releases per calendar and one row per
+// release (with its release note in the data model shape).
 // CI appends it to the job summary: node scripts/summary.js >> "$GITHUB_STEP_SUMMARY"
 //
 // Copes with both shapes of releases.json, looking at the fields present:
@@ -38,7 +39,26 @@ function dataModelRow(r) {
   const rentBuy = list(r?.providers?.rentBuy);
   const calendars = list(r?.calendars);
   const where = rentBuy ? `${calendars || '—'} (rent/buy: ${rentBuy})` : calendars;
-  return [r?.releaseDate, r?.title, r?.type ?? r?.releaseType, where];
+  const note = typeof r?.releaseNote === 'string' && r.releaseNote.trim() ? r.releaseNote.trim() : '';
+  return [r?.releaseDate, r?.title, r?.type ?? r?.releaseType, where, note];
+}
+
+/**
+ * Per-calendar counts: the `calendars` metadata when present, otherwise counted from
+ * the releases (first-seen order, plus the implicit `all`).
+ * @returns {Array<{ slug: string, file: string, count: number }>}
+ */
+function calendarCounts(doc, releases) {
+  if (Array.isArray(doc?.calendars)) {
+    return doc.calendars.filter((c) => c && typeof c === 'object')
+      .map((c) => ({ slug: c.slug, file: c.file, count: c.count }));
+  }
+  const counts = new Map();
+  for (const r of releases) {
+    for (const slug of Array.isArray(r?.calendars) ? r.calendars : []) counts.set(slug, (counts.get(slug) ?? 0) + 1);
+  }
+  return [...counts].map(([slug, count]) => ({ slug, file: null, count }))
+    .concat({ slug: 'all', file: 'horror.ics', count: releases.length });
 }
 
 /**
@@ -53,7 +73,17 @@ function renderSummary(doc) {
 
   const lines = [`## Horror releases (${releases.length})`, ''];
   if (doc?.generated) lines.push(`Generated: ${cell(doc.generated)}`, '');
-  lines.push(`| Date | Title | Type | ${lastColumn} |`, '|---|---|---|---|');
+  if (modern && doc?.region && doc?.window) {
+    lines.push(`Region: ${cell(doc.region)} · window ${cell(doc.window.from)} → ${cell(doc.window.to)}`, '');
+  }
+  if (modern) {
+    lines.push('| Calendar | File | Releases |', '|---|---|---|');
+    for (const c of calendarCounts(doc, releases)) lines.push(`| ${[c.slug, c.file, c.count].map(cell).join(' | ')} |`);
+    lines.push('');
+    lines.push(`| Date | Title | Type | ${lastColumn} | Release note |`, '|---|---|---|---|---|');
+  } else {
+    lines.push(`| Date | Title | Type | ${lastColumn} |`, '|---|---|---|---|');
+  }
   for (const r of releases) {
     lines.push(`| ${(modern ? dataModelRow(r) : legacyRow(r)).map(cell).join(' | ')} |`);
   }
