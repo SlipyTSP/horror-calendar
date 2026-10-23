@@ -4,7 +4,7 @@
 
 const fs = require('fs');
 const path = require('path');
-const { fetchHorrorReleases } = require('./tmdb');
+const { fetchHorrorReleases, escapeCommand } = require('./tmdb');
 const { assignCalendars, matchPlatform } = require('./platforms');
 const { generateCalendars } = require('./calendar');
 
@@ -76,8 +76,8 @@ async function main({
     // Release notes that name no configured platform: the owner may need a new alias
     for (const r of releases) {
       if (r.releaseNote !== null && matchPlatform(r.releaseNote) === null) {
-        log(`::warning::Release note "${r.releaseNote}" of "${r.title}" (TMDB ${r.id}) matches no platform alias `
-          + 'in src/platforms.js.');
+        log(`::warning::${escapeCommand(`Release note "${r.releaseNote}" of "${r.title}" (TMDB ${r.id}) `
+          + 'matches no platform alias in src/platforms.js.')}`);
       }
     }
 

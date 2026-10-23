@@ -177,3 +177,22 @@ test('a missing API key exits non-zero with a hint', async () => {
   assert.equal(code, 1);
   assert.match(error.lines.join('\n'), /TMDB_API_KEY/);
 });
+
+test('::warning:: lines escape %, CR and LF so a title with a line break stays one annotation', async () => {
+  const fetchImpl = createFixtureFetch({
+    routes: {
+      [discoverKey('4')]: {
+        body: { page: 1, total_pages: 1, total_results: 1, results: [{ id: 1393171, title: 'Chicken\nBoy\r 100%', release_date: '2026-12-01', overview: 'x' }] },
+      },
+      '/movie/1393171/release_dates': {
+        body: { id: 1393171, results: [{ iso_3166_1: 'ES', release_dates: [{ type: 4, release_date: '2026-12-01T00:00:00.000Z', note: 'Atresplayer' }] }] },
+      },
+    },
+  });
+  const { code, log } = await runMain({ fetchImpl });
+  assert.equal(code, 0);
+  const warnings = log.lines.filter((l) => l.startsWith('::warning::'));
+  assert.equal(warnings.length, 1);
+  assert.match(warnings[0], /"Chicken%0ABoy%0D 100%25"/);
+  assert.doesNotMatch(warnings[0], /[\r\n]/);
+});

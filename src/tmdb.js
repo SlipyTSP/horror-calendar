@@ -28,6 +28,16 @@ const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
 
 class TmdbError extends Error {}
 
+/**
+ * Escapes the message of a GitHub Actions workflow command (`::warning::<message>`), so
+ * that a title or note with a line break cannot cut or forge an annotation.
+ * @param {string} message
+ * @returns {string}
+ */
+function escapeCommand(message) {
+  return String(message).replace(/%/g, '%25').replace(/\r/g, '%0D').replace(/\n/g, '%0A');
+}
+
 const defaultSleep = (ms) => new Promise((resolve) => { setTimeout(resolve, ms); });
 
 /**
@@ -225,7 +235,7 @@ async function fetchHorrorReleases({
   env = process.env,
   sleep = defaultSleep,
   log = console.log,
-  warn = (message) => log(`::warning::${message}`),
+  warn = (message) => log(`::warning::${escapeCommand(message)}`),
 } = {}) {
   const settings = resolveSettings(env, now, warn);
   const { apiKey, language, region, maxPages, from, to } = settings;
@@ -252,8 +262,8 @@ async function fetchHorrorReleases({
         const reported = Number(data?.total_pages);
         totalPages = Number.isInteger(reported) && reported > 0 ? reported : 1;
         if (totalPages > maxPages) {
-          log(`::warning::TMDB query ${query.type} (with_release_type=${query.releaseType}) has `
-            + `total_pages=${totalPages} but MAX_PAGES=${maxPages}: only the first ${maxPages} pages were read.`);
+          log(`::warning::${escapeCommand(`TMDB query ${query.type} (with_release_type=${query.releaseType}) has `
+            + `total_pages=${totalPages} but MAX_PAGES=${maxPages}: only the first ${maxPages} pages were read.`)}`);
         }
       }
       for (const movie of Array.isArray(data?.results) ? data.results : []) {
@@ -336,6 +346,7 @@ async function getHorrorReleases(options = {}) {
 module.exports = {
   getHorrorReleases,
   fetchHorrorReleases,
+  escapeCommand,
   resolveSettings,
   parseProviders,
   parseReleaseNote,
