@@ -10,18 +10,19 @@ calendarios `.ics` con los estrenos de películas de terror en España (cines y 
 de streaming), publicados en GitHub Pages junto a una web de suscripción. El usuario se
 suscribe desde iOS solo a los calendarios que le interesan.
 
-Problema de fondo que se está corrigiendo: la versión actual mezcla `primary_release_date`
-con `region` en `discover/movie` (TMDB ignora la región en ese caso) y acepta casi
-cualquier película, así que el calendario trae estrenos de todo el mundo. El plan de
-corrección está en `docs/phases.md`; el modelo de datos objetivo, en `docs/data-model.md`.
+Problema de fondo corregido en F1: la versión original mezclaba `primary_release_date`
+con `region` en `discover/movie` (TMDB ignora la región en ese caso) y aceptaba casi
+cualquier película, así que el calendario traía estrenos de todo el mundo. El plan está
+en `docs/phases.md`; el modelo de datos, en `docs/data-model.md`.
 
 ## Comandos
 
 ```bash
 npm ci                              # Instalar dependencias (usa el lockfile)
 npm start                           # Ejecuta src/index.js — consulta TMDB y escribe output/
+                                    # (11 .ics + releases.json); exit 1 en los casos de §7
 npm test                            # Test runner nativo (node --test): tests/unit/*.test.js
-node scripts/summary.js [archivo]   # Tabla Markdown de output/releases.json (o del archivo dado)
+node scripts/summary.js [archivo]   # Tablas Markdown de output/releases.json (o del archivo dado)
 node scripts/capture-fixtures.js    # Captura respuestas reales de TMDB en tests/fixtures/tmdb/
                                     # (necesita key; lo ejecuta el propietario, nunca CI)
 ```
@@ -35,21 +36,34 @@ y cualquier servidor estático sobre `site/` (las copias locales están en `.git
 
 ```
 src/
-  index.js       — Entry point: orquesta la consulta y escribe output/horror.ics y
-                   output/releases.json
-  tmdb.js        — Cliente TMDB: discover/movie (género 27) + watch/providers +
-                   release_dates + sinopsis EN de respaldo
-  calendar.js    — Generador .ics (RFC 5545): folding a 75 octetos, escape, CRLF.
-                   Exporta generateICS y, para tests, escapeText, foldLine,
-                   generateUID y buildDescription
+  index.js       — Entry point. main({ fetchImpl, now, env, outDir, … }) devuelve el
+                   exit code; solo se ejecuta si require.main === module (carga dotenv
+                   ahí). getHorrorReleases → assignCalendars → generateCalendars; escribe
+                   los 11 .ics y releases.json (§4), preview por release y ::warning::
+                   por cada releaseNote sin alias
+  tmdb.js        — Cliente TMDB: getHorrorReleases / fetchHorrorReleases (este último
+                   añade region, window y contadores). Dos discover regionales,
+                   watch/providers + release_dates solo para digitales, sinopsis EN de
+                   respaldo, pool de 5, reintentos 429/5xx con Retry-After, umbral de
+                   fallos de detalle del 20 %. fetch, now, env y sleep inyectables
+  platforms.js   — PLATFORMS (§5), matchPlatform, assignCalendars (unión nota +
+                   flatrate) y calendarDefinitions (orden canónico)
+  calendar.js    — generateCalendars(releases, { now }) → un VCALENDAR por calendario
+                   (RFC 5545: folding a 75 octetos, escape, CRLF). Exporta también
+                   generateICS, escapeText, foldLine, generateUID, buildDescription y
+                   buildWhereLine
 scripts/
-  summary.js     — Tabla Markdown de releases.json (formato actual y el de
-                   docs/data-model.md §4); CI la vuelca en el resumen del job
+  summary.js     — Tablas Markdown de releases.json: contadores por calendario y una
+                   fila por release con calendarios y nota (tolera el formato antiguo);
+                   CI la vuelca en el resumen del job
   capture-fixtures.js — Captura única de respuestas TMDB (§7) a tests/fixtures/tmdb/
-                   con manifest.json; sin reintentos, nunca escribe la key
+                   (discover, watch/providers, release_dates, detalle EN) con
+                   manifest.json; sin reintentos, nunca escribe la key; imprime
+                   provider_name y notas tipo 4 vistas en la región
 site/
   index.html     — Web pública. El deploy copia site/ entero a GitHub Pages
-output/          — Generado por npm start (.ics + releases.json), ignorado por git
+output/          — Generado por npm start: horror-cines.ics, horror-<plataforma>.ics,
+                   horror-digital.ics, horror.ics y releases.json; ignorado por git
 docs/
   data-model.md  — Contrato de datos entre la capa Node y la web (solo lectura)
   phases.md      — Plan de fases, reparto de ficheros y criterios de aceptación
@@ -57,10 +71,15 @@ docs/
 tests/
   unit/*.test.js — Tests (node --test), sin red
   support/       — Helpers, no son tests: mock-fetch.js (fetch falso que mapea URL
-                   sin api_key → fixture, graba llamadas, respuestas en cola) y
-                   fixture-name.js (nombre determinista de fixture por petición)
+                   sin api_key → fixture, graba llamadas, respuestas en cola),
+                   fixture-name.js (nombre determinista de fixture por petición),
+                   fixture-fetch.js (mock-fetch sobre capturadas + synthetic/, sin
+                   colisiones) e ics-validator.js (validador estructural de .ics)
   fixtures/releases.sample.json — Ejemplo completo y válido de releases.json (contrato)
-  fixtures/tmdb/ — Respuestas TMDB capturadas + manifest.json
+  fixtures/tmdb/ — Respuestas TMDB capturadas + manifest.json (solo las recaptura el
+                   propietario)
+  fixtures/tmdb/synthetic/ — Fixtures escritas a mano para lo que la captura no cubre
+                   (release_dates observados el 2026-10-23, sinopsis EN, casos límite)
 .github/workflows/
   ci.yml         — PR, push a main y manual: job test (npm test) y job dry-run
                    (npm start real, tabla en el resumen, artefacto output/ 14 días)
@@ -78,18 +97,32 @@ Cada fase que cambie la estructura actualiza esta sección en el mismo PR.
   `release_date.gte/lte`. **Nunca** combinar `primary_release_date.*` con `region`.
 - Con región y tipo, el `release_date` devuelto es la fecha de ese tipo en esa región:
   esa es la fecha del evento.
-- Solo `flatrate` de `watch/providers` (región ES) cuenta como "incluido en suscripción";
-  `rent` y `buy` se etiquetan como alquiler/compra y nunca como streaming.
+- Solo `flatrate` de `watch/providers` (región ES) cuenta como "incluido en suscripción"
+  (los tiers `ads`/`free` solo si son alias de una plataforma configurada); `rent` y `buy`
+  se fusionan en `rentBuy`, se etiquetan como alquiler/compra y nunca crean pertenencia.
+- `release_dates` se pide solo para releases digitales y solo para obtener `releaseNote`
+  (nota tipo 4 de la región cuyo día coincide con `releaseDate`; si ninguna coincide, la
+  primera tipo 4 con nota). Nunca para inferir el tipo ni para buscar en otras regiones.
+- Pertenencia a calendarios de plataforma = unión de `matchPlatform(releaseNote)` y
+  `matchPlatform` de cada `flatrate` (alias en `src/platforms.js`). Una nota sin alias se
+  avisa con `::warning::` al final de `npm start`.
+- La ventana empieza hoy (UTC), sin look-back: `WINDOW_DAYS` (1-366, def. 90) y
+  `MAX_PAGES` (1-20, def. 5); un corte de paginación siempre emite `::warning::`.
 - Detalles exactos de queries, reintentos y límites: `docs/data-model.md` §7.
 
 ## Formato .ics
 
 - iCalendar válido (RFC 5545): CRLF, folding a 75 octetos sin partir secuencias UTF-8,
   eventos de día completo, `METHOD:PUBLISH`, refresco de 24 h.
-- UID objetivo: `tmdb-<id>-<type>@horror-calendar` (estable ante cambios de fecha o
-  título). No volver a UIDs derivados de título o fecha.
+- UID: `tmdb-<id>-<type>@horror-calendar` (estable ante cambios de fecha o título).
+  No volver a UIDs derivados de título o fecha.
+- Un `.ics` por calendario (`cines`, plataformas, `digital`, `all`), todos en cada build,
+  vacíos incluidos; `X-WR-CALNAME` = `Terror — <nombre>` (`horror.ics`: `Terror — Todo`).
+- DESCRIPTION: sinopsis; línea "dónde" (`En cines` / `Incluido en:` / `Estreno en:`
+  para plataformas conocidas solo por la nota / `Alquiler o compra:` / `Estreno
+  digital`); `Más info:`. El filtrado vive solo en la capa de datos.
 - `horror.ics` es un contrato con los suscriptores existentes: no se renombra ni se
-  elimina. Detalles: `docs/data-model.md` §3 y §6.
+  elimina y contiene cines + digital. Detalles: `docs/data-model.md` §3 y §6.
 
 ## Convenciones
 
