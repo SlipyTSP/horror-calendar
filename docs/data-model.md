@@ -11,7 +11,7 @@ the contract silently.
 
 ```
 src/tmdb.js       TMDB API  ->  raw releases (one per movie *and* release type)
-src/platforms.js  provider names -> platform slugs; assigns `calendars` to each release
+src/platforms.js  provider names + release notes -> platform slugs; assigns `calendars`
 src/calendar.js   releases -> N iCalendar documents (one per calendar) + legacy alias
 src/index.js      orchestrates, writes output/*.ics and output/releases.json
 site/             static web: reads releases.json, lets the user pick calendars
@@ -35,6 +35,7 @@ on a platform produces two objects with the same `id` and different `type`.
 | `type` | `"theatrical"` \| `"digital"` | Given by the query the movie came from, never inferred from other regions. |
 | `calendars` | string[] | Slugs of the calendars this release belongs to (see §3). The legacy `all` calendar is implicit and never listed. Never empty. |
 | `providers` | object | `{ "flatrate": string[], "rentBuy": string[] }`. Provider names as returned by `watch/providers` for region `ES`. Always present; both arrays empty for theatrical releases. |
+| `releaseNote` | string \| null | Trimmed `note` of the Spanish type-4 (digital) entry in `/movie/{id}/release_dates` (§7), e.g. `"Prime Video"`. TMDB usually fills it **before** the release, when `watch/providers` is still empty. `null` for theatrical releases, when the note is empty, or when the request failed. |
 | `posterPath` | string \| null | TMDB `poster_path` (relative, e.g. `/abc.jpg`). The web builds `https://image.tmdb.org/t/p/w342{posterPath}`. |
 | `overview` | string | Spanish synopsis, English fallback, or empty string. Informational only, never an inclusion criterion. |
 | `tmdbUrl` | string | `https://www.themoviedb.org/movie/{id}`. |
@@ -51,8 +52,13 @@ Ordering of `releases`: by `releaseDate` ascending, then `title` ascending.
 
 ### Provider classification
 
-- `flatrate` = included in a subscription. Only this list drives platform calendar
-  membership.
+- Platform membership comes from two sources, combined as a **union**:
+  1. `releaseNote` (announced platform of the Spanish digital release, available before
+     the release date);
+  2. `flatrate` = included in a subscription (TMDB only lists it once the movie is
+     actually available in Spain, so for upcoming releases it is usually empty).
+  Both are matched against the same aliases (§5). A note that matches no alias creates
+  no membership and is reported (§7).
 - `rent` and `buy` are merged into `rentBuy`. They never create platform membership and
   are never presented as "streaming".
 - `ads`/`free` tiers returned by TMDB are ignored unless they are aliases of a configured
@@ -63,7 +69,7 @@ Ordering of `releases`: by `releaseDate` ascending, then `title` ascending.
 | Slug | File | `kind` | Membership rule | iCalendar name |
 |---|---|---|---|---|
 | `cines` | `horror-cines.ics` | `cinema` | every release with `type === "theatrical"` | `Terror — Cines` |
-| `<platform>` | `horror-<platform>.ics` | `platform` | `type === "digital"` and some `providers.flatrate` entry maps to that platform | `Terror — <Platform name>` |
+| `<platform>` | `horror-<platform>.ics` | `platform` | `type === "digital"` and `releaseNote` or some `providers.flatrate` entry maps to that platform | `Terror — <Platform name>` |
 | `digital` | `horror-digital.ics` | `aggregate` | every release with `type === "digital"` | `Terror — Digital` |
 | `all` | `horror.ics` | `legacy` | every release | `Terror — Todo` |
 
@@ -107,8 +113,8 @@ Rules:
 | `releases` | Array of release objects (§2). |
 
 `tests/fixtures/releases.sample.json` is a complete, valid example covering: theatrical
-only, digital on one platform, digital on two platforms, digital rent/buy only, digital on
-a non-configured provider, one movie with both a theatrical and a digital release, empty
+only, digital on one platform, digital on two platforms, digital on a platform known only
+from its release note, digital rent/buy only, digital on a non-configured provider, one movie with both a theatrical and a digital release, empty
 `overview`, `posterPath: null`, and platforms with zero releases.
 
 ## 5. Platform configuration — `src/platforms.js`
@@ -118,7 +124,7 @@ Single place to add or remove platforms. Shape:
 ```js
 module.exports.PLATFORMS = [
   { slug: 'netflix',       name: 'Netflix',        providerNames: ['Netflix', 'Netflix basic with Ads'] },
-  { slug: 'prime-video',   name: 'Prime Video',    providerNames: ['Amazon Prime Video', 'Amazon Prime Video with Ads'] },
+  { slug: 'prime-video',   name: 'Prime Video',    providerNames: ['Amazon Prime Video', 'Amazon Prime Video with Ads', 'Prime Video'] },
   { slug: 'hbo-max',       name: 'HBO Max',        providerNames: ['HBO Max', 'Max'] },
   { slug: 'movistar-plus', name: 'Movistar Plus+', providerNames: ['Movistar Plus+', 'Movistar Plus'] },
   { slug: 'filmin',        name: 'Filmin',         providerNames: ['Filmin'] },
@@ -128,13 +134,16 @@ module.exports.PLATFORMS = [
 ];
 ```
 
-- Matching is by exact provider name, case-insensitive, after trimming. `providerNames`
-  are aliases: TMDB renames providers (Max/HBO Max) and adds ad tiers.
+- Matching is by exact name, case-insensitive, after trimming, and applies to both
+  `flatrate` entries and `releaseNote`. `providerNames` are aliases: TMDB renames
+  providers (Max/HBO Max), adds ad tiers, and release notes use short names
+  (`Prime Video`, observed in the 2026-10-23 capture).
 - Slugs are file-name safe: lowercase `a-z`, `0-9` and `-` only. Slugs `cines`,
   `digital` and `all` are reserved.
 - The initial `providerNames` above are the expected TMDB names for region `ES`; F1 must
   verify them against the captured fixtures in `tests/fixtures/tmdb/` and adjust the
-  aliases (not the slugs).
+  aliases (not the slugs). Observed type-4 notes in region ES on 2026-10-23: `Prime Video`,
+  `Netflix`, and empty strings.
 
 ## 6. iCalendar rules
 
@@ -150,9 +159,11 @@ module.exports.PLATFORMS = [
   duplicating it. Never derive UIDs from title or date.
 - `SUMMARY`: title plus a type marker (`🎬` theatrical, `📺` digital), as today.
 - `DESCRIPTION`, in this order, separated by blank lines: synopsis (if any); a "where"
-  line — `En cines` for theatrical, `Incluido en: Netflix, Filmin` when `flatrate` is not
-  empty, `Alquiler o compra: Apple TV, Rakuten TV` when only `rentBuy` is not empty,
-  `Estreno digital` when neither is known; `Más info: <tmdbUrl>`.
+  line, first rule that applies — `En cines` for theatrical; `Incluido en: Netflix, Filmin`
+  when `flatrate` is not empty (provider names as returned); `Estreno en: Prime Video` when
+  `flatrate` is empty but the release belongs to platform calendars (platform display
+  names, in config order); `Alquiler o compra: Apple TV, Rakuten TV` when only `rentBuy` is
+  not empty; `Estreno digital` otherwise; then `Más info: <tmdbUrl>`.
 - `URL:<tmdbUrl>`.
 - `DTSTAMP` is the build time (acceptable; stable DTSTAMP is optional future work).
 
@@ -173,9 +184,19 @@ Common parameters: `language=es-ES`, `region=ES`, `with_genres=27`,
 - With `region` + `with_release_type`, the `release_date` field of each result is the
   first Spanish date of that type: use it as `releaseDate`. Do not rely on `sort_by` for
   regional dates; sort in code.
-- Pagination: follow `total_pages` up to `MAX_PAGES` (default 5) per query.
-- Per movie, one extra request: `GET /movie/{id}/watch/providers`, region `ES` only.
-  Theatrical releases skip this request.
+- Pagination: follow `total_pages` up to `MAX_PAGES` (default 5) per query. If a query
+  has more pages than `MAX_PAGES`, the cut is never silent: print a line starting with
+  `::warning::` (GitHub Actions turns it into a visible annotation) naming the query,
+  `total_pages` and `MAX_PAGES`. The 2026-10-23 capture had `total_pages = 1` for both
+  queries.
+- Per digital release, two extra requests: `GET /movie/{id}/watch/providers` (region `ES`
+  only) and `GET /movie/{id}/release_dates`. From `release_dates`, take the entry with
+  `iso_3166_1` equal to the region and, inside it, the type-4 date whose day equals
+  `releaseDate` (fallback: the first type-4 date with a non-empty note); its trimmed
+  `note` is `releaseNote`, empty → `null`. Release notes of other types (festivals,
+  premieres) are ignored. Theatrical releases skip both requests.
+- Every non-null `releaseNote` that matches no alias is reported at the end of the run
+  with a `::warning::` line (title, id, note), so that the owner can add the alias.
 - `GET /movie/{id}?language=en-US` only when the Spanish `overview` is empty (fallback).
 - Concurrency: a pool of 5 simultaneous detail requests. HTTP 429 and 5xx are retried
   (up to 3 times, honouring `Retry-After`, exponential backoff otherwise). Detail failures
@@ -188,7 +209,8 @@ Common parameters: `language=es-ES`, `region=ES`, `with_genres=27`,
 Environment variables: `TMDB_API_KEY` (required), `TMDB_LANGUAGE` (default `es-ES`),
 `TMDB_REGION` (default `ES`), `WINDOW_DAYS` (default `90`, integer 1–366, invalid values
 fall back to the default with a warning), `MAX_PAGES` (default `5`, integer 1–20, same
-fallback).
+fallback). The window always starts today: releases leave every calendar on the first build
+after their date (decision of 2026-10-23, no look-back).
 
 ## 8. Web contract — `site/`
 
@@ -212,3 +234,9 @@ fallback).
 
 A change to this contract is a PR that updates this file, `tests/fixtures/releases.sample.json`
 and every consumer in the same PR, and bumps `schema` when `releases.json` changes shape.
+
+History:
+
+- 2026-10-23 — `releaseNote` added and platform membership extended to the union of
+  release note and `flatrate` (the capture showed `watch/providers` empty in ES for every
+  upcoming release). Additive change made before any consumer existed: `schema` stays `1`.
