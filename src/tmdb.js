@@ -258,10 +258,11 @@ async function fetchHorrorReleases({
       }
       for (const movie of Array.isArray(data?.results) ? data.results : []) {
         if (!Number.isInteger(movie?.id) || seen.has(movie.id)) continue;
+        // First occurrence wins, even when it is then dropped by the window check
+        seen.add(movie.id);
         // Strict inclusion: a Spanish date of this type inside the window, or nothing
         const date = movie.release_date;
         if (typeof date !== 'string' || !ISO_DATE.test(date) || date < from || date > to) continue;
-        seen.add(movie.id);
         releases.push(toRelease(movie, query.type));
       }
     }
