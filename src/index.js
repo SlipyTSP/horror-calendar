@@ -1,90 +1,100 @@
-// Punto de entrada principal: consulta TMDB y genera el archivo .ics
-
-// Cargamos las variables de entorno desde .env antes de cualquier otra cosa
-require('dotenv').config();
+// Entry point: queries TMDB, assigns calendars and writes every .ics plus releases.json
+// (docs/data-model.md §3 and §4). Exits non-zero on the conditions of §7 so that CI
+// never publishes empty or partial calendars over good ones.
 
 const fs = require('fs');
 const path = require('path');
-const { getHorrorReleases } = require('./tmdb');
-const { generateICS } = require('./calendar');
+const { fetchHorrorReleases } = require('./tmdb');
+const { assignCalendars, matchPlatform } = require('./platforms');
+const { generateCalendars } = require('./calendar');
 
-// Rutas donde se guardan los archivos generados
 const OUTPUT_DIR = path.join(__dirname, '..', 'output');
-const ICS_FILE = path.join(OUTPUT_DIR, 'horror.ics');
-const JSON_FILE = path.join(OUTPUT_DIR, 'releases.json');
+const SCHEMA_VERSION = 1;
+const TYPE_EMOJI = { theatrical: '🎬', digital: '📺' };
 
-async function main() {
-  console.log('🎬 Horror Calendar — Generador de calendario de estrenos de terror\n');
-
-  // Paso 1: Consultar TMDB para obtener los próximos estrenos de terror
-  console.log('Consultando TMDB...');
-  const releases = await getHorrorReleases();
-
-  if (releases.length === 0) {
-    console.log('No se encontraron estrenos de terror en los próximos 90 días.');
-    return;
-  }
-
-  console.log(`Se encontraron ${releases.length} películas de terror.\n`);
-
-  // Mostramos un resumen de las primeras películas encontradas
-  const preview = releases.slice(0, 5);
-  for (const movie of preview) {
-    const typeEmoji = { theatrical: '🎬', digital: '📺', physical: '💿' }[movie.releaseType] || '❓';
-    const providers = movie.providers.length > 0
-      ? ` (${movie.providers.join(', ')})`
-      : '';
-    console.log(`  ${typeEmoji} ${movie.releaseDate} — ${movie.title}${providers}`);
-  }
-  if (releases.length > 5) {
-    console.log(`  ... y ${releases.length - 5} más.\n`);
-  } else {
-    console.log();
-  }
-
-  // Paso 2: Generar el contenido del archivo .ics (filtra películas sin info útil)
-  console.log('Generando archivo .ics...');
-  const { ics, total, excluded } = generateICS(releases);
-
-  if (excluded > 0) {
-    console.log(`  Se excluyeron ${excluded} películas sin descripción ni plataformas.`);
-  }
-
-  // Paso 3: Generar releases.json con los datos de las películas
-  const releasesJson = JSON.stringify({
-    generated: new Date().toISOString(),
-    total: releases.length,
+/**
+ * Builds the releases.json document (§4).
+ * @returns {object}
+ */
+function buildReleasesDocument({ now, region, window, calendars, releases }) {
+  return {
+    schema: SCHEMA_VERSION,
+    generated: now.toISOString(),
+    region,
+    window,
+    calendars: calendars.map(({ slug, file, name, kind, count }) => ({ slug, file, name, kind, count })),
     releases,
-  }, null, 2);
-
-  // Paso 4: Asegurarnos de que el directorio output/ existe y guardar los archivos
-  fs.mkdirSync(OUTPUT_DIR, { recursive: true });
-  fs.writeFileSync(ICS_FILE, ics, 'utf-8');
-  fs.writeFileSync(JSON_FILE, releasesJson, 'utf-8');
-
-  console.log(`Archivo .ics guardado en: ${ICS_FILE}`);
-  console.log(`Archivo .json guardado en: ${JSON_FILE}`);
-  console.log(`\n✅ Calendario generado con ${total} eventos.`);
+  };
 }
 
-// Ejecutamos y capturamos cualquier error para mostrar un mensaje claro
-main().catch((error) => {
-  console.error('\n❌ Error al generar el calendario:\n');
+/**
+ * Runs the whole pipeline. Returns the exit code instead of exiting, for tests.
+ * @param {object} [options]
+ * @param {Function} [options.fetchImpl] - fetch implementation
+ * @param {Date} [options.now] - Build time and start of the window
+ * @param {object} [options.env] - Environment variables
+ * @param {string} [options.outDir] - Output directory
+ * @param {Function} [options.sleep] - Delay between retries
+ * @param {Function} [options.log] - Standard output (also ::warning:: annotations)
+ * @param {Function} [options.error] - Error output
+ * @returns {Promise<number>}
+ */
+async function main({
+  fetchImpl = globalThis.fetch,
+  now = new Date(),
+  env = process.env,
+  outDir = OUTPUT_DIR,
+  sleep,
+  log = console.log,
+  error = console.error,
+} = {}) {
+  const apiKey = String(env?.TMDB_API_KEY ?? '').trim();
+  const redact = (text) => (apiKey ? String(text).split(apiKey).join('***') : String(text));
 
-  // Errores conocidos con mensajes útiles
-  if (error.message.includes('TMDB_API_KEY')) {
-    console.error('  No se encontró la API key de TMDB.');
-    console.error('  Copia .env.example a .env y añade tu clave.');
-  } else if (error.message.includes('Error de TMDB')) {
-    console.error('  La API de TMDB respondió con un error:');
-    console.error(`  ${error.message}`);
-  } else if (error.code === 'ENOENT') {
-    console.error('  No se pudo escribir el archivo de salida.');
-    console.error(`  Verifica que tengas permisos en: ${OUTPUT_DIR}`);
-  } else {
-    console.error(`  ${error.message}`);
+  try {
+    log('🎬 Horror Calendar — Spanish horror releases\n');
+    log('Querying TMDB...');
+    const { releases: found, region, window } = await fetchHorrorReleases({ fetchImpl, now, env, sleep, log });
+    const releases = found.map(assignCalendars);
+    const calendars = generateCalendars(releases, { now });
+    const doc = buildReleasesDocument({ now, region, window, calendars, releases });
+
+    log(`\n${releases.length} releases in ${region} from ${window.from} to ${window.to}:`);
+    for (const r of releases) {
+      log(`  ${TYPE_EMOJI[r.type] ?? '•'} ${r.releaseDate} ${r.type.padEnd(10)} ${r.title} → ${r.calendars.join(', ')}`);
+    }
+
+    fs.mkdirSync(outDir, { recursive: true });
+    for (const calendar of calendars) {
+      fs.writeFileSync(path.join(outDir, calendar.file), calendar.ics, 'utf-8');
+    }
+    fs.writeFileSync(path.join(outDir, 'releases.json'), `${JSON.stringify(doc, null, 2)}\n`, 'utf-8');
+
+    log(`\nWrote ${calendars.length} calendars and releases.json to ${outDir}:`);
+    for (const c of calendars) log(`  ${c.file.padEnd(26)} ${String(c.count).padStart(3)}  ${c.name}`);
+
+    // Release notes that name no configured platform: the owner may need a new alias
+    for (const r of releases) {
+      if (r.releaseNote !== null && matchPlatform(r.releaseNote) === null) {
+        log(`::warning::Release note "${r.releaseNote}" of "${r.title}" (TMDB ${r.id}) matches no platform alias `
+          + 'in src/platforms.js.');
+      }
+    }
+
+    log('\n✅ Done.');
+    return 0;
+  } catch (err) {
+    error(`\n❌ Calendar generation failed: ${redact(err?.message || err)}`);
+    if (/TMDB_API_KEY/.test(String(err?.message))) error('   Copy .env.example to .env and set TMDB_API_KEY.');
+    return 1;
   }
+}
 
-  // Salimos con código de error para que CI/scripts detecten el fallo
-  process.exit(1);
-});
+if (require.main === module) {
+  require('dotenv').config({ path: path.join(__dirname, '..', '.env'), quiet: true });
+  main().then((code) => {
+    process.exitCode = code;
+  });
+}
+
+module.exports = { main, buildReleasesDocument, OUTPUT_DIR };
