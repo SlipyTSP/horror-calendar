@@ -26,7 +26,7 @@ planning folder; this file is what a coding session needs.
 | Phase | Branch | PR | Status |
 |---|---|---|---|
 | Package (this document) | `main` | — | merged |
-| F0 — Foundations | `feat/f0-foundations` | [#1](https://github.com/SlipyTSP/horror-calendar/pull/1) | in review |
+| F0 — Foundations | `feat/f0-foundations` | [#1](https://github.com/SlipyTSP/horror-calendar/pull/1) | merged |
 | F1 — Regional data core + calendars | `feat/f1-regional-data` | | pending (after F0) |
 | F2 — Web selector | `feat/f2-web-selector` | | pending (after F0, parallel to F1) |
 | F3 light — Visual polish | `feat/f3-visual-polish` | | optional (after F1 + F2) |
@@ -139,19 +139,28 @@ content.
 ## 2. F1 — Regional data core + multi-calendar (Node side)
 
 **Goal.** Replace the worldwide query with two Spanish regional queries, apply the strict
-inclusion rules, classify providers, and generate one calendar per platform plus the
-aggregates and the legacy alias, exactly as `docs/data-model.md` specifies.
+inclusion rules, classify providers, read the announced platform from the Spanish digital
+release note, and generate one calendar per platform plus the aggregates and the legacy
+alias, exactly as `docs/data-model.md` specifies.
+
+**Input from the 2026-10-23 capture** (`tests/fixtures/tmdb/`, commit `8f6f1c5`): 13
+theatrical and 4 digital releases in 90 days, `total_pages = 1` for both queries, and
+`watch/providers` empty in ES for every upcoming release. A direct look at
+`release_dates` showed the platform in the type-4 note for 2 of the 4 digital releases
+(`1507696` → `Prime Video`, `1702511` → `Netflix`; `1393171` and `1739309` have empty
+notes). That is why the contract was amended the same day (`releaseNote`, union rule).
 
 **Branch.** `feat/f1-regional-data`
 
 **Owns.** `src/**` (including new `src/platforms.js`), `tests/unit/**`,
 `tests/fixtures/tmdb/**` (read; may add hand-written fixtures for edge cases in a
 clearly named `tests/fixtures/tmdb/synthetic/` folder), `scripts/summary.js`,
-`.env.example`, `README.md`, `CLAUDE.md` (architecture, TMDB and ICS sections),
-`docs/phases.md` (status row only).
+`scripts/capture-fixtures.js`, `.env.example`, `README.md`, `CLAUDE.md` (architecture,
+TMDB and ICS sections), `docs/phases.md` (status row only).
 
-**Must not touch.** `site/**`, `.github/workflows/ci.yml`, `scripts/capture-fixtures.js`,
-`docs/data-model.md`, `tests/fixtures/releases.sample.json`, `tests/support/mock-fetch.js`
+**Must not touch.** `site/**`, `.github/workflows/ci.yml`, `docs/data-model.md`,
+`tests/fixtures/releases.sample.json`, the captured files directly under
+`tests/fixtures/tmdb/` (only the owner re-captures them), `tests/support/mock-fetch.js`
 (if it needs a feature, add a new helper file instead).
 
 **Authorised exceptions.** `.github/workflows/update-calendar.yml` only if the copy step
@@ -163,28 +172,41 @@ from F0 turns out not to pick up the new files (it should, it is a glob).
    process.env })` returns release objects (§2 of the data model) **without** `calendars`.
    Two discover queries (§7), deduplication inside each query, both types kept, Spanish
    regional date as `releaseDate`, sort in code, pagination up to `MAX_PAGES`,
-   `watch/providers` (ES) for digital releases only with `flatrate` vs `rentBuy`, English
+   `watch/providers` (ES) for digital releases only with `flatrate` vs `rentBuy`,
+   `release_dates` for digital releases only to fill `releaseNote` (§7), English
    overview fallback, concurrency pool of 5, retries with backoff on 429/5xx honouring
    `Retry-After`, failure counter with a final console report, non-zero exit conditions
-   (§7). Remove the ES→GB→FR→DE→US cascade, the synopsis-based inclusion and the
-   `release_dates` request (the type comes from the query).
+   (§7), `::warning::` lines for a pagination cut and for release notes that match no
+   alias. Remove the ES→GB→FR→DE→US cascade and the synopsis-based inclusion; the
+   release type comes from the query, never from `release_dates`.
 2. `src/platforms.js`: `PLATFORMS` (§5), `assignCalendars(release)` → copy with
-   `calendars` set, `calendarDefinitions()` → the canonical ordered list of
+   `calendars` set from the union of `releaseNote` and `providers.flatrate`,
+   `matchPlatform(name)` → slug or `null` (shared by both sources), `calendarDefinitions()` → the canonical ordered list of
    `{ slug, file, name, kind }` for cines, platforms, digital, all.
 3. `src/calendar.js`: `generateCalendars(releases, { now })` → array of
    `{ slug, file, name, kind, count, ics }` in canonical order; UID
    `tmdb-<id>-<type>@horror-calendar`; `X-WR-CALNAME` per calendar; DESCRIPTION rules
-   (§6); remove `shouldInclude` (filtering lives in the data layer only); keep folding,
+   (§6, including the `Estreno en:` line for note-only platforms); remove
+   `shouldInclude` (filtering lives in the data layer only); keep folding,
    escaping and CRLF behaviour. Empty calendars are valid VCALENDAR documents.
 4. `src/index.js`: orchestrate `getHorrorReleases` → `assignCalendars` →
    `generateCalendars` → write every `.ics` to `output/` and `output/releases.json` (§4,
    `schema: 1`, canonical `calendars` metadata with counts). Console preview: one line per
    release with date, type, title and calendars. Exit codes as in §7.
 5. `scripts/summary.js`: show the `calendars` column and the per-calendar counts.
+5b. `scripts/capture-fixtures.js`: also capture `GET /movie/{id}/release_dates` for the
+   same ids as `watch/providers`, with the same naming, manifest and no-retry rules, and
+   print the distinct type-4 notes seen in the region. Update its test. The owner
+   re-runs the capture after the merge.
 6. Tests (fixtures only, no network): query parameters built exactly as §7 (assert on the
    recorded URLs); regional date used; dedup inside a query; same id in both queries gives
    two releases; strict inclusion; provider classification; alias matching
-   (case-insensitive, `Max` → `hbo-max`); pool + retry on 429 with `Retry-After`; failure
+   (case-insensitive, `Max` → `hbo-max`); `releaseNote` extraction (region entry, type 4,
+   date match, fallback, empty → `null`, other types ignored); note-only membership
+   (`Prime Video` → `prime-video` with empty `flatrate`); union without duplicates;
+   unmatched note reported; `release_dates` failure counted and leaving `releaseNote`
+   `null`; pagination cut produces the `::warning::` line; pool + retry on 429 with
+   `Retry-After`; failure
    threshold → non-zero; empty discover → non-zero; `assignCalendars` and
    `generateCalendars` fed with `tests/fixtures/releases.sample.json` reproduce its
    `calendars` metadata and counts exactly; UID stable when a release date changes;
@@ -209,6 +231,12 @@ from F0 turns out not to pick up the new files (it should, it is a glob).
 - B7. `horror.ics` keeps its file name and remains the full aggregate.
 - B8. `MAX_PAGES`, `WINDOW_DAYS` and any other numeric input are parsed defensively
   (invalid → default with a warning); TMDB fields are treated as optional (`null`-safe).
+- B9. A digital release whose Spanish type-4 note names a configured platform lands in
+  that platform's calendar even when `watch/providers` is empty (test with synthetic
+  fixtures copied from the values observed on 2026-10-23); in the dry run, `Apocalipsis Z:
+  Nuevo mundo` appears under `prime-video` and `The Class: Online` under `netflix` while
+  they are inside the window.
+- B10. A pagination cut is never silent (`::warning::` annotation, test).
 
 **Out of scope.** Anything under `site/`, posters, redesign.
 
