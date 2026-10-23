@@ -25,7 +25,10 @@ function mergedFixturesDir() {
   const captured = new Set(jsonFiles(DEFAULT_FIXTURES_DIR));
   for (const name of captured) fs.copyFileSync(path.join(DEFAULT_FIXTURES_DIR, name), path.join(dir, name));
   for (const name of jsonFiles(SYNTHETIC_DIR)) {
-    if (captured.has(name)) throw new Error(`fixture-fetch: synthetic/${name} collides with a captured fixture`);
+    if (captured.has(name)) {
+      throw new Error(`fixture-fetch: synthetic/${name} collides with a captured fixture; `
+        + 'the capture now covers it, so delete the synthetic copy and update the tests that used it');
+    }
     fs.copyFileSync(path.join(SYNTHETIC_DIR, name), path.join(dir, name));
   }
   mergedDir = dir;
