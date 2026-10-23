@@ -124,7 +124,15 @@ function createClient({ fetchImpl, apiKey, sleep }) {
 
       const status = response?.status;
       const retryable = response === null || status === 429 || status >= 500;
-      if (response) failure = `HTTP ${status}`;
+      if (response) {
+        failure = `HTTP ${status}`;
+        // Release the unread body before retrying or failing (some mocks have no body)
+        try {
+          await response.body?.cancel?.();
+        } catch {
+          // Nothing to release
+        }
+      }
       if (!retryable || attempt >= MAX_RETRIES) {
         const tries = attempt + 1;
         throw new TmdbError(`TMDB ${label} failed: ${failure} after ${tries} attempt${tries === 1 ? '' : 's'}`);
