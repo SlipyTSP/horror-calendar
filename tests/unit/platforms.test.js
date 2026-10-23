@@ -105,3 +105,9 @@ test('calendarDefinitions follows the canonical order and matches the sample met
   assert.equal(defs.at(-2).slug, 'digital');
   assert.deepEqual(defs.at(-1), { slug: 'all', file: 'horror.ics', name: 'Todo', kind: 'legacy' });
 });
+
+test('assignCalendars places calendars right after type, as in the data model', () => {
+  const out = assignCalendars({ id: 1, title: 'T', releaseDate: '2026-11-01', type: 'digital', providers: { flatrate: [], rentBuy: [] }, releaseNote: null });
+  assert.deepEqual(Object.keys(out), ['id', 'title', 'releaseDate', 'type', 'calendars', 'providers', 'releaseNote']);
+  for (const r of SAMPLE.releases) assert.deepEqual(Object.keys(assignCalendars(r)), Object.keys(r));
+});

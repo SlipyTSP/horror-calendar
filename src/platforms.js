@@ -37,12 +37,24 @@ function matchPlatform(name) {
  * @returns {object}
  */
 function assignCalendars(release) {
-  if (release?.type === 'theatrical') return { ...release, calendars: ['cines'] };
+  if (release?.type === 'theatrical') return withCalendars(release, ['cines']);
 
   const flatrate = Array.isArray(release?.providers?.flatrate) ? release.providers.flatrate : [];
   const matched = new Set([release?.releaseNote, ...flatrate].map(matchPlatform).filter(Boolean));
   const slugs = PLATFORMS.map((p) => p.slug).filter((slug) => matched.has(slug));
-  return { ...release, calendars: ['digital', ...slugs] };
+  return withCalendars(release, ['digital', ...slugs]);
+}
+
+// Copy with `calendars` right after `type`, the field order of data-model §2
+function withCalendars(release, calendars) {
+  const copy = {};
+  for (const [key, value] of Object.entries(release ?? {})) {
+    if (key === 'calendars') continue;
+    copy[key] = value;
+    if (key === 'type') copy.calendars = calendars;
+  }
+  if (!('calendars' in copy)) copy.calendars = calendars;
+  return copy;
 }
 
 /**
