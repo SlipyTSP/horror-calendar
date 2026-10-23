@@ -13,16 +13,20 @@ const RELEASE_EMOJI = {
 };
 
 /**
- * Escapes text values (RFC 5545 §3.3.11): backslash, semicolon, comma and newlines.
+ * Escapes text values (RFC 5545 §3.3.11): backslash, semicolon, comma and newlines
+ * (CRLF, lone CR and LF all become an escaped "\n"). Other control characters, which
+ * RFC 5545 forbids in TEXT values, are removed.
  * @param {string} text
  * @returns {string}
  */
 function escapeText(text) {
   return String(text ?? '')
+    .replace(/\r\n|\r|\n/g, '\n')
+    .replace(/[\x00-\x08\x0B-\x1F\x7F]/g, '')
     .replace(/\\/g, '\\\\')
     .replace(/;/g, '\\;')
     .replace(/,/g, '\\,')
-    .replace(/\r?\n/g, '\\n');
+    .replace(/\n/g, '\\n');
 }
 
 /** YYYY-MM-DD → YYYYMMDD (VALUE=DATE). */

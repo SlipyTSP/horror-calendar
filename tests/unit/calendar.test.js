@@ -51,6 +51,18 @@ test('escapeText escapes backslashes first, so escapes are not doubled', () => {
   assert.equal(escapeText('Sin escapes: ñ á 🎃'), 'Sin escapes: ñ á 🎃');
 });
 
+test('escapeText normalises CR, LF and CRLF and drops other control characters', () => {
+  assert.equal(escapeText('a\rb\nc\r\nd'), 'a\\nb\\nc\\nd');
+  assert.equal(escapeText('bell\u0007 nul\u0000 esc\u001B del\u007F tab\tok'), 'bell nul esc del tab\tok');
+});
+
+test('a synopsis with a lone CR and a control character still gives a valid .ics', () => {
+  const ics = generateICS([release({ overview: 'Primera línea\rsegunda\u0007 línea; con, signos.' })], { name: 'Cines', now: NOW });
+  assertValidICS(ics);
+  assert.doesNotMatch(ics, /\u0007/);
+  assert.ok(unfoldedLines(ics).some((l) => l.startsWith('DESCRIPTION:Primera línea\\nsegunda línea\\; con\\, signos.')));
+});
+
 test('foldLine leaves lines of up to 75 octets untouched', () => {
   const exact = 'X'.repeat(75);
   assert.equal(foldLine(exact), exact);
