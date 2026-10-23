@@ -18,14 +18,20 @@ corrección está en `docs/phases.md`; el modelo de datos objetivo, en `docs/dat
 ## Comandos
 
 ```bash
-npm ci             # Instalar dependencias (usa el lockfile)
-npm start          # Ejecuta src/index.js — consulta TMDB y escribe output/
-npm test           # Test runner nativo de Node (node --test). Hasta F0 no hay tests.
+npm ci                              # Instalar dependencias (usa el lockfile)
+npm start                           # Ejecuta src/index.js — consulta TMDB y escribe output/
+npm test                            # Test runner nativo (node --test): tests/unit/*.test.js
+node scripts/summary.js [archivo]   # Tabla Markdown de output/releases.json (o del archivo dado)
+node scripts/capture-fixtures.js    # Captura respuestas reales de TMDB en tests/fixtures/tmdb/
+                                    # (necesita key; lo ejecuta el propietario, nunca CI)
 ```
 
 La API key se lee de `.env` (ver `.env.example`). En CI va por `secrets.TMDB_API_KEY`.
 
-## Arquitectura actual (antes de F0)
+Vista previa local de la web: `cp tests/fixtures/releases.sample.json site/releases.json`
+y cualquier servidor estático sobre `site/` (las copias locales están en `.gitignore`).
+
+## Arquitectura
 
 ```
 src/
@@ -33,19 +39,34 @@ src/
                    output/releases.json
   tmdb.js        — Cliente TMDB: discover/movie (género 27) + watch/providers +
                    release_dates + sinopsis EN de respaldo
-  calendar.js    — Generador .ics (RFC 5545): folding a 75 octetos, escape, CRLF
+  calendar.js    — Generador .ics (RFC 5545): folding a 75 octetos, escape, CRLF.
+                   Exporta generateICS y, para tests, escapeText, foldLine,
+                   generateUID y buildDescription
 scripts/
-  generate.js    — Vacío, sin uso (se elimina en F0)
-output/
-  index.html     — Web pública (se mueve a site/ en F0). El resto de output/ se genera.
+  summary.js     — Tabla Markdown de releases.json (formato actual y el de
+                   docs/data-model.md §4); CI la vuelca en el resumen del job
+  capture-fixtures.js — Captura única de respuestas TMDB (§7) a tests/fixtures/tmdb/
+                   con manifest.json; sin reintentos, nunca escribe la key
+site/
+  index.html     — Web pública. El deploy copia site/ entero a GitHub Pages
+output/          — Generado por npm start (.ics + releases.json), ignorado por git
 docs/
   data-model.md  — Contrato de datos entre la capa Node y la web (solo lectura)
   phases.md      — Plan de fases, reparto de ficheros y criterios de aceptación
   prototype-selector.html — Maqueta de referencia del selector de calendarios (F2)
 tests/
+  unit/*.test.js — Tests (node --test), sin red
+  support/       — Helpers, no son tests: mock-fetch.js (fetch falso que mapea URL
+                   sin api_key → fixture, graba llamadas, respuestas en cola) y
+                   fixture-name.js (nombre determinista de fixture por petición)
   fixtures/releases.sample.json — Ejemplo completo y válido de releases.json (contrato)
+  fixtures/tmdb/ — Respuestas TMDB capturadas + manifest.json
 .github/workflows/
-  update-calendar.yml — Cron lunes 06:00 UTC: npm start y deploy a GitHub Pages
+  ci.yml         — PR, push a main y manual: job test (npm test) y job dry-run
+                   (npm start real, tabla en el resumen, artefacto output/ 14 días)
+  update-calendar.yml — Cron lunes 06:00 UTC: npm test, npm start, copia site/ +
+                   output/*.ics + output/releases.json y deploy a GitHub Pages;
+                   job keepalive que rehabilita el workflow vía API (sin commits)
 ```
 
 Cada fase que cambie la estructura actualiza esta sección en el mismo PR.
