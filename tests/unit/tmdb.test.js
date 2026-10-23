@@ -498,3 +498,9 @@ test('dedup marks an id as seen before the window check: an out-of-window first 
     [1, 'digital', '2026-12-01'],
   ]);
 });
+
+test('escapeCommand escapes %, CR and LF for workflow commands', () => {
+  const { escapeCommand } = require('../../src/tmdb');
+  assert.equal(escapeCommand('a%b\r\nc\nd\re'), 'a%25b%0D%0Ac%0Ad%0De');
+  assert.equal(escapeCommand('plain: text'), 'plain: text');
+});
