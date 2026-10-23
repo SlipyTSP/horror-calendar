@@ -1,0 +1,66 @@
+{
+  "id": 0,
+  "results": {
+    "ES": {
+      "link": "https://www.themoviedb.org/movie/0/watch?locale=ES",
+      "flatrate": [
+        {
+          "provider_id": 8,
+          "provider_name": "Netflix"
+        },
+        {
+          "provider_id": 63,
+          "provider_name": "Filmin"
+        },
+        {
+          "provider_id": 8,
+          "provider_name": "Netflix"
+        }
+      ],
+      "ads": [
+        {
+          "provider_id": 1796,
+          "provider_name": "Netflix basic with Ads"
+        },
+        {
+          "provider_id": 999,
+          "provider_name": "Pluto TV"
+        }
+      ],
+      "free": [
+        {
+          "provider_id": 998,
+          "provider_name": "RTVE Play"
+        }
+      ],
+      "rent": [
+        {
+          "provider_id": 2,
+          "provider_name": "Apple TV"
+        },
+        {
+          "provider_id": 35,
+          "provider_name": "Rakuten TV"
+        }
+      ],
+      "buy": [
+        {
+          "provider_id": 2,
+          "provider_name": "Apple TV"
+        },
+        {
+          "provider_id": 3,
+          "provider_name": "Google Play Movies"
+        }
+      ]
+    },
+    "US": {
+      "flatrate": [
+        {
+          "provider_id": 15,
+          "provider_name": "Hulu"
+        }
+      ]
+    }
+  }
+}

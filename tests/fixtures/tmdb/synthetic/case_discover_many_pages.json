@@ -1,0 +1,15 @@
+{
+  "page": 1,
+  "total_pages": 12,
+  "total_results": 240,
+  "results": [
+    {
+      "id": 910001,
+      "title": "Página Uno",
+      "original_title": "Page One",
+      "release_date": "2026-11-10",
+      "overview": "Primera página.",
+      "poster_path": null
+    }
+  ]
+}
