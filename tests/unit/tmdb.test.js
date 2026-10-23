@@ -485,3 +485,16 @@ test('TMDB_REGION is upper-cased: "es" queries region=ES and reads results.ES an
   assert.deepEqual(releases[0].providers.flatrate, ['Netflix', 'Filmin', 'Netflix basic with Ads']);
   assert.equal(releases[0].releaseNote, 'Netflix');
 });
+
+test('dedup marks an id as seen before the window check: an out-of-window first occurrence wins', async () => {
+  const routes = smallRoutes({
+    theatrical: [movie(1, '2027-02-01'), movie(2, '2026-11-02'), movie(1, '2026-11-05')],
+    digital: [movie(1, '2026-12-01')],
+  });
+  const { releases } = await run(createFixtureFetch({ routes }));
+
+  assert.deepEqual(releases.map((r) => [r.id, r.type, r.releaseDate]), [
+    [2, 'theatrical', '2026-11-02'],
+    [1, 'digital', '2026-12-01'],
+  ]);
+});
