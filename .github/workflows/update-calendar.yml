@@ -1,5 +1,5 @@
 # Workflow de GitHub Actions para Horror Calendar
-# Genera el archivo .ics con estrenos de terror y lo publica en GitHub Pages
+# Genera los .ics con estrenos de terror y los publica en GitHub Pages junto a la web
 
 name: Actualizar Calendario de Terror
 
@@ -34,11 +34,11 @@ jobs:
     steps:
       # Paso 1: Clonar el repositorio
       - name: Checkout del repositorio
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       # Paso 2: Configurar Node.js 24
       - name: Configurar Node.js 24
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version: 24
           cache: npm
@@ -47,7 +47,11 @@ jobs:
       - name: Instalar dependencias
         run: npm ci
 
-      # Paso 4: Ejecutar el script para generar el .ics
+      # Paso 4: Ejecutar los tests antes de generar nada
+      - name: Ejecutar tests
+        run: npm test
+
+      # Paso 5: Ejecutar el script para generar los .ics
       # La API key se lee desde los secretos del repositorio (Settings > Secrets)
       - name: Generar calendario .ics
         run: npm start
@@ -56,22 +60,36 @@ jobs:
           TMDB_LANGUAGE: es-ES
           TMDB_REGION: ES
 
-      # Paso 5: Preparar los archivos para GitHub Pages
-      # Copiamos el .ics, releases.json y el index.html al directorio de deploy
+      # Paso 6: Preparar los archivos para GitHub Pages
+      # Copiamos la web (site/) y todos los .ics generados (glob) más releases.json
       - name: Preparar directorio para Pages
         run: |
           mkdir -p _site
-          cp output/horror.ics _site/horror.ics
+          cp -r site/. _site/
+          cp output/*.ics _site/
           cp output/releases.json _site/releases.json
-          cp output/index.html _site/index.html
 
-      # Paso 6: Subir los archivos como artefacto de Pages
+      # Paso 7: Subir los archivos como artefacto de Pages
       - name: Subir artefacto de Pages
-        uses: actions/upload-pages-artifact@v3
+        uses: actions/upload-pages-artifact@v5
         with:
           path: _site
 
-      # Paso 7: Desplegar en GitHub Pages
+      # Paso 8: Desplegar en GitHub Pages
       - name: Desplegar en GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5
+
+  # Evita que GitHub desactive el cron tras 60 días sin commits en el repositorio.
+  # Equivale al modo API de gautamkrishnar/keepalive-workflow (sin commits): vuelve a
+  # habilitar este workflow con la API REST de Actions. Va en un job aparte para que
+  # funcione aunque falle la generación, y con el permiso mínimo que necesita.
+  keepalive:
+    runs-on: ubuntu-latest
+    permissions:
+      actions: write
+    steps:
+      - name: Mantener activo el cron
+        run: gh api --method PUT "repos/${GITHUB_REPOSITORY}/actions/workflows/update-calendar.yml/enable"
+        env:
+          GH_TOKEN: ${{ github.token }}
