@@ -1,0 +1,142 @@
+{
+  "capturedAt": "2026-10-23T20:44:30.031Z",
+  "window": {
+    "from": "2026-10-23",
+    "to": "2027-01-21",
+    "days": 90
+  },
+  "language": "es-ES",
+  "region": "ES",
+  "queries": {
+    "theatrical": {
+      "with_release_type": "3|2",
+      "total_results": 13,
+      "total_pages": 1,
+      "pages": [
+        1
+      ]
+    },
+    "digital": {
+      "with_release_type": "4",
+      "total_results": 4,
+      "total_pages": 1,
+      "pages": [
+        1
+      ]
+    }
+  },
+  "requests": [
+    {
+      "file": "discover_movie__language=es-ES,page=1,region=ES,release_date.gte=2026-10-23,release_date.lte=2027-01-21,with_genres=27,with_release_type=3~7C2.json",
+      "path": "/discover/movie",
+      "params": {
+        "language": "es-ES",
+        "region": "ES",
+        "with_genres": "27",
+        "release_date.gte": "2026-10-23",
+        "release_date.lte": "2027-01-21",
+        "with_release_type": "3|2",
+        "page": 1
+      },
+      "status": 200
+    },
+    {
+      "file": "discover_movie__language=es-ES,page=1,region=ES,release_date.gte=2026-10-23,release_date.lte=2027-01-21,with_genres=27,with_release_type=4.json",
+      "path": "/discover/movie",
+      "params": {
+        "language": "es-ES",
+        "region": "ES",
+        "with_genres": "27",
+        "release_date.gte": "2026-10-23",
+        "release_date.lte": "2027-01-21",
+        "with_release_type": "4",
+        "page": 1
+      },
+      "status": 200
+    },
+    {
+      "file": "movie_1400940_watch_providers.json",
+      "path": "/movie/1400940/watch/providers",
+      "params": {},
+      "status": 200
+    },
+    {
+      "file": "movie_1232569_watch_providers.json",
+      "path": "/movie/1232569/watch/providers",
+      "params": {},
+      "status": 200
+    },
+    {
+      "file": "movie_1284046_watch_providers.json",
+      "path": "/movie/1284046/watch/providers",
+      "params": {},
+      "status": 200
+    },
+    {
+      "file": "movie_1381071_watch_providers.json",
+      "path": "/movie/1381071/watch/providers",
+      "params": {},
+      "status": 200
+    },
+    {
+      "file": "movie_1376400_watch_providers.json",
+      "path": "/movie/1376400/watch/providers",
+      "params": {},
+      "status": 200
+    },
+    {
+      "file": "movie_1564614_watch_providers.json",
+      "path": "/movie/1564614/watch/providers",
+      "params": {},
+      "status": 200
+    },
+    {
+      "file": "movie_1507696_watch_providers.json",
+      "path": "/movie/1507696/watch/providers",
+      "params": {},
+      "status": 200
+    },
+    {
+      "file": "movie_1393171_watch_providers.json",
+      "path": "/movie/1393171/watch/providers",
+      "params": {},
+      "status": 200
+    },
+    {
+      "file": "movie_1702511_watch_providers.json",
+      "path": "/movie/1702511/watch/providers",
+      "params": {},
+      "status": 200
+    },
+    {
+      "file": "movie_1739309_watch_providers.json",
+      "path": "/movie/1739309/watch/providers",
+      "params": {},
+      "status": 200
+    },
+    {
+      "file": "movie_1400940__language=en-US.json",
+      "path": "/movie/1400940",
+      "params": {
+        "language": "en-US"
+      },
+      "status": 200
+    },
+    {
+      "file": "movie_1232569__language=en-US.json",
+      "path": "/movie/1232569",
+      "params": {
+        "language": "en-US"
+      },
+      "status": 200
+    },
+    {
+      "file": "movie_1284046__language=en-US.json",
+      "path": "/movie/1284046",
+      "params": {
+        "language": "en-US"
+      },
+      "status": 200
+    }
+  ]
+}
