@@ -61,7 +61,13 @@ scripts/
                    manifest.json; sin reintentos, nunca escribe la key; imprime
                    provider_name y notas tipo 4 vistas en la región
 site/
-  index.html     — Web pública. El deploy copia site/ entero a GitHub Pages
+  index.html     — Web pública: marcado e i18n ES/EN vía data-i18n. El deploy copia
+                   site/ entero a GitHub Pages
+  styles.css     — Estilos de la página
+  selector.js    — Selector de calendarios (ES2020, sin build): lee releases.json con
+                   URL relativa, persiste la selección en localStorage y pinta
+                   suscripciones y lista filtrada. La lógica pura se exporta para
+                   node --test (guarda module.exports); el DOM solo si existe document
 output/          — Generado por npm start: horror-cines.ics, horror-<plataforma>.ics,
                    horror-digital.ics, horror.ics y releases.json; ignorado por git
 docs/
@@ -69,7 +75,8 @@ docs/
   phases.md      — Plan de fases, reparto de ficheros y criterios de aceptación
   prototype-selector.html — Maqueta de referencia del selector de calendarios (F2)
 tests/
-  unit/*.test.js — Tests (node --test), sin red
+  unit/*.test.js — Tests (node --test), sin red. site-*.test.js prueban la web sin
+                   DOM importando site/selector.js en Node
   support/       — Helpers, no son tests: mock-fetch.js (fetch falso que mapea URL
                    sin api_key → fixture, graba llamadas, respuestas en cola),
                    fixture-name.js (nombre determinista de fixture por petición),
