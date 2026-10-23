@@ -19,6 +19,20 @@ function providers(id, es) {
   return { body: { id, results: { ES: es, US: { flatrate: [{ provider_name: 'US Only' }] } } } };
 }
 
+function releaseDates(id) {
+  const date = (type, note) => ({ type, note, release_date: '2026-11-10T00:00:00.000Z' });
+  const notes = { 1: ' Prime Video ', 2: 'Netflix', 3: '', 4: 'Prime Video' };
+  return {
+    body: {
+      id,
+      results: [
+        { iso_3166_1: 'US', release_dates: [date(4, 'US Note')] },
+        { iso_3166_1: 'ES', release_dates: [date(1, 'Festival de Sitges'), ...(id in notes ? [date(4, notes[id])] : [])] },
+      ],
+    },
+  };
+}
+
 // theatrical: two pages (ids 1-7); digital: one page (ids 7-8, 7 repeated across queries)
 function routes() {
   return {
@@ -29,6 +43,7 @@ function routes() {
       `/movie/${id}/watch/providers`,
       providers(id, id % 2 ? { flatrate: [{ provider_name: 'Netflix' }] } : { rent: [{ provider_name: 'Apple TV' }], buy: [{ provider_name: 'Apple TV' }] }),
     ])),
+    ...Object.fromEntries([1, 2, 3, 4, 5, 6, 7, 8].map((id) => [`/movie/${id}/release_dates`, releaseDates(id)])),
     ...Object.fromEntries([1, 2, 3].map((id) => [`/movie/${id}?language=en-US`, { body: { id, overview: `English ${id}` } }])),
   };
 }
@@ -73,7 +88,7 @@ test('with a key it performs the expected requests and writes fixtures and manif
     mockFetch.keyFor(discoverKey('3|2', 2)),
     mockFetch.keyFor(discoverKey('4', 1)),
     // first six of each query, deduplicated: 1-6 from theatrical, 7-8 from digital
-    ...[1, 2, 3, 4, 5, 6, 7, 8].map((id) => `/movie/${id}/watch/providers`),
+    ...[1, 2, 3, 4, 5, 6, 7, 8].flatMap((id) => [`/movie/${id}/watch/providers`, `/movie/${id}/release_dates`]),
     ...[1, 2, 3].map((id) => `/movie/${id}?language=en-US`),
   ]);
   for (const call of mockFetch.calls) {
@@ -90,6 +105,9 @@ test('with a key it performs the expected requests and writes fixtures and manif
   // Bodies are stored as received
   const providersFile = path.join(outDir, 'movie_1_watch_providers.json');
   assert.equal(fs.readFileSync(providersFile, 'utf-8'), JSON.stringify(routes()['/movie/1/watch/providers'].body));
+  const datesFile = path.join(outDir, 'movie_1_release_dates.json');
+  assert.equal(fs.readFileSync(datesFile, 'utf-8'), JSON.stringify(routes()['/movie/1/release_dates'].body));
+  assert.ok(written.includes('movie_8_release_dates.json'));
 
   const manifest = JSON.parse(fs.readFileSync(path.join(outDir, 'manifest.json'), 'utf-8'));
   assert.equal(manifest.capturedAt, '2026-11-02T06:03:00.000Z');
@@ -114,6 +132,20 @@ test('with a key it performs the expected requests and writes fixtures and manif
   assert.match(output, /- Apple TV \(buy, rent\)/);
   assert.match(output, /- Netflix \(flatrate\)/);
   assert.doesNotMatch(output, /US Only/, 'only region ES providers are listed');
+
+  // Distinct type-4 notes in region ES: trimmed, other types and regions ignored
+  assert.match(output, /Distinct type-4 release notes in region ES \(2\):\n {2}- Netflix \(1\)\n {2}- Prime Video \(2\)\n {2}\(empty note: 1\)/);
+  assert.doesNotMatch(output, /US Note|Sitges/);
+});
+
+test('a release_dates failure stops the capture like any other request', async () => {
+  const outDir = tmpOut();
+  const mockFetch = createMockFetch({ routes: { ...routes(), '/movie/5/release_dates': { status: 404, body: { status_code: 34 } } } });
+  const error = sink();
+
+  assert.equal(await capture({ fetchImpl: mockFetch, env: ENV, outDir, now: NOW, log: sink(), error }), 1);
+  assert.equal(fs.existsSync(outDir), false);
+  assert.match(error.lines.join('\n'), /movie\/5\/release_dates returned HTTP 404/);
 });
 
 test('the API key never appears in file names, contents or logs', async () => {

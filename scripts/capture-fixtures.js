@@ -4,7 +4,8 @@
 //
 // Requests (docs/data-model.md §7), sequential and without retries:
 //   - discover/movie for the theatrical (3|2) and digital (4) queries, pages 1 and 2
-//   - movie/{id}/watch/providers for up to 12 ids (first six of each query)
+//   - movie/{id}/watch/providers and movie/{id}/release_dates for up to 12 ids (first
+//     six of each query)
 //   - movie/{id}?language=en-US for the first three of those ids
 // Bodies are written as received to tests/fixtures/tmdb/<fixtureName>.json, plus
 // manifest.json. Nothing is written unless every request succeeds. The API key never
@@ -20,6 +21,7 @@ const HORROR_GENRE_ID = '27';
 const PAGES = [1, 2];
 const PROVIDER_IDS_PER_QUERY = 6;
 const ENGLISH_DETAILS = 3;
+const DIGITAL_RELEASE_TYPE = 4;
 const DEFAULT_WINDOW_DAYS = 90;
 
 const QUERIES = [
@@ -125,6 +127,7 @@ async function capture({
 
   const queries = {};
   const providerNames = new Map(); // provider_name -> Set of categories
+  const releaseNotes = new Map(); // trimmed type-4 note in the region -> number of dates
 
   try {
     for (const query of QUERIES) {
@@ -181,6 +184,14 @@ async function capture({
           }
         }
       }
+
+      const dates = await get(`/movie/${id}/release_dates`);
+      const entry = (Array.isArray(dates?.results) ? dates.results : []).find((r) => r?.iso_3166_1 === region);
+      for (const date of Array.isArray(entry?.release_dates) ? entry.release_dates : []) {
+        if (Number(date?.type) !== DIGITAL_RELEASE_TYPE) continue;
+        const note = typeof date?.note === 'string' ? date.note.trim() : '';
+        releaseNotes.set(note, (releaseNotes.get(note) ?? 0) + 1);
+      }
     }
 
     for (const id of ids.slice(0, ENGLISH_DETAILS)) {
@@ -227,6 +238,10 @@ async function capture({
   const names = [...providerNames.keys()].sort((a, b) => a.localeCompare(b));
   say(`Distinct provider_name values in region ${region} (${names.length}):`);
   for (const name of names) say(`  - ${name} (${[...providerNames.get(name)].sort().join(', ')})`);
+  const notes = [...releaseNotes.keys()].filter(Boolean).sort((a, b) => a.localeCompare(b));
+  say(`Distinct type-4 release notes in region ${region} (${notes.length}):`);
+  for (const note of notes) say(`  - ${note} (${releaseNotes.get(note)})`);
+  if (releaseNotes.has('')) say(`  (empty note: ${releaseNotes.get('')})`);
   return 0;
 }
 
