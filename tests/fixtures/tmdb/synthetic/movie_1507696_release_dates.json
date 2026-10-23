@@ -1,0 +1,26 @@
+{
+  "id": 1507696,
+  "results": [
+    {
+      "iso_3166_1": "ES",
+      "release_dates": [
+        {
+          "certification": "",
+          "descriptors": [],
+          "iso_639_1": "",
+          "note": "Festival de Sitges",
+          "release_date": "2026-10-03T00:00:00.000Z",
+          "type": 1
+        },
+        {
+          "certification": "",
+          "descriptors": [],
+          "iso_639_1": "",
+          "note": "Prime Video",
+          "release_date": "2026-10-30T00:00:00.000Z",
+          "type": 4
+        }
+      ]
+    }
+  ]
+}
