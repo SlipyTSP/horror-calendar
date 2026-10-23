@@ -1,283 +1,185 @@
-// Módulo para generar archivos .ics (RFC 5545) a partir de datos de películas
-// Sin dependencias externas — construimos el formato manualmente
+// iCalendar (RFC 5545) generation: one VCALENDAR per calendar of docs/data-model.md §3,
+// with the rules of §6. No dependencies — the format is built by hand.
 
-const crypto = require('crypto');
+const { PLATFORMS, assignCalendars, calendarDefinitions } = require('./platforms');
 
-// Nombre del calendario que se muestra en iOS/Google Calendar
-const CALENDAR_NAME = '🎬 Estrenos de Terror';
+const PRODID = '-//Horror Calendar//horror-calendar//ES';
+const CALENDAR_NAME_PREFIX = 'Terror — ';
 
-// Emojis para cada tipo de estreno — se usan en SUMMARY y DESCRIPTION
+// Type marker appended to SUMMARY
 const RELEASE_EMOJI = {
   theatrical: '🎬',
   digital: '📺',
-  physical: '💿',
 };
 
 /**
- * Escapa caracteres especiales según RFC 5545 (sección 3.3.11)
- * Los valores de texto deben escapar: backslash, punto y coma, coma y saltos de línea
- * @param {string} text - Texto a escapar
- * @returns {string} Texto escapado para .ics
+ * Escapes text values (RFC 5545 §3.3.11): backslash, semicolon, comma and newlines.
+ * @param {string} text
+ * @returns {string}
  */
 function escapeText(text) {
-  return text
+  return String(text ?? '')
     .replace(/\\/g, '\\\\')
     .replace(/;/g, '\\;')
     .replace(/,/g, '\\,')
     .replace(/\r?\n/g, '\\n');
 }
 
-/**
- * Convierte una fecha YYYY-MM-DD a formato VALUE=DATE de iCalendar (YYYYMMDD)
- * Se usa para eventos de día completo (sin hora)
- * @param {string} dateStr - Fecha en formato YYYY-MM-DD
- * @returns {string} Fecha en formato YYYYMMDD
- */
+/** YYYY-MM-DD → YYYYMMDD (VALUE=DATE). */
 function formatDateValue(dateStr) {
   return dateStr.replace(/-/g, '');
 }
 
-/**
- * Genera un UID único para cada evento basado en el contenido
- * Usamos un hash SHA-256 del título + fecha para que el UID sea
- * determinista: si se regenera el calendario, los mismos eventos
- * mantienen el mismo UID y iOS no los duplica
- * @param {string} title - Título de la película
- * @param {string} date - Fecha de estreno
- * @returns {string} UID único en formato estándar
- */
-function generateUID(title, date) {
-  const hash = crypto.createHash('sha256')
-    .update(`${title}-${date}`)
-    .digest('hex')
-    .substring(0, 16);
-  return `${hash}@horror-calendar`;
+/** Date → YYYYMMDDTHHMMSSZ (UTC). */
+function formatTimestamp(date) {
+  return date.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '');
 }
 
 /**
- * Genera el timestamp actual en formato UTC para DTSTAMP
- * RFC 5545 requiere que cada VEVENT tenga un DTSTAMP con la fecha de creación
- * @returns {string} Timestamp en formato YYYYMMDDTHHMMSSZ
+ * Stable UID from the TMDB id and the release type: a date or title change in TMDB
+ * updates the event instead of duplicating it.
+ * @param {{ id: number, type: string }} release
+ * @returns {string} e.g. "tmdb-900004-digital@horror-calendar"
  */
-function nowUTC() {
-  return new Date().toISOString()
-    .replace(/[-:]/g, '')
-    .replace(/\.\d{3}/, '');
+function generateUID(release) {
+  return `tmdb-${release.id}-${release.type}@horror-calendar`;
 }
 
 /**
- * Genera la línea de "dónde se estrena" según el tipo y los proveedores
- * - Theatrical → "🎬 En cines"
- * - Digital con proveedores → "📺 Streaming: Netflix, HBO Max..."
- * - Digital sin proveedores → "📺 Estreno digital"
- * - Physical → "💿 Formato físico"
- * - Sin tipo pero con proveedores → "📺 Streaming: ..."
- * - Sin nada → null (se omite)
- *
- * @param {string|null} releaseType - Tipo de estreno (theatrical, digital, physical)
- * @param {string[]} providers - Lista de plataformas
- * @returns {string|null} Línea descriptiva o null
+ * "Where" line of the description (§6), first rule that applies.
+ * @param {object} release - Release with calendars
+ * @returns {string}
  */
-function buildWhereLine(releaseType, providers) {
-  const hasProviders = providers && providers.length > 0;
+function buildWhereLine(release) {
+  if (release.type === 'theatrical') return 'En cines';
 
-  if (releaseType === 'theatrical') {
-    // Estreno en cines — si además tiene proveedores, los mencionamos
-    if (hasProviders) {
-      return `🎬 En cines | 📺 También en: ${providers.join(', ')}`;
-    }
-    return '🎬 En cines';
-  }
+  const flatrate = Array.isArray(release.providers?.flatrate) ? release.providers.flatrate : [];
+  if (flatrate.length > 0) return `Incluido en: ${flatrate.join(', ')}`;
 
-  if (releaseType === 'digital') {
-    if (hasProviders) {
-      return `📺 Streaming: ${providers.join(', ')}`;
-    }
-    return '📺 Estreno digital';
-  }
+  const calendars = Array.isArray(release.calendars) ? release.calendars : assignCalendars(release).calendars;
+  const platforms = PLATFORMS.filter((p) => calendars.includes(p.slug)).map((p) => p.name);
+  if (platforms.length > 0) return `Estreno en: ${platforms.join(', ')}`;
 
-  if (releaseType === 'physical') {
-    return '💿 Formato físico';
-  }
+  const rentBuy = Array.isArray(release.providers?.rentBuy) ? release.providers.rentBuy : [];
+  if (rentBuy.length > 0) return `Alquiler o compra: ${rentBuy.join(', ')}`;
 
-  // Sin tipo conocido pero con proveedores de streaming
-  if (hasProviders) {
-    return `📺 Streaming: ${providers.join(', ')}`;
-  }
-
-  // No tenemos información de dónde se estrena
-  return null;
+  return 'Estreno digital';
 }
 
 /**
- * Construye el bloque DESCRIPTION para un evento
- * Incluye: sinopsis, línea de dónde se estrena y enlace a TMDB
- * @param {object} release - Datos de la película
- * @returns {string} Texto escapado para el campo DESCRIPTION
+ * DESCRIPTION value, escaped: synopsis (if any), where line and TMDB link,
+ * separated by blank lines.
+ * @param {object} release
+ * @returns {string}
  */
 function buildDescription(release) {
   const parts = [];
-
-  // Sinopsis (ya validada en shouldInclude, pero protegemos por si acaso)
-  if (release.overview) {
-    parts.push(release.overview);
-  }
-
-  // Línea de dónde se estrena (cines, streaming, digital, etc.)
-  const whereLine = buildWhereLine(release.releaseType, release.providers);
-  if (whereLine) {
-    parts.push(whereLine);
-  }
-
-  // Enlace directo a la ficha en TMDB
+  if (release.overview) parts.push(release.overview);
+  parts.push(buildWhereLine(release));
   parts.push(`Más info: ${release.tmdbUrl}`);
-
   return escapeText(parts.join('\n\n'));
 }
 
-/**
- * Genera el SUMMARY del evento con el emoji del tipo de estreno
- * Ejemplo: "Baby Bird 🎬" o "The Ring 📺"
- * @param {string} title - Título de la película
- * @param {string|null} releaseType - Tipo de estreno
- * @returns {string} Título con emoji
- */
-function buildSummary(title, releaseType) {
-  const emoji = RELEASE_EMOJI[releaseType] || '';
-  return emoji ? `${title} ${emoji}` : title;
+/** SUMMARY: title plus the type marker. */
+function buildSummary(release) {
+  const emoji = RELEASE_EMOJI[release.type];
+  return emoji ? `${release.title} ${emoji}` : release.title;
 }
 
 /**
- * Determina si una película debe incluirse en el calendario
- * Se excluyen películas que no tienen ni descripción ni plataformas conocidas
- * @param {object} release - Datos de la película
- * @returns {boolean} true si debe incluirse
- */
-function shouldInclude(release) {
-  const hasOverview = Boolean(release.overview);
-  const hasProviders = release.providers && release.providers.length > 0;
-  const hasReleaseType = Boolean(release.releaseType);
-
-  // Excluimos si no tiene descripción Y tampoco sabemos dónde se estrena
-  return hasOverview || hasProviders || hasReleaseType;
-}
-
-/**
- * Pliega líneas largas según RFC 5545 (sección 3.1)
- * Las líneas de contenido no deben superar 75 octetos.
- * Las continuaciones se marcan con un espacio al inicio de la línea siguiente.
- * @param {string} line - Línea a plegar
- * @returns {string} Línea plegada
+ * Folds a content line at 75 octets (RFC 5545 §3.1) without splitting UTF-8
+ * sequences; continuation lines start with a single space.
+ * @param {string} line
+ * @returns {string}
  */
 function foldLine(line) {
   const MAX_OCTETS = 75;
-  const encoder = new TextEncoder();
-  const bytes = encoder.encode(line);
-
-  // Si cabe en una línea, no hay que plegar
+  const bytes = new TextEncoder().encode(line);
   if (bytes.length <= MAX_OCTETS) return line;
 
   const lines = [];
   let start = 0;
-
   while (start < bytes.length) {
-    // La primera línea permite 75 octetos; las siguientes 74 (por el espacio de continuación)
+    // 75 octets on the first line, 74 on continuations (plus the leading space)
     const limit = start === 0 ? MAX_OCTETS : MAX_OCTETS - 1;
     let end = start + limit;
-
-    // No cortar en medio de un carácter multi-byte UTF-8
-    // Los bytes de continuación UTF-8 empiezan con 10xxxxxx (0x80-0xBF)
     if (end < bytes.length) {
-      while (end > start && (bytes[end] & 0xC0) === 0x80) {
-        end--;
-      }
+      // UTF-8 continuation bytes are 10xxxxxx: back off to the start of the character
+      while (end > start && (bytes[end] & 0xC0) === 0x80) end -= 1;
     } else {
       end = bytes.length;
     }
-
     const chunk = new TextDecoder().decode(bytes.slice(start, end));
     lines.push(start === 0 ? chunk : ` ${chunk}`);
     start = end;
   }
-
   return lines.join('\r\n');
 }
 
-/**
- * Genera un bloque VEVENT para una película
- * @param {object} release - Datos de la película (de getHorrorReleases)
- * @returns {string} Bloque VEVENT completo
- */
-function buildEvent(release) {
-  const dtstamp = nowUTC();
-  const uid = generateUID(release.title, release.releaseDate);
-  const dtstart = formatDateValue(release.releaseDate);
-  const summary = escapeText(buildSummary(release.title, release.releaseType));
-  const description = buildDescription(release);
-  const url = release.tmdbUrl;
-
-  // Cada propiedad se pliega individualmente para respetar el límite de 75 octetos
-  const lines = [
+/** One all-day VEVENT. */
+function buildEvent(release, dtstamp) {
+  return [
     'BEGIN:VEVENT',
-    foldLine(`UID:${uid}`),
-    foldLine(`DTSTAMP:${dtstamp}`),
-    foldLine(`DTSTART;VALUE=DATE:${dtstart}`),       // Evento de día completo (sin hora)
-    foldLine(`SUMMARY:${summary}`),
-    foldLine(`DESCRIPTION:${description}`),
-    foldLine(`URL:${url}`),
-    'TRANSP:TRANSPARENT',                             // No bloquea el horario del usuario
+    foldLine(`UID:${generateUID(release)}`),
+    `DTSTAMP:${dtstamp}`,
+    `DTSTART;VALUE=DATE:${formatDateValue(release.releaseDate)}`,
+    foldLine(`SUMMARY:${escapeText(buildSummary(release))}`),
+    foldLine(`DESCRIPTION:${buildDescription(release)}`),
+    foldLine(`URL:${release.tmdbUrl}`),
+    'TRANSP:TRANSPARENT',
     'END:VEVENT',
-  ];
-
-  return lines.join('\r\n');
+  ].join('\r\n');
 }
 
 /**
- * Función principal: genera el contenido .ics completo
- *
- * Filtra las películas que no tienen información útil (sin descripción
- * ni plataformas conocidas) antes de generar los eventos.
- *
- * Cabeceras del calendario:
- * - VERSION:2.0 → versión de iCalendar (RFC 5545)
- * - PRODID → identificador del producto que genera el calendario
- * - CALSCALE:GREGORIAN → escala de calendario (estándar)
- * - METHOD:PUBLISH → indica que es un calendario de solo lectura/suscripción
- * - X-WR-CALNAME → nombre visible del calendario en iOS/macOS
- * - REFRESH-INTERVAL / X-PUBLISHED-TTL → le dice a iOS que refresque
- *   el calendario cada 24 horas (P1D = Period 1 Day)
- *
- * @param {Array<{title: string, releaseDate: string, overview: string, providers: string[], releaseType: string|null, tmdbUrl: string}>} releases
- * @returns {{ ics: string, total: number, excluded: number }} Contenido .ics y estadísticas
+ * A complete VCALENDAR document; with no releases it is still valid (no VEVENT).
+ * @param {object[]} releases - Releases of this calendar, already ordered
+ * @param {object} options
+ * @param {string} options.name - Display name, without the "Terror — " prefix
+ * @param {Date} [options.now] - Build time, used for DTSTAMP
+ * @returns {string} Document with CRLF line endings and a trailing CRLF
  */
-function generateICS(releases) {
-  // Filtramos películas sin información útil
-  const included = releases.filter(shouldInclude);
-  const excluded = releases.length - included.length;
-
-  const header = [
+function generateICS(releases, { name, now = new Date() }) {
+  const dtstamp = formatTimestamp(now);
+  const lines = [
     'BEGIN:VCALENDAR',
     'VERSION:2.0',
-    'PRODID:-//Horror Calendar//horror-calendar//ES',
+    `PRODID:${PRODID}`,
     'CALSCALE:GREGORIAN',
     'METHOD:PUBLISH',
-    foldLine(`X-WR-CALNAME:${CALENDAR_NAME}`),
-    // Intervalo de refresco estándar (RFC 7986) — cada 24 horas
+    foldLine(`X-WR-CALNAME:${escapeText(`${CALENDAR_NAME_PREFIX}${name}`)}`),
+    // RFC 7986 refresh interval, plus the legacy property for older clients
     'REFRESH-INTERVAL;VALUE=DURATION:P1D',
-    // Versión legacy del refresh para clientes que no soporten RFC 7986
     'X-PUBLISHED-TTL:P1D',
+    ...releases.map((release) => buildEvent(release, dtstamp)),
+    'END:VCALENDAR',
   ];
-
-  const footer = ['END:VCALENDAR'];
-
-  // Generamos un VEVENT por cada película incluida
-  const events = included.map(buildEvent);
-
-  // RFC 5545 exige terminaciones de línea CRLF (\r\n)
-  const parts = [...header, ...events, ...footer];
-  const ics = parts.join('\r\n') + '\r\n';
-
-  return { ics, total: included.length, excluded };
+  return `${lines.join('\r\n')}\r\n`;
 }
 
-module.exports = { generateICS, escapeText, foldLine, generateUID, buildDescription };
+/**
+ * Every calendar of §3, in canonical order, always generated (possibly empty).
+ * `all` (horror.ics) holds every release: cines + digital.
+ * @param {object[]} releases - Releases with `calendars` (see src/platforms.js)
+ * @param {object} [options]
+ * @param {Date} [options.now] - Build time
+ * @returns {Array<{ slug: string, file: string, name: string, kind: string, count: number, ics: string }>}
+ */
+function generateCalendars(releases, { now = new Date() } = {}) {
+  return calendarDefinitions().map((def) => {
+    const members = def.slug === 'all'
+      ? releases
+      : releases.filter((r) => Array.isArray(r.calendars) && r.calendars.includes(def.slug));
+    return { ...def, count: members.length, ics: generateICS(members, { name: def.name, now }) };
+  });
+}
+
+module.exports = {
+  generateCalendars,
+  generateICS,
+  escapeText,
+  foldLine,
+  generateUID,
+  buildDescription,
+  buildWhereLine,
+};
