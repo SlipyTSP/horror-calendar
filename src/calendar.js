@@ -280,4 +280,4 @@ function generateICS(releases) {
   return { ics, total: included.length, excluded };
 }
 
-module.exports = { generateICS };
+module.exports = { generateICS, escapeText, foldLine, generateUID, buildDescription };
