@@ -504,3 +504,33 @@ test('escapeCommand escapes %, CR and LF for workflow commands', () => {
   assert.equal(escapeCommand('a%b\r\nc\nd\re'), 'a%25b%0D%0Ac%0Ad%0De');
   assert.equal(escapeCommand('plain: text'), 'plain: text');
 });
+
+test('non-OK response bodies are cancelled before retrying or failing; a missing body is tolerated', async () => {
+  const routes = smallRoutes({ digital: [1, 2, 3, 4, 5, 6].map((id) => movie(id, `2026-11-0${id}`)) });
+  routes['/movie/2/release_dates'] = { status: 404, body: {} };
+  const inner = createFixtureFetch({ routes });
+  inner.enqueue('/movie/1/watch/providers', { status: 503, body: {} });
+  let cancelled = 0;
+  let bodyless = 0;
+  const fetchImpl = async (url) => {
+    if (url.includes('/movie/3/release_dates')) {
+      bodyless += 1;
+      // Mock response without a body stream
+      return { ok: false, status: 500, headers: new Headers() };
+    }
+    const res = await inner(url);
+    if (!res.ok && res.body) {
+      const original = res.body.cancel.bind(res.body);
+      res.body.cancel = async (...args) => {
+        cancelled += 1;
+        return original(...args);
+      };
+    }
+    return res;
+  };
+  const { details } = await run(fetchImpl);
+
+  assert.equal(cancelled, 2, 'the 503 before its retry and the final 404');
+  assert.equal(bodyless, 4, 'bodyless 500 retried 3 times without throwing');
+  assert.deepEqual(details, { total: 12, failed: 2 });
+});
