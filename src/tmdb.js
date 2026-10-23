@@ -1,274 +1,346 @@
-// Módulo para consultar la API de TMDB (discover/movie con género Horror)
-// Usa fetch nativo de Node.js 18+ — sin dependencias externas
+// TMDB client for the Spanish regional horror releases (docs/data-model.md §2 and §7).
+//
+// Two discover/movie queries (theatrical 3|2 and digital 4) with region + release type,
+// so that release_date is the Spanish date of that type. Digital releases get
+// watch/providers (flatrate vs rent/buy) and release_dates (Spanish type-4 note).
+// Everything that touches the network goes through an injectable fetch, clock and sleep.
+
+const { matchPlatform } = require('./platforms');
 
 const BASE_URL = 'https://api.themoviedb.org/3';
+const HORROR_GENRE_ID = '27';
+const DIGITAL_RELEASE_TYPE = 4;
 
-// Género 27 = Horror en TMDB
-const HORROR_GENRE_ID = 27;
+const QUERIES = [
+  { type: 'theatrical', releaseType: '3|2' },
+  { type: 'digital', releaseType: '4' },
+];
 
-// Tipos de estreno en TMDB (endpoint /movie/{id}/release_dates)
-// 1 = Premiere, 2 = Theatrical (limited), 3 = Theatrical,
-// 4 = Digital, 5 = Physical, 6 = TV
-const RELEASE_TYPE = {
-  PREMIERE: 1,
-  THEATRICAL_LIMITED: 2,
-  THEATRICAL: 3,
-  DIGITAL: 4,
-  PHYSICAL: 5,
-  TV: 6,
-};
+const DEFAULT_WINDOW_DAYS = 90;
+const DEFAULT_MAX_PAGES = 5;
+const DETAIL_CONCURRENCY = 5;
+const MAX_RETRIES = 3;
+const BASE_BACKOFF_MS = 1000;
+const MAX_RETRY_AFTER_MS = 60_000;
+const MAX_DETAIL_FAILURE_RATE = 0.2;
 
-// Agrupamos los tipos en categorías para mostrar en el calendario
-// "theatrical" = se estrena en cines, "digital" = plataformas online/streaming
-const THEATRICAL_TYPES = [RELEASE_TYPE.PREMIERE, RELEASE_TYPE.THEATRICAL_LIMITED, RELEASE_TYPE.THEATRICAL];
-const DIGITAL_TYPES = [RELEASE_TYPE.DIGITAL, RELEASE_TYPE.TV];
+const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
 
-// Incluimos todos los tipos en el filtro de discover/movie
-const RELEASE_TYPES = '1|2|3|4|5|6';
+class TmdbError extends Error {}
+
+const defaultSleep = (ms) => new Promise((resolve) => { setTimeout(resolve, ms); });
 
 /**
- * Construye la URL con query params para el endpoint dado
- * @param {string} path - Ruta del endpoint (ej: /discover/movie)
- * @param {Record<string, string>} params - Parámetros de consulta
- * @returns {string} URL completa
+ * Parses an integer setting with a default; invalid values fall back with a warning.
+ * @returns {number}
  */
-function buildUrl(path, params) {
-  const url = new URL(`${BASE_URL}${path}`);
-  for (const [key, value] of Object.entries(params)) {
-    url.searchParams.set(key, value);
+function parseIntSetting(value, fallback, { min, max, name }, warn) {
+  if (value === undefined || value === null || String(value).trim() === '') return fallback;
+  const parsed = Number(String(value).trim());
+  if (!Number.isInteger(parsed) || parsed < min || parsed > max) {
+    warn(`${name}="${value}" is not an integer between ${min} and ${max}; using ${fallback}.`);
+    return fallback;
   }
-  return url.toString();
+  return parsed;
+}
+
+function isoDate(date) {
+  return date.toISOString().slice(0, 10);
+}
+
+function addDays(date, days) {
+  const copy = new Date(date.getTime());
+  copy.setUTCDate(copy.getUTCDate() + days);
+  return copy;
 }
 
 /**
- * Hace una petición GET a la API de TMDB y devuelve el JSON parseado
- * @param {string} path - Ruta del endpoint
- * @param {Record<string, string>} params - Parámetros adicionales
- * @returns {Promise<object>} Respuesta JSON
+ * Resolves the run settings from the environment and the clock (dates in UTC).
+ * @returns {{ apiKey: string, language: string, region: string, windowDays: number,
+ *   maxPages: number, from: string, to: string }}
  */
-async function tmdbGet(path, params = {}) {
-  const apiKey = process.env.TMDB_API_KEY;
-  if (!apiKey) {
-    throw new Error('Falta la variable de entorno TMDB_API_KEY. Revisa tu archivo .env');
-  }
+function resolveSettings(env = {}, now = new Date(), warn = console.warn) {
+  const windowDays = parseIntSetting(env.WINDOW_DAYS, DEFAULT_WINDOW_DAYS,
+    { min: 1, max: 366, name: 'WINDOW_DAYS' }, warn);
+  const maxPages = parseIntSetting(env.MAX_PAGES, DEFAULT_MAX_PAGES,
+    { min: 1, max: 20, name: 'MAX_PAGES' }, warn);
+  return {
+    apiKey: String(env.TMDB_API_KEY ?? '').trim(),
+    language: String(env.TMDB_LANGUAGE ?? '').trim() || 'es-ES',
+    region: String(env.TMDB_REGION ?? '').trim() || 'ES',
+    windowDays,
+    maxPages,
+    from: isoDate(now),
+    to: isoDate(addDays(now, windowDays)),
+  };
+}
 
-  // Añadimos la API key a todos los requests
-  const allParams = { api_key: apiKey, ...params };
-  const url = buildUrl(path, allParams);
-
-  const response = await fetch(url);
-  if (!response.ok) {
-    throw new Error(`Error de TMDB (${response.status}): ${response.statusText} — ${url}`);
-  }
-
-  return response.json();
+/** Delay in ms from a Retry-After header (seconds or HTTP date), or null. */
+function retryAfterMs(header, now = Date.now()) {
+  if (header === null || header === undefined || String(header).trim() === '') return null;
+  const seconds = Number(header);
+  const ms = Number.isFinite(seconds) ? seconds * 1000 : Date.parse(header) - now;
+  if (!Number.isFinite(ms)) return null;
+  return Math.min(Math.max(ms, 0), MAX_RETRY_AFTER_MS);
 }
 
 /**
- * Calcula las fechas límite: desde hoy hasta dentro de 90 días
- * @returns {{ from: string, to: string }} Fechas en formato YYYY-MM-DD
+ * GET helper with retries on 429, 5xx and network errors (up to MAX_RETRIES), honouring
+ * Retry-After and falling back to exponential backoff. Error messages never carry the key.
  */
-function getDateRange() {
-  const today = new Date();
-  const in90Days = new Date(today);
-  in90Days.setDate(today.getDate() + 90);
+function createClient({ fetchImpl, apiKey, sleep }) {
+  return async function get(pathname, params = {}) {
+    const url = new URL(`${BASE_URL}${pathname}`);
+    for (const [k, v] of Object.entries(params)) url.searchParams.set(k, String(v));
+    const label = `${url.pathname.replace(/^\/3/, '')}${url.search}`;
+    url.searchParams.set('api_key', apiKey);
 
-  // Formateamos a YYYY-MM-DD
-  const from = today.toISOString().split('T')[0];
-  const to = in90Days.toISOString().split('T')[0];
-  return { from, to };
-}
+    for (let attempt = 0; ; attempt += 1) {
+      let response = null;
+      let failure;
+      try {
+        response = await fetchImpl(url.toString());
+      } catch (err) {
+        failure = `network error (${String(err?.message || err).split(apiKey).join('***')})`;
+      }
 
-/**
- * Obtiene los proveedores de streaming/alquiler/compra para una película
- * @param {number} movieId - ID de la película en TMDB
- * @param {string} region - Código de región (ES, US, MX, etc.)
- * @returns {Promise<string[]>} Lista de nombres de plataformas
- */
-async function getWatchProviders(movieId, region) {
-  try {
-    const data = await tmdbGet(`/movie/${movieId}/watch/providers`);
-    const regionData = data.results?.[region];
-
-    if (!regionData) return [];
-
-    // Recopilamos proveedores de todas las categorías disponibles:
-    // flatrate (suscripción), rent (alquiler), buy (compra)
-    const providers = new Set();
-    for (const type of ['flatrate', 'rent', 'buy']) {
-      if (regionData[type]) {
-        for (const provider of regionData[type]) {
-          providers.add(provider.provider_name);
+      if (response?.ok) {
+        try {
+          return await response.json();
+        } catch {
+          throw new TmdbError(`TMDB ${label} did not return JSON`);
         }
       }
+
+      const status = response?.status;
+      const retryable = response === null || status === 429 || status >= 500;
+      if (response) failure = `HTTP ${status}`;
+      if (!retryable || attempt >= MAX_RETRIES) {
+        const tries = attempt + 1;
+        throw new TmdbError(`TMDB ${label} failed: ${failure} after ${tries} attempt${tries === 1 ? '' : 's'}`);
+      }
+      const delay = retryAfterMs(response?.headers?.get?.('retry-after')) ?? BASE_BACKOFF_MS * 2 ** attempt;
+      await sleep(delay);
     }
-
-    return [...providers];
-  } catch {
-    // Si falla la consulta de proveedores, no bloqueamos el flujo principal
-    return [];
-  }
-}
-
-/**
- * Obtiene el tipo de estreno de una película para una región dada
- * Consulta /movie/{id}/release_dates y busca en orden: ES, GB, FR, DE, US
- * (Europa primero, US como último recurso para mayor cobertura)
- *
- * Devuelve una categoría simplificada:
- * - "theatrical" → estreno en cines (tipos 1, 2, 3)
- * - "digital"    → estreno digital/streaming (tipos 4, 6)
- * - "physical"   → estreno físico (tipo 5)
- * - null         → no se pudo determinar
- *
- * @param {number} movieId - ID de la película en TMDB
- * @param {string} region - Código de región principal (ES, MX, AR, etc.)
- * @returns {Promise<string|null>} Categoría de estreno
- */
-async function getReleaseType(movieId, region) {
-  try {
-    const data = await tmdbGet(`/movie/${movieId}/release_dates`);
-    const results = data.results || [];
-
-    // Buscamos en orden: región principal, Europa occidental, US como último recurso
-    const regionsToCheck = [region, 'GB', 'FR', 'DE', 'US'];
-    for (const reg of regionsToCheck) {
-      const entry = results.find((r) => r.iso_3166_1 === reg);
-      if (!entry || !entry.release_dates?.length) continue;
-
-      const types = entry.release_dates.map((rd) => rd.type);
-
-      // Priorizamos: si hay estreno en cines, eso es lo principal
-      if (types.some((t) => THEATRICAL_TYPES.includes(t))) return 'theatrical';
-      // Si no, comprobamos digital/streaming
-      if (types.some((t) => DIGITAL_TYPES.includes(t))) return 'digital';
-      // Estreno solo en formato físico
-      if (types.includes(RELEASE_TYPE.PHYSICAL)) return 'physical';
-    }
-
-    return null;
-  } catch {
-    return null;
-  }
-}
-
-/**
- * Intenta obtener la sinopsis en inglés como fallback cuando no hay
- * descripción en el idioma principal
- * @param {number} movieId - ID de la película en TMDB
- * @returns {Promise<string>} Sinopsis en inglés o cadena vacía
- */
-async function getEnglishOverview(movieId) {
-  try {
-    const data = await tmdbGet(`/movie/${movieId}`, { language: 'en-US' });
-    return data.overview || '';
-  } catch {
-    return '';
-  }
-}
-
-/**
- * Recorre todas las páginas de resultados de discover/movie
- * TMDB pagina los resultados (máx 20 por página)
- * @param {Record<string, string>} params - Parámetros de la consulta
- * @returns {Promise<object[]>} Array con todos los resultados combinados
- */
-async function fetchAllPages(params) {
-  const allResults = [];
-
-  // Primera petición para saber cuántas páginas hay
-  const firstPage = await tmdbGet('/discover/movie', { ...params, page: '1' });
-  allResults.push(...firstPage.results);
-
-  // Limitamos a 5 páginas (100 películas) para no abusar de la API
-  const totalPages = Math.min(firstPage.total_pages, 5);
-
-  for (let page = 2; page <= totalPages; page++) {
-    const data = await tmdbGet('/discover/movie', { ...params, page: String(page) });
-    allResults.push(...data.results);
-  }
-
-  return allResults;
-}
-
-/**
- * Función principal: obtiene los estrenos de películas de terror
- * en los próximos 90 días (cines + plataformas online)
- *
- * Para cada película obtiene:
- * - Proveedores de streaming (watch/providers)
- * - Tipo de estreno: theatrical, digital o physical (release_dates)
- * - Sinopsis en inglés como fallback si no hay en el idioma principal
- *
- * @returns {Promise<Array<{
- *   title: string,
- *   releaseDate: string,
- *   overview: string,
- *   providers: string[],
- *   releaseType: string|null,
- *   tmdbUrl: string
- * }>>} Array de películas con sus datos
- */
-async function getHorrorReleases() {
-  const language = process.env.TMDB_LANGUAGE || 'es-ES';
-  const region = process.env.TMDB_REGION || 'ES';
-  const { from, to } = getDateRange();
-
-  // Parámetros para discover/movie:
-  // - with_genres=27 → solo horror
-  // - sort_by=primary_release_date.asc → ordenadas por fecha de estreno
-  // - primary_release_date.gte/lte → ventana de 90 días
-  // - with_release_type → todos los tipos (cine, digital, TV, etc.)
-  // - region → para fechas de estreno locales
-  const params = {
-    language,
-    region,
-    with_genres: String(HORROR_GENRE_ID),
-    sort_by: 'primary_release_date.asc',
-    'primary_release_date.gte': from,
-    'primary_release_date.lte': to,
-    with_release_type: RELEASE_TYPES,
   };
-
-  // Obtenemos todas las películas paginadas
-  const movies = await fetchAllPages(params);
-
-  // Para cada película consultamos proveedores, tipo de estreno y sinopsis fallback
-  // Usamos Promise.all para paralelizar las peticiones por película
-  const releases = await Promise.all(
-    movies.map(async (movie) => {
-      // Lanzamos las 3 consultas en paralelo para cada película
-      const [providers, releaseType, englishOverview] = await Promise.all([
-        getWatchProviders(movie.id, region),
-        getReleaseType(movie.id, region),
-        // Solo pedimos la sinopsis en inglés si no hay en el idioma principal
-        movie.overview ? Promise.resolve('') : getEnglishOverview(movie.id),
-      ]);
-
-      // Usamos la sinopsis original, o la inglesa como fallback
-      const overview = movie.overview || englishOverview;
-
-      return {
-        title: movie.title,
-        releaseDate: movie.release_date,
-        overview,
-        providers,
-        releaseType,
-        tmdbUrl: `https://www.themoviedb.org/movie/${movie.id}`,
-      };
-    })
-  );
-
-  // Filtro suave: excluimos solo películas sin absolutamente ninguna información
-  // - Incluir si tiene providers en ES (streaming confirmado)
-  // - Incluir si tiene releaseType (estreno confirmado en ES/GB/FR/DE/US)
-  // - Incluir si al menos tiene sinopsis (puede ser relevante para España)
-  // - Excluir solo si no tiene nada: sin releaseType, sin providers y sin overview
-  const filtered = releases.filter((r) =>
-    r.releaseType !== null || r.providers.length > 0 || r.overview
-  );
-
-  return filtered;
 }
 
-module.exports = { getHorrorReleases };
+/** Runs fn over items with at most `limit` promises in flight; keeps input order. */
+async function mapPool(items, limit, fn) {
+  const results = new Array(items.length);
+  let next = 0;
+  async function worker() {
+    while (next < items.length) {
+      const index = next;
+      next += 1;
+      results[index] = await fn(items[index], index);
+    }
+  }
+  await Promise.all(Array.from({ length: Math.min(limit, items.length) }, worker));
+  return results;
+}
+
+const text = (value) => (typeof value === 'string' ? value.trim() : '');
+
+function uniqueNames(entries, seen = new Set()) {
+  const names = [];
+  for (const entry of Array.isArray(entries) ? entries : []) {
+    const name = text(entry?.provider_name);
+    if (!name || seen.has(name)) continue;
+    seen.add(name);
+    names.push(name);
+  }
+  return names;
+}
+
+/**
+ * Splits watch/providers for the region into included (flatrate) and rent/buy.
+ * ads/free tiers count as included only when they are aliases of a configured platform.
+ * @returns {{ flatrate: string[], rentBuy: string[] }}
+ */
+function parseProviders(body, region) {
+  const regional = body?.results?.[region];
+  if (!regional || typeof regional !== 'object') return { flatrate: [], rentBuy: [] };
+  const included = new Set();
+  const flatrate = uniqueNames(regional.flatrate, included);
+  const tiers = uniqueNames([...(regional.ads ?? []), ...(regional.free ?? [])], included)
+    .filter((name) => matchPlatform(name) !== null);
+  const rentBuy = uniqueNames([...(Array.isArray(regional.rent) ? regional.rent : []),
+    ...(Array.isArray(regional.buy) ? regional.buy : [])]);
+  return { flatrate: [...flatrate, ...tiers], rentBuy };
+}
+
+/**
+ * Note of the regional type-4 (digital) release whose day equals releaseDate; when no
+ * type-4 date has that day, the first type-4 date with a non-empty note. Other types
+ * (premieres, festivals) are ignored. Trimmed; empty → null.
+ * @returns {string|null}
+ */
+function parseReleaseNote(body, region, releaseDate) {
+  const results = Array.isArray(body?.results) ? body.results : [];
+  const entry = results.find((r) => r?.iso_3166_1 === region);
+  const dates = (Array.isArray(entry?.release_dates) ? entry.release_dates : [])
+    .filter((d) => Number(d?.type) === DIGITAL_RELEASE_TYPE);
+  const sameDay = dates.find((d) => typeof d?.release_date === 'string' && d.release_date.slice(0, 10) === releaseDate);
+  const chosen = sameDay ?? dates.find((d) => text(d?.note) !== '');
+  return text(chosen?.note) || null;
+}
+
+function toRelease(movie, type) {
+  const title = text(movie.title) || text(movie.original_title);
+  return {
+    id: movie.id,
+    title,
+    originalTitle: text(movie.original_title) || title,
+    releaseDate: movie.release_date,
+    type,
+    providers: { flatrate: [], rentBuy: [] },
+    releaseNote: null,
+    posterPath: text(movie.poster_path) || null,
+    overview: text(movie.overview),
+    tmdbUrl: `https://www.themoviedb.org/movie/${movie.id}`,
+  };
+}
+
+function compareReleases(a, b) {
+  if (a.releaseDate !== b.releaseDate) return a.releaseDate < b.releaseDate ? -1 : 1;
+  return a.title.localeCompare(b.title, 'es') || a.type.localeCompare(b.type) || a.id - b.id;
+}
+
+/**
+ * Queries TMDB and returns the releases plus run metadata.
+ * @param {object} [options]
+ * @param {Function} [options.fetchImpl] - fetch implementation
+ * @param {Date} [options.now] - Clock; the window starts on its UTC day
+ * @param {object} [options.env] - Environment variables
+ * @param {Function} [options.sleep] - Delay between retries, (ms) => Promise
+ * @param {Function} [options.log] - Info output (also ::warning:: annotations)
+ * @param {Function} [options.warn] - Configuration warnings
+ * @returns {Promise<{ releases: object[], region: string, window: { from: string, to: string },
+ *   details: { total: number, failed: number } }>}
+ */
+async function fetchHorrorReleases({
+  fetchImpl = globalThis.fetch,
+  now = new Date(),
+  env = process.env,
+  sleep = defaultSleep,
+  log = console.log,
+  warn = (message) => log(`::warning::${message}`),
+} = {}) {
+  const settings = resolveSettings(env, now, warn);
+  const { apiKey, language, region, maxPages, from, to } = settings;
+  if (!apiKey) throw new TmdbError('TMDB_API_KEY is not set. Copy .env.example to .env and add your key.');
+
+  const get = createClient({ fetchImpl, apiKey, sleep });
+
+  // 1. Discover: one query per release type, paginated up to MAX_PAGES
+  const releases = [];
+  for (const query of QUERIES) {
+    const params = {
+      language,
+      region,
+      with_genres: HORROR_GENRE_ID,
+      'release_date.gte': from,
+      'release_date.lte': to,
+      with_release_type: query.releaseType,
+    };
+    const seen = new Set();
+    let totalPages = 1;
+    for (let page = 1; page <= Math.min(totalPages, maxPages); page += 1) {
+      const data = await get('/discover/movie', { ...params, page });
+      if (page === 1) {
+        const reported = Number(data?.total_pages);
+        totalPages = Number.isInteger(reported) && reported > 0 ? reported : 1;
+        if (totalPages > maxPages) {
+          log(`::warning::TMDB query ${query.type} (with_release_type=${query.releaseType}) has `
+            + `total_pages=${totalPages} but MAX_PAGES=${maxPages}: only the first ${maxPages} pages were read.`);
+        }
+      }
+      for (const movie of Array.isArray(data?.results) ? data.results : []) {
+        if (!Number.isInteger(movie?.id) || seen.has(movie.id)) continue;
+        // Strict inclusion: a Spanish date of this type inside the window, or nothing
+        const date = movie.release_date;
+        if (typeof date !== 'string' || !ISO_DATE.test(date) || date < from || date > to) continue;
+        seen.add(movie.id);
+        releases.push(toRelease(movie, query.type));
+      }
+    }
+  }
+
+  if (releases.length === 0) {
+    throw new TmdbError(`Both TMDB discover queries returned 0 releases for ${region} ${from} → ${to}; `
+      + 'refusing to publish empty calendars.');
+  }
+
+  // 2. Details: providers and release note (digital only), English overview fallback
+  const details = { total: 0, failed: 0 };
+  const englishOverviews = new Map();
+  const tasks = [];
+  for (const release of releases) {
+    if (release.type === 'digital') {
+      tasks.push({
+        path: `/movie/${release.id}/watch/providers`,
+        apply: (body) => { release.providers = parseProviders(body, region); },
+      });
+      tasks.push({
+        path: `/movie/${release.id}/release_dates`,
+        apply: (body) => { release.releaseNote = parseReleaseNote(body, region, release.releaseDate); },
+      });
+    }
+    if (!release.overview) {
+      if (!englishOverviews.has(release.id)) {
+        englishOverviews.set(release.id, []);
+        tasks.push({
+          path: `/movie/${release.id}`,
+          params: { language: 'en-US' },
+          apply: (body) => {
+            for (const target of englishOverviews.get(release.id)) target.overview = text(body?.overview);
+          },
+        });
+      }
+      englishOverviews.get(release.id).push(release);
+    }
+  }
+
+  await mapPool(tasks, DETAIL_CONCURRENCY, async (task) => {
+    details.total += 1;
+    try {
+      task.apply(await get(task.path, task.params));
+    } catch (err) {
+      // A failed detail leaves its data empty; the release itself is kept
+      details.failed += 1;
+      log(`Detail request failed: ${err?.message || err}`);
+    }
+  });
+
+  log(`Detail requests: ${details.total}, failed: ${details.failed}.`);
+  if (details.total > 0 && details.failed / details.total > MAX_DETAIL_FAILURE_RATE) {
+    throw new TmdbError(`${details.failed} of ${details.total} TMDB detail requests failed `
+      + `(more than ${MAX_DETAIL_FAILURE_RATE * 100} %); refusing to publish partial calendars.`);
+  }
+
+  releases.sort(compareReleases);
+  return { releases, region, window: { from, to }, details };
+}
+
+/**
+ * Spanish horror releases (data model §2) without `calendars`.
+ * Same options as fetchHorrorReleases.
+ * @returns {Promise<object[]>}
+ */
+async function getHorrorReleases(options = {}) {
+  return (await fetchHorrorReleases(options)).releases;
+}
+
+module.exports = {
+  getHorrorReleases,
+  fetchHorrorReleases,
+  resolveSettings,
+  parseProviders,
+  parseReleaseNote,
+  retryAfterMs,
+  TmdbError,
+  QUERIES,
+  DETAIL_CONCURRENCY,
+  MAX_RETRIES,
+};
