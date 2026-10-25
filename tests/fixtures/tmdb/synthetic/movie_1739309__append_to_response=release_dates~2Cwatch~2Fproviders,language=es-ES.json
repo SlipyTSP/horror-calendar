@@ -1,0 +1,30 @@
+{
+  "id": 1739309,
+  "imdb_id": "tt91739309",
+  "title": "Miguel Myers, Halloween Villaverde",
+  "original_title": "Miguel Myers, Halloween Villaverde",
+  "overview": "Cortometraje fan de Michael Myers",
+  "poster_path": "/u3I6J5qHKHXkDDqPT35dbMUxXvc.jpg",
+  "release_date": "2026-10-31",
+  "runtime": 93,
+  "release_dates": {
+    "results": [
+      {
+        "iso_3166_1": "ES",
+        "release_dates": [
+          {
+            "certification": "7",
+            "descriptors": [],
+            "iso_639_1": "es",
+            "note": "",
+            "release_date": "2026-10-31T00:00:00.000Z",
+            "type": 4
+          }
+        ]
+      }
+    ]
+  },
+  "watch/providers": {
+    "results": {}
+  }
+}
