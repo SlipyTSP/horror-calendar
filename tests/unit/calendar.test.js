@@ -3,7 +3,7 @@ const assert = require('node:assert/strict');
 const fs = require('fs');
 const path = require('path');
 const {
-  generateCalendars, generateICS, escapeText, foldLine, generateUID, buildDescription,
+  generateCalendars, generateICS, escapeText, foldLine, generateUID, buildDescription, buildWhereLine,
 } = require('../../src/calendar');
 const { assignCalendars } = require('../../src/platforms');
 const { validateICS, assertValidICS, unfoldedLines } = require('../support/ics-validator');
@@ -229,9 +229,17 @@ test('generateCalendars returns every calendar in canonical order with counts ma
   assert.deepEqual(calendars.map(({ ics, ...meta }) => meta), SAMPLE.calendars);
 });
 
-test('assignCalendars + generateCalendars on the sample releases reproduce its calendars metadata', () => {
-  const stripped = SAMPLE.releases.map(({ calendars, ...rest }) => rest);
-  const calendars = generateCalendars(stripped.map(assignCalendars), { now: NOW });
+// The curated platform of a manual release lives in data/manual-releases.json, not in
+// the release object: it is passed to assignCalendars, as src/manual.js does
+const curated = (r) => (r.source === 'manual' ? { platforms: r.calendars.filter((s) => s !== 'digital') } : undefined);
+
+test('E6 assignCalendars + generateCalendars on the sample releases reproduce it exactly, counts included', () => {
+  const assigned = SAMPLE.releases.map((r) => {
+    const { calendars, ...rest } = r;
+    return assignCalendars(rest, curated(r));
+  });
+  assert.deepEqual(assigned, SAMPLE.releases);
+  const calendars = generateCalendars(assigned, { now: NOW });
   assert.deepEqual(calendars.map(({ ics, ...meta }) => meta), SAMPLE.calendars);
 });
 
@@ -244,8 +252,8 @@ test('every generated calendar passes the structural validator, empty ones inclu
     assert.ok(lines.includes(`X-WR-CALNAME:Terror — ${c.name}`), c.file);
     assert.equal(lines.filter((l) => l === 'BEGIN:VEVENT').length, c.count, c.file);
   }
-  assert.ok(byFile(calendars, 'horror-disney-plus.ics').ics.length > 0);
-  assert.equal(byFile(calendars, 'horror-disney-plus.ics').count, 0);
+  assert.ok(byFile(calendars, 'horror-skyshowtime.ics').ics.length > 0);
+  assert.equal(byFile(calendars, 'horror-skyshowtime.ics').count, 0);
 });
 
 test('each calendar contains exactly the releases that list its slug', () => {
@@ -269,7 +277,51 @@ test('horror.ics keeps its file name, is named "Terror — Todo" and holds cines
   const digital = uids(byFile(calendars, 'horror-digital.ics').ics);
   assert.deepEqual(new Set(uids(all.ics)), new Set([...cines, ...digital]));
   assert.equal(all.count, cines.length + digital.length);
-  assert.equal(all.count, SAMPLE.releases.length);
+  assert.equal(all.count, SAMPLE.releases.filter((r) => r.type !== 'arrival').length);
+});
+
+// --- Arrivals and manual releases (F4) ---
+
+test('E5 arrivals: only in their platform calendar, never in digital nor horror.ics', () => {
+  const calendars = generateCalendars(SAMPLE.releases, { now: NOW });
+  const arrivalUids = ['tmdb-900010-arrival-movistar-plus@horror-calendar', 'tmdb-900011-arrival-netflix@horror-calendar'];
+  for (const c of calendars) {
+    const found = uids(c.ics).filter((u) => u.includes('-arrival-'));
+    const expected = { 'movistar-plus': [arrivalUids[0]], netflix: [arrivalUids[1]] }[c.slug] ?? [];
+    assert.deepEqual(found, expected, c.file);
+  }
+  assert.doesNotMatch(byFile(calendars, 'horror.ics').ics, /🆕|arrival/);
+  assert.doesNotMatch(byFile(calendars, 'horror-digital.ics').ics, /🆕|arrival/);
+});
+
+test('E5 arrival event: UID with the platform, 🆕 marker and "Ya disponible en:" line', () => {
+  const arrival = SAMPLE.releases.find((r) => r.id === 900010);
+  assert.equal(generateUID(arrival), 'tmdb-900010-arrival-movistar-plus@horror-calendar');
+  const lines = unfoldedLines(generateICS([arrival], { name: 'Movistar Plus+', now: NOW }));
+  assert.ok(lines.includes('UID:tmdb-900010-arrival-movistar-plus@horror-calendar'));
+  assert.ok(lines.includes('SUMMARY:Noche de Lobos 🆕'));
+  assert.ok(lines.includes('DTSTART;VALUE=DATE:20261026'));
+  assert.ok(lines.includes(`DESCRIPTION:${escapeText(arrival.overview)}\\n\\nYa disponible en: Movistar Plus+`
+    + '\\n\\nMás info: https://www.themoviedb.org/movie/900010'));
+  // The same movie on two platforms gives two UIDs
+  assert.notEqual(generateUID({ ...arrival, arrivalPlatform: 'filmin' }), generateUID(arrival));
+  // Arrival wins over flatrate in the where line
+  assert.equal(buildWhereLine({ ...arrival, providers: { flatrate: ['Filmin'], rentBuy: [] } }), 'Ya disponible en: Movistar Plus+');
+});
+
+test('E3 manual release: digital UID shared with TMDB, "Estreno en:" then "Fuente:" line', () => {
+  const manual = SAMPLE.releases.find((r) => r.source === 'manual');
+  assert.equal(generateUID(manual), 'tmdb-900009-digital@horror-calendar');
+  assert.equal(generateUID({ ...manual, source: 'tmdb', sourceUrl: null }), generateUID(manual));
+  assert.equal(buildDescription(manual), `${escapeText(manual.overview)}\\n\\nEstreno en: Disney+`
+    + '\\n\\nFuente: https://example.com/prensa/el-pozo-disney-plus\\n\\nMás info: https://www.themoviedb.org/movie/900009');
+  // Only manual releases get the source line
+  assert.doesNotMatch(buildDescription({ ...manual, source: 'tmdb' }), /Fuente:/);
+  const calendars = generateCalendars(SAMPLE.releases, { now: NOW });
+  for (const file of ['horror-disney-plus.ics', 'horror-digital.ics', 'horror.ics']) {
+    assert.ok(uids(byFile(calendars, file).ics).includes('tmdb-900009-digital@horror-calendar'), file);
+    assert.match(unfold(byFile(calendars, file).ics), /Fuente: https:\/\/example\.com\/prensa\/el-pozo-disney-plus/, file);
+  }
 });
 
 test('with no releases every calendar is still generated as a valid empty VCALENDAR', () => {

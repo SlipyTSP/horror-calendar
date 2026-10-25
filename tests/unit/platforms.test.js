@@ -87,7 +87,9 @@ test('assignCalendars tolerates missing providers and note', () => {
 test('assignCalendars reproduces the calendars of every release in releases.sample.json', () => {
   for (const release of SAMPLE.releases) {
     const { calendars, ...withoutCalendars } = release;
-    const out = assignCalendars(withoutCalendars);
+    // A manual release's platform comes from the curated file (src/manual.js passes it)
+    const options = release.source === 'manual' ? { platforms: calendars.filter((s) => s !== 'digital') } : undefined;
+    const out = assignCalendars(withoutCalendars, options);
     assert.deepEqual(out.calendars, calendars, `${release.id} ${release.type}`);
     assert.deepEqual(out, release);
   }
@@ -106,8 +108,32 @@ test('calendarDefinitions follows the canonical order and matches the sample met
   assert.deepEqual(defs.at(-1), { slug: 'all', file: 'horror.ics', name: 'Todo', kind: 'legacy' });
 });
 
+test('arrivals belong to their arrivalPlatform only, whatever their providers or note', () => {
+  const arrival = { id: 1, type: 'arrival', source: 'providers', providers: { flatrate: ['Netflix'], rentBuy: [] }, releaseNote: 'Filmin', arrivalPlatform: 'hbo-max' };
+  assert.deepEqual(assignCalendars(arrival).calendars, ['hbo-max']);
+  assert.deepEqual(assignCalendars(arrival, { platforms: ['netflix'] }).calendars, ['hbo-max']);
+  assert.deepEqual(assignCalendars({ ...arrival, arrivalPlatform: 'nope' }).calendars, []);
+});
+
+test('manual releases: the curated platform only, no note or flatrate union', () => {
+  const manual = digital({ source: 'manual', releaseNote: 'Netflix', providers: { flatrate: ['Filmin'], rentBuy: [] } });
+  assert.deepEqual(assignCalendars(manual, { platforms: ['disney-plus'] }).calendars, ['digital', 'disney-plus']);
+  assert.deepEqual(assignCalendars(manual).calendars, ['digital']);
+});
+
+test('TMDB wins: a curated platform is added to the note + flatrate union, in config order, unknown slugs ignored', () => {
+  const r = digital({ source: 'tmdb', releaseNote: 'Filmin' });
+  assert.deepEqual(assignCalendars(r, { platforms: ['movistar-plus', 'filmin', 'cines', 'nope'] }).calendars,
+    ['digital', 'movistar-plus', 'filmin']);
+  // Array.prototype.map passes an index as second argument: it is ignored
+  assert.deepEqual([r].map(assignCalendars)[0].calendars, ['digital', 'filmin']);
+});
+
 test('assignCalendars places calendars right after type, as in the data model', () => {
   const out = assignCalendars({ id: 1, title: 'T', releaseDate: '2026-11-01', type: 'digital', providers: { flatrate: [], rentBuy: [] }, releaseNote: null });
   assert.deepEqual(Object.keys(out), ['id', 'title', 'releaseDate', 'type', 'calendars', 'providers', 'releaseNote']);
+  // With `source` (schema 2) calendars go right after it
+  const withSource = assignCalendars({ id: 1, type: 'digital', source: 'tmdb', providers: { flatrate: [], rentBuy: [] } });
+  assert.deepEqual(Object.keys(withSource), ['id', 'type', 'source', 'calendars', 'providers']);
   for (const r of SAMPLE.releases) assert.deepEqual(Object.keys(assignCalendars(r)), Object.keys(r));
 });

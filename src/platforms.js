@@ -29,32 +29,51 @@ function matchPlatform(name) {
 }
 
 /**
- * Returns a copy of the release with `calendars` set:
- * ["cines"] for theatrical; ["digital", ...platformSlugs] for digital, where the
- * platform slugs are the union of the release note and the flatrate providers,
- * without duplicates and in config order.
- * @param {object} release - Release object from src/tmdb.js
+ * Returns a copy of the release with `calendars` set (§3):
+ * - theatrical: ["cines"];
+ * - tmdb digital: ["digital", ...platformSlugs], the union of the release note, the
+ *   flatrate providers and the curated `platforms` (TMDB-wins rule of §2);
+ * - manual digital: ["digital", ...platforms] (curated slug only, no note/flatrate union);
+ * - arrival: [arrivalPlatform].
+ * Platform slugs without duplicates and in config order.
+ * @param {object} release - Release object from src/tmdb.js, src/manual.js or src/arrivals.js
+ * @param {{ platforms?: string[] }} [options] - Curated platform slugs to add
  * @returns {object}
  */
-function assignCalendars(release) {
+function assignCalendars(release, options) {
   if (release?.type === 'theatrical') return withCalendars(release, ['cines']);
+  if (release?.type === 'arrival') {
+    const slug = PLATFORMS.some((p) => p.slug === release.arrivalPlatform) ? release.arrivalPlatform : null;
+    return withCalendars(release, slug ? [slug] : []);
+  }
 
-  const flatrate = Array.isArray(release?.providers?.flatrate) ? release.providers.flatrate : [];
-  const matched = new Set([release?.releaseNote, ...flatrate].map(matchPlatform).filter(Boolean));
+  const curated = Array.isArray(options?.platforms) ? options.platforms : [];
+  const matched = new Set(curated);
+  if (release?.source !== 'manual') {
+    const flatrate = Array.isArray(release?.providers?.flatrate) ? release.providers.flatrate : [];
+    for (const slug of [release?.releaseNote, ...flatrate].map(matchPlatform)) if (slug) matched.add(slug);
+  }
   const slugs = PLATFORMS.map((p) => p.slug).filter((slug) => matched.has(slug));
   return withCalendars(release, ['digital', ...slugs]);
 }
 
-// Copy with `calendars` right after `type`, the field order of data-model §2
+// Copy with `calendars` right after `source` (or after `type` when there is no source),
+// the field order of data-model §2
 function withCalendars(release, calendars) {
+  const entries = Object.entries(release ?? {}).filter(([key]) => key !== 'calendars');
+  const anchor = entries.some(([key]) => key === 'source') ? 'source' : 'type';
   const copy = {};
-  for (const [key, value] of Object.entries(release ?? {})) {
-    if (key === 'calendars') continue;
+  for (const [key, value] of entries) {
     copy[key] = value;
-    if (key === 'type') copy.calendars = calendars;
+    if (key === anchor) copy.calendars = calendars;
   }
   if (!('calendars' in copy)) copy.calendars = calendars;
   return copy;
+}
+
+/** Display name of a platform slug, or null. */
+function platformName(slug) {
+  return PLATFORMS.find((p) => p.slug === slug)?.name ?? null;
 }
 
 /**
@@ -70,4 +89,4 @@ function calendarDefinitions() {
   ];
 }
 
-module.exports = { PLATFORMS, matchPlatform, assignCalendars, calendarDefinitions };
+module.exports = { PLATFORMS, matchPlatform, assignCalendars, calendarDefinitions, platformName };

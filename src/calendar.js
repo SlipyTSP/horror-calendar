@@ -1,7 +1,9 @@
 // iCalendar (RFC 5545) generation: one VCALENDAR per calendar of docs/data-model.md §3,
 // with the rules of §6. No dependencies — the format is built by hand.
 
-const { PLATFORMS, assignCalendars, calendarDefinitions } = require('./platforms');
+const {
+  PLATFORMS, assignCalendars, calendarDefinitions, platformName,
+} = require('./platforms');
 
 const PRODID = '-//Horror Calendar//horror-calendar//ES';
 const CALENDAR_NAME_PREFIX = 'Terror — ';
@@ -10,7 +12,11 @@ const CALENDAR_NAME_PREFIX = 'Terror — ';
 const RELEASE_EMOJI = {
   theatrical: '🎬',
   digital: '📺',
+  arrival: '🆕',
 };
+
+// Types that belong to the legacy horror.ics (cines + digital, never arrivals)
+const LEGACY_TYPES = new Set(['theatrical', 'digital']);
 
 /**
  * Escapes text values (RFC 5545 §3.3.11): backslash, semicolon, comma and newlines
@@ -40,12 +46,15 @@ function formatTimestamp(date) {
 }
 
 /**
- * Stable UID from the TMDB id and the release type: a date or title change in TMDB
- * updates the event instead of duplicating it.
- * @param {{ id: number, type: string }} release
- * @returns {string} e.g. "tmdb-900004-digital@horror-calendar"
+ * Stable UID from the TMDB id and the release type (plus the platform for arrivals): a
+ * date or title change in TMDB updates the event instead of duplicating it. A manual
+ * release shares the `digital` UID with its future TMDB counterpart.
+ * @param {{ id: number, type: string, arrivalPlatform?: string|null }} release
+ * @returns {string} e.g. "tmdb-900004-digital@horror-calendar",
+ *   "tmdb-900010-arrival-movistar-plus@horror-calendar"
  */
 function generateUID(release) {
+  if (release.type === 'arrival') return `tmdb-${release.id}-arrival-${release.arrivalPlatform}@horror-calendar`;
   return `tmdb-${release.id}-${release.type}@horror-calendar`;
 }
 
@@ -56,6 +65,7 @@ function generateUID(release) {
  */
 function buildWhereLine(release) {
   if (release.type === 'theatrical') return 'En cines';
+  if (release.type === 'arrival') return `Ya disponible en: ${platformName(release.arrivalPlatform) ?? release.arrivalPlatform}`;
 
   const flatrate = Array.isArray(release.providers?.flatrate) ? release.providers.flatrate : [];
   if (flatrate.length > 0) return `Incluido en: ${flatrate.join(', ')}`;
@@ -71,8 +81,8 @@ function buildWhereLine(release) {
 }
 
 /**
- * DESCRIPTION value, escaped: synopsis (if any), where line and TMDB link,
- * separated by blank lines.
+ * DESCRIPTION value, escaped: synopsis (if any), where line, press source (manual
+ * releases) and TMDB link, separated by blank lines.
  * @param {object} release
  * @returns {string}
  */
@@ -80,6 +90,7 @@ function buildDescription(release) {
   const parts = [];
   if (release.overview) parts.push(release.overview);
   parts.push(buildWhereLine(release));
+  if (release.source === 'manual' && release.sourceUrl) parts.push(`Fuente: ${release.sourceUrl}`);
   parts.push(`Más info: ${release.tmdbUrl}`);
   return escapeText(parts.join('\n\n'));
 }
@@ -163,7 +174,8 @@ function generateICS(releases, { name, now = new Date() }) {
 
 /**
  * Every calendar of §3, in canonical order, always generated (possibly empty).
- * `all` (horror.ics) holds every release: cines + digital.
+ * `all` (horror.ics) holds every theatrical and digital release (cines + digital);
+ * arrivals only belong to their platform calendar.
  * @param {object[]} releases - Releases with `calendars` (see src/platforms.js)
  * @param {object} [options]
  * @param {Date} [options.now] - Build time
@@ -172,7 +184,7 @@ function generateICS(releases, { name, now = new Date() }) {
 function generateCalendars(releases, { now = new Date() } = {}) {
   return calendarDefinitions().map((def) => {
     const members = def.slug === 'all'
-      ? releases
+      ? releases.filter((r) => LEGACY_TYPES.has(r.type))
       : releases.filter((r) => Array.isArray(r.calendars) && r.calendars.includes(def.slug));
     return { ...def, count: members.length, ics: generateICS(members, { name: def.name, now }) };
   });
