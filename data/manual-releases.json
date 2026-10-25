@@ -1,0 +1,54 @@
+{
+  "schema": 1,
+  "releases": [
+    {
+      "id": 1405742,
+      "releaseDate": "2026-10-28",
+      "platform": "movistar-plus",
+      "sourceUrl": "https://www.xatakamovil.com/movistar/movistar-plus-desvela-nuevas-peliculas-series-que-llegaran-octubre-preparate-para-maraton-estrenos",
+      "comment": "Portal to Hell (2025). Sin fechas ES en TMDB."
+    },
+    {
+      "id": 1422096,
+      "releaseDate": "2026-10-29",
+      "platform": "movistar-plus",
+      "sourceUrl": "https://www.xatakamovil.com/movistar/movistar-plus-desvela-nuevas-peliculas-series-que-llegaran-octubre-preparate-para-maraton-estrenos",
+      "comment": "Good Boy (2025). Cines ES 2025-10-17; ya en Netflix y Filmin en ES."
+    },
+    {
+      "id": 1430077,
+      "releaseDate": "2026-10-31",
+      "platform": "movistar-plus",
+      "sourceUrl": "https://www.xatakamovil.com/movistar/movistar-plus-desvela-nuevas-peliculas-series-que-llegaran-octubre-preparate-para-maraton-estrenos",
+      "comment": "Hokum. Cines ES 2026-05-15; ventana Movistar+ sin fecha ES en TMDB."
+    },
+    {
+      "id": 1286185,
+      "releaseDate": "2026-11-01",
+      "platform": "movistar-plus",
+      "sourceUrl": "https://www.mundoplus.tv/cine/movistar-plus-prepara-un-noviembre-cargado-de-cine-estos-son-los-primeros-estrenos-confirmados/",
+      "comment": "The Carpenter's Son (2025). Sin fechas ES en TMDB."
+    },
+    {
+      "id": 964849,
+      "releaseDate": "2026-11-03",
+      "platform": "movistar-plus",
+      "sourceUrl": "https://www.mundoplus.tv/cine/movistar-plus-prepara-un-noviembre-cargado-de-cine-estos-son-los-primeros-estrenos-confirmados/",
+      "comment": "Engendro / Nightborn. Cines ES 2026-10-16."
+    },
+    {
+      "id": 1507442,
+      "releaseDate": "2026-11-04",
+      "platform": "movistar-plus",
+      "sourceUrl": "https://www.mundoplus.tv/cine/movistar-plus-prepara-un-noviembre-cargado-de-cine-estos-son-los-primeros-estrenos-confirmados/",
+      "comment": "Flush (2025, comedia de terror, 70 min). DOD Magazine lo daba el 1-oct; Mundoplus (28-sep) el 4-nov."
+    },
+    {
+      "id": 1302916,
+      "releaseDate": "2026-11-15",
+      "platform": "movistar-plus",
+      "sourceUrl": "https://www.mundoplus.tv/cine/movistar-plus-prepara-un-noviembre-cargado-de-cine-estos-son-los-primeros-estrenos-confirmados/",
+      "comment": "Heart Eyes (2025). Sin fechas ES en TMDB."
+    }
+  ]
+}
