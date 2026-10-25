@@ -95,6 +95,17 @@ test('E3 invalid entries are skipped with one problem each; a repeated id skips 
   assert.equal(problems.filter((p) => /id 19\) skipped: id repeated/.test(p)).length, 2);
 });
 
+test('a repeated id counts invalid entries too: the valid one is skipped as repeated', () => {
+  const { entries, problems } = validateManualDocument({
+    schema: 1,
+    releases: [entry({ id: 5 }), entry({ id: 5, releaseDate: 'bad' }), entry({ id: 6 })],
+  });
+  assert.deepEqual(entries.map((e) => e.id), [6]);
+  assert.equal(problems.length, 2);
+  assert.match(problems[0], /entry #2 \(id 5\) skipped: "releaseDate"/);
+  assert.match(problems[1], /entry #1 \(id 5\) skipped: id repeated in the file/);
+});
+
 test('validateManualDocument rejects documents that are not schema 1 with a releases array', () => {
   for (const doc of [null, [], 'x', {}, { schema: 2, releases: [] }, { schema: '1', releases: [] }, { schema: 1 }, { schema: 1, releases: {} }]) {
     const result = validateManualDocument(doc);
