@@ -1,0 +1,130 @@
+{
+  "results": [
+    {
+      "display_priorities": {
+        "ES": 0
+      },
+      "display_priority": 0,
+      "logo_path": "/logo8.jpg",
+      "provider_name": "Netflix",
+      "provider_id": 8
+    },
+    {
+      "display_priorities": {
+        "ES": 1
+      },
+      "display_priority": 1,
+      "logo_path": "/logo1796.jpg",
+      "provider_name": "Netflix basic with Ads",
+      "provider_id": 1796
+    },
+    {
+      "display_priorities": {
+        "ES": 2
+      },
+      "display_priority": 2,
+      "logo_path": "/logo119.jpg",
+      "provider_name": "Amazon Prime Video",
+      "provider_id": 119
+    },
+    {
+      "display_priorities": {
+        "ES": 3
+      },
+      "display_priority": 3,
+      "logo_path": "/logo2100.jpg",
+      "provider_name": "Amazon Prime Video with Ads",
+      "provider_id": 2100
+    },
+    {
+      "display_priorities": {
+        "ES": 4
+      },
+      "display_priority": 4,
+      "logo_path": "/logo1899.jpg",
+      "provider_name": "HBO Max",
+      "provider_id": 1899
+    },
+    {
+      "display_priorities": {
+        "ES": 5
+      },
+      "display_priority": 5,
+      "logo_path": "/logo1825.jpg",
+      "provider_name": "HBO Max Amazon Channel",
+      "provider_id": 1825
+    },
+    {
+      "display_priorities": {
+        "ES": 6
+      },
+      "display_priority": 6,
+      "logo_path": "/logo149.jpg",
+      "provider_name": "Movistar Plus+",
+      "provider_id": 149
+    },
+    {
+      "display_priorities": {
+        "ES": 7
+      },
+      "display_priority": 7,
+      "logo_path": "/logo2241.jpg",
+      "provider_name": "Movistar Plus+ Ficción Total ",
+      "provider_id": 2241
+    },
+    {
+      "display_priorities": {
+        "ES": 8
+      },
+      "display_priority": 8,
+      "logo_path": "/logo63.jpg",
+      "provider_name": "Filmin",
+      "provider_id": 63
+    },
+    {
+      "display_priorities": {
+        "ES": 9
+      },
+      "display_priority": 9,
+      "logo_path": "/logo337.jpg",
+      "provider_name": "Disney Plus",
+      "provider_id": 337
+    },
+    {
+      "display_priorities": {
+        "ES": 10
+      },
+      "display_priority": 10,
+      "logo_path": "/logo1773.jpg",
+      "provider_name": "SkyShowtime",
+      "provider_id": 1773
+    },
+    {
+      "display_priorities": {
+        "ES": 11
+      },
+      "display_priority": 11,
+      "logo_path": "/logo350.jpg",
+      "provider_name": "Apple TV Plus",
+      "provider_id": 350
+    },
+    {
+      "display_priorities": {
+        "ES": 12
+      },
+      "display_priority": 12,
+      "logo_path": "/logo2.jpg",
+      "provider_name": "Apple TV",
+      "provider_id": 2
+    },
+    {
+      "display_priorities": {
+        "ES": 13
+      },
+      "display_priority": 13,
+      "logo_path": "/logo35.jpg",
+      "provider_name": "Rakuten TV",
+      "provider_id": 35
+    }
+  ]
+}

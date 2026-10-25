@@ -1,0 +1,34 @@
+{
+  "page": 1,
+  "total_pages": 1,
+  "total_results": 3,
+  "results": [
+    {
+      "id": 920001,
+      "title": "Catálogo 920001",
+      "original_title": "Catalogue 920001",
+      "release_date": "2025-03-14",
+      "genre_ids": [
+        27
+      ]
+    },
+    {
+      "id": 920002,
+      "title": "Catálogo 920002",
+      "original_title": "Catalogue 920002",
+      "release_date": "2025-03-14",
+      "genre_ids": [
+        27
+      ]
+    },
+    {
+      "id": 920003,
+      "title": "Catálogo 920003",
+      "original_title": "Catalogue 920003",
+      "release_date": "2025-03-14",
+      "genre_ids": [
+        27
+      ]
+    }
+  ]
+}
