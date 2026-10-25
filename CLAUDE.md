@@ -185,6 +185,19 @@ Reglas de cada sesión:
 - Un `.ics` por plataforma más `cines`, `digital` y el alias `horror.ics`; todos se
   generan siempre. Altas y bajas de plataformas se resuelven suscribiéndose o no en el
   dispositivo, no en el build.
-- La sinopsis no es criterio de inclusión; sin fecha de estreno en España no se entra.
-- UID basado en ID de TMDB + tipo.
+- La sinopsis no es criterio de inclusión. Sin fecha de estreno en España no se entra: la
+  fecha española sale de TMDB o, para altas manuales, de una fuente de prensa española
+  (`data/manual-releases.json`). Nunca se usan fechas de otros países.
+- Regla de duración (2026-10-26): solo entran películas de 40 min o más, o sin duración
+  en TMDB pero con `imdb_id` (la medición del 25-oct mostró que la mitad de lo publicado
+  en sep-oct eran cortos).
+- Altas manuales (2026-10-26): `data/manual-releases.json` es del propietario; si TMDB ya
+  fecha el estreno, gana TMDB. Se rellena desde la prensa a mano o mediante PRs que revisa
+  el propietario.
+- Llegadas a plataformas (2026-10-26): diff semanal del catálogo `flatrate` en ES de
+  películas de terror de los últimos 3 años; solo en el calendario de su plataforma
+  (nunca en `digital` ni en `horror.ics`), 30 días; la foto anterior se lee de la copia
+  publicada en Pages, sin commits desde Actions.
+- UID basado en ID de TMDB + tipo (las llegadas añaden la plataforma).
 - La web usa solo URLs relativas (en el futuro puede servirse bajo una subruta).
+- Atribución obligatoria en la web: TMDB y JustWatch (datos de disponibilidad).

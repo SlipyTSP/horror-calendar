@@ -16,7 +16,8 @@ planning folder; this file is what a coding session needs.
   if a change outside the owned set seems necessary, leave it undone and explain it in
   the PR description. The only exceptions are the ones listed as "authorised exceptions".
 - The data contract (`docs/data-model.md` + `tests/fixtures/releases.sample.json`) is
-  read-only for every phase.
+  read-only for every phase. F4 starts from a branch that already contains its contract change
+  (schema 2), because the current code and tests cannot run against it until F4 is done.
 - Done means: the acceptance criteria are met with evidence in the PR description,
   `npm test` is green on the branch, CI is green on the PR, and `CLAUDE.md` describes the
   repository as the phase leaves it.
@@ -29,7 +30,8 @@ planning folder; this file is what a coding session needs.
 | F0 — Foundations | `feat/f0-foundations` | [#1](https://github.com/SlipyTSP/horror-calendar/pull/1) | merged |
 | F1 — Regional data core + calendars | `feat/f1-regional-data` | [#2](https://github.com/SlipyTSP/horror-calendar/pull/2) | merged |
 | F2 — Web selector | `feat/f2-web-selector` | [#3](https://github.com/SlipyTSP/horror-calendar/pull/3) | merged |
-| F3 light — Visual polish | `feat/f3-visual-polish` | [#4](https://github.com/SlipyTSP/horror-calendar/pull/4) | in review |
+| F3 light — Visual polish | `feat/f3-visual-polish` | [#4](https://github.com/SlipyTSP/horror-calendar/pull/4) | merged |
+| F4 — Coverage: runtime rule, manual releases, platform arrivals | `feat/f4-coverage` | — | contract committed on the branch |
 
 Each phase updates its own row when it opens its PR.
 
@@ -300,3 +302,124 @@ tags, a system font stack instead of Google Fonts, and grouping the list by mont
 **Branch.** `feat/f3-visual-polish`. **Owns** `site/**` and `tests/unit/site-*.test.js`.
 **Must not touch** anything else. Runs only after F1 and F2 are merged. The full redesign
 is deliberately not part of this plan.
+
+## 5. F4 — Coverage: runtime rule, manual releases, platform arrivals
+
+**Goal.** Close the gaps found by the platform coverage measurement of 2026-10-25
+(planning folder): Sep–Oct cinemas were fully covered, but only 3 of 10 platform
+releases and 0 of 15 platform arrivals of recent catalogue titles were caught, and half
+of the published Sep–Oct entries were shorts. F4 implements the contract change of
+2026-10-26 (`docs/data-model.md` §2, §3, §6, §7, §8, §10, §11; `schema: 2`):
+
+1. **Runtime rule** for every release (§2), with one detail request per release (§7).
+2. **Manual releases** from the curated `data/manual-releases.json` (§10).
+3. **Platform arrivals** from the weekly providers diff, with a published snapshot (§11).
+4. Web and calendars updated to `schema: 2` (arrival badge, JustWatch attribution).
+
+**Measured facts the implementation can rely on** (2026-10-25, real API):
+
+- Shorts published today run 1–22 min (plus two without runtime and without `imdb_id`);
+  the shortest real release confirmed by the press was `1702511` *The Class: Online*,
+  52 min. `MIN_RUNTIME = 40` removed 18 of 36 Sep–Oct releases and none of the press list.
+- Streaming windows after a Spanish theatrical run have no Spanish type-4 date
+  (`1083381` Backrooms, `1212763` Evil Dead Burn, `1430077` Hokum); direct-to-platform
+  releases often have none either (`1107166` Psycho Killer, `1459725` Vleesdag). That is
+  what `data/manual-releases.json` is for.
+- Spanish `flatrate` already shows those titles once available (Psycho Killer → Disney
+  Plus, Vleesdag → Amazon Prime Video, Backrooms → HBO Max and Filmin, Whistle and
+  Redux Redux → Movistar Plus+). That is what the arrivals diff uses.
+
+**Branch.** `feat/f4-coverage`, **already created by the owner** with the contract
+commit (`docs/data-model.md`, `docs/phases.md`, `tests/fixtures/releases.sample.json`,
+`CLAUDE.md` decisions, `data/manual-releases.json`). The session checks it out and adds
+its commits on top; it does not create a new branch from `main`. Until F4 is done the
+branch's tests are red against the new contract: that is expected.
+
+**Owns.** `src/**`, `site/**`, `tests/unit/**`, `tests/support/**` (new helpers only, or
+backwards-compatible additions), `tests/fixtures/tmdb/synthetic/**`, `scripts/summary.js`,
+`.env.example`, `README.md`, `CLAUDE.md` (architecture, commands, TMDB and ICS sections),
+`docs/phases.md` (status row only), `.github/workflows/update-calendar.yml` and
+`.github/workflows/ci.yml` (only the changes listed in the tasks).
+
+**Must not touch.** `docs/data-model.md`, `tests/fixtures/releases.sample.json`,
+`data/manual-releases.json` (owner's data; tests use their own fixture files),
+`CLAUDE.md` "Decisiones vigentes", the captured files directly under
+`tests/fixtures/tmdb/`, `scripts/capture-fixtures.js`, `package.json` dependencies.
+
+**Tasks.**
+
+1. Detail request per release (§7): `GET /movie/{id}` with
+   `append_to_response=release_dates,watch/providers`, replacing the separate
+   `watch/providers` and `release_dates` requests; one request per movie id even when
+   the movie is in both queries; failures keep the release (§7). Runtime rule with
+   `MIN_RUNTIME` (§2), with the removed count and titles in the log.
+2. Manual releases (§10): load and validate `MANUAL_RELEASES_FILE`, window filter,
+   detail request, TMDB-wins rule with its warning, `Fuente:` line.
+3. Arrivals (§11): provider ids, one catalogue query per platform with pagination and
+   cut warning, previous snapshot from `SNAPSHOT_URL`, seed mode, per-platform diff with
+   the three guards, carried-over arrivals, `ARRIVAL_DAYS` window, detail request and
+   runtime rule, de-duplication against the build's digital releases, new snapshot in
+   `output/providers-snapshot.json`. Best effort: never a non-zero exit.
+4. `releases.json` `schema: 2` with `arrivalWindow` and the new fields on every release
+   (§2, §4); calendar membership and counts (§3); UIDs, `🆕` marker and DESCRIPTION
+   lines (§6).
+5. Workflows: `update-calendar.yml` passes `SNAPSHOT_URL=https://slipytsp.github.io/horror-calendar/providers-snapshot.json`
+   to `npm start` and copies `output/providers-snapshot.json` to `_site/` (the data
+   layer always writes it, §11, so the copy cannot fail on its own); `ci.yml`
+   passes the same `SNAPSHOT_URL` to the dry run (read-only use of the published copy).
+   No other workflow change.
+6. Web (§8): accept `schema: 2` only; arrival badge ES/EN; arrivals in the list under
+   their month; JustWatch attribution in the footer; C1–C4 of F2 and D1–D6 of F3 keep
+   holding.
+7. `scripts/summary.js`: `source` column and arrivals counted per platform.
+8. Tests with fixtures only. The combined detail request no longer matches the captured
+   `movie_*_release_dates.json` / `*_watch_providers.json` files: new detail responses
+   go under `tests/fixtures/tmdb/synthetic/`, or a new helper in `tests/support/` builds
+   them from the captured files (the captured files themselves are not edited). The
+   sample fixture's `900007` (`runtime: null`) needs a detail response with an
+   `imdb_id`. Tests asserting `schema: 1` or rejecting `schema: 2`
+   (`tests/unit/index.test.js`, `tests/unit/site-selector.test.js`) are adapted. Cover
+   every rule above,
+   including seed mode, each guard, carried-over arrivals leaving the window, TMDB-wins
+   with differing dates, invalid manual entries, the `Fuente:` line, the arrival UID and
+   marker, `horror.ics` and `digital` without arrivals, and the sample fixture
+   reproduced exactly by `assignCalendars` + `generateCalendars`.
+9. Docs: README (manual releases file for the owner, arrivals explained, JustWatch
+   attribution), `CLAUDE.md` sections owned above, `.env.example` with the new
+   variables, status row.
+
+**Acceptance criteria.**
+
+- E1. Every release (all sources) passes the runtime rule; a test proves that a 20-min
+  release is removed, a 52-min one kept, and one without runtime kept only with
+  `imdb_id`. The dry run on the PR no longer lists shorts.
+- E2. One detail request per movie id; a failed detail keeps the release; the 20 %
+  threshold and exit codes of §7 still hold.
+- E3. A valid manual entry inside the window lands in `digital` and its platform
+  calendar with `source: "manual"`, `sourceUrl` and the `Fuente:` line; invalid entries
+  warn and are skipped; a manual entry that TMDB also dates is dropped (warning when the
+  dates differ) and both would share the UID `tmdb-<id>-digital`.
+- E4. Arrivals: seed mode produces no arrivals and a valid snapshot; a second run
+  against that snapshot produces arrivals exactly for the new ids; each guard (empty
+  current set, flood, pagination cut, platform missing from the snapshot) behaves as §11
+  says; carried-over arrivals keep their date and leave after `ARRIVAL_DAYS`.
+- E5. Arrivals appear only in their platform calendar, with UID
+  `tmdb-<id>-arrival-<platform>@horror-calendar`, `🆕` and `Ya disponible en:`;
+  `horror.ics` still equals `cines` + `digital`.
+- E6. `output/releases.json` and `output/providers-snapshot.json` conform to §4 and §11;
+  the sample fixture is reproduced exactly (counts included).
+- E7. The web shows the arrival badge, accepts schema 2 only, credits JustWatch, and
+  keeps C1–C4 and D1–D6 (visual check at 320/390/1440 px with the sample fixture).
+- E8. Workflows: the deploy publishes `providers-snapshot.json`; the dry run reads the
+  published snapshot (first run: seed mode with a warning, since nothing is published
+  yet). No failure of §10/§11 turns a run red.
+- E9. All numeric inputs parsed defensively; TMDB, manual and snapshot fields treated as
+  optional.
+- E10. `npm test` green on the branch and in CI; no new dependencies.
+
+**First weeks in production.** The first deploy after the merge seeds the snapshot (no
+arrivals); arrivals start on the second build. Manual releases work from the first build.
+
+**Out of scope.** Automating the press review (it is a scheduled task outside the
+repository that opens pull requests against `data/manual-releases.json`); dates from
+other countries; scraping JustWatch or the press; redesign.
