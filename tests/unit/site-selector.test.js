@@ -249,13 +249,8 @@ test('release dates are parsed as local dates without timezone shift', () => {
   assert.ok(selector.formatGenerated(SAMPLE.generated, 'es-ES').includes('2026'));
 });
 
-test('site/ contains no absolute link to the production host', () => {
-  for (const file of fs.readdirSync(SITE)) {
-    if (!/\.(html|css|js)$/.test(file)) continue;
-    const text = fs.readFileSync(path.join(SITE, file), 'utf8');
-    assert.ok(!/slipytsp\.github\.io/i.test(text), file);
-  }
-});
+// The check for absolute links to the production host lives in site-static.test.js
+// (recursive, with the og:/twitter: meta exception authorised in F3).
 
 test('posterUrl builds the TMDB w342 URL for valid poster paths', () => {
   assert.equal(selector.posterUrl('/sample-900001.jpg'), 'https://image.tmdb.org/t/p/w342/sample-900001.jpg');
