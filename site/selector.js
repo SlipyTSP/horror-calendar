@@ -1,9 +1,10 @@
 /*
  * Horror calendar selector — plain ES2020, no build step, no dependencies.
  *
- * Reads releases.json (docs/data-model.md §4) with a relative URL, lets the user pick
- * calendars (cinemas, platforms, digital aggregate), offers a webcal:// button and a
- * copyable https URL per selected calendar, and filters the release list.
+ * Reads releases.json (docs/data-model.md §4, schema 2 only) with a relative URL, lets
+ * the user pick calendars (cinemas, platforms, digital aggregate), offers a webcal://
+ * button and a copyable https URL per selected calendar, and filters the release list
+ * (releases and platform arrivals, in the order of releases.json).
  *
  * Local preview (both copies are ignored by git):
  *   cp tests/fixtures/releases.sample.json site/releases.json
@@ -15,7 +16,9 @@
 (function () {
   'use strict';
 
-  const SCHEMA_VERSION = 1;
+  const SCHEMA_VERSION = 2;
+  // Types counted as upcoming releases; arrivals are already available (§8)
+  const UPCOMING_TYPES = ['theatrical', 'digital'];
   const STORAGE_KEY = 'horror-calendar:selection';
   const DEFAULT_SELECTION = ['cines'];
   const SELECTABLE_KINDS = ['cinema', 'platform', 'aggregate'];
@@ -31,10 +34,10 @@
       stats_other: '{total} estrenos de terror en los próximos meses',
       generated: 'Actualizado el {date}',
       picker_title: '1 · Elige tus calendarios',
-      picker_hint: 'Marca los cines y las plataformas que tienes. «Digital» incluye todos los estrenos digitales, también los de alquiler o compra.',
+      picker_hint: 'Marca los cines y las plataformas que tienes. Cada plataforma incluye sus estrenos y las películas de terror que acaban de llegar a su catálogo. «Digital» incluye todos los estrenos digitales, también los de alquiler o compra.',
       picker_unavailable: 'No se ha podido cargar la lista de calendarios.',
-      count_one: '{count} estreno',
-      count_other: '{count} estrenos',
+      count_one: '{count} título',
+      count_other: '{count} títulos',
       subscribe_title: '2 · Suscríbete a lo elegido',
       subscribe_empty: 'Marca arriba al menos un calendario.',
       subscribe_btn: 'Suscribirse',
@@ -46,15 +49,17 @@
       gcal_instructions: 'Abre Google Calendar → Otros calendarios (+) → Desde URL → pega la URL y pulsa «Añadir calendario».',
       classic_text: '¿Ya estabas suscrito? El calendario clásico con todos los estrenos (cines y digital) sigue funcionando.',
       classic_link: 'Calendario clásico completo',
-      movies_title: 'Próximos estrenos de tu selección',
+      movies_title: 'Estrenos y novedades de tu selección',
       loading: 'Cargando estrenos...',
       no_selection: 'Marca al menos un calendario para ver sus estrenos.',
-      no_movies: 'No hay estrenos próximos en los calendarios elegidos.',
+      no_movies: 'No hay estrenos próximos ni novedades en los calendarios elegidos.',
       error: 'No se han podido cargar los estrenos. Inténtalo más tarde.',
       error_schema: 'Los datos publicados tienen un formato que esta página no reconoce. Inténtalo más tarde.',
       badge_rentbuy: 'Alquiler/compra',
+      badge_arrival: 'Ya disponible',
       no_date: 'Sin fecha',
       footer_data: 'Datos de',
+      footer_justwatch: 'Disponibilidad en plataformas:',
       footer_source: 'Código en',
       footer_tmdb_notice: 'Este producto usa la API de TMDB pero no está avalado ni certificado por TMDB.',
       date_locale: 'es-ES',
@@ -66,10 +71,10 @@
       stats_other: '{total} horror releases in the coming months',
       generated: 'Updated {date}',
       picker_title: '1 · Pick your calendars',
-      picker_hint: 'Tick the cinemas and the platforms you have. “Digital” includes every digital release, rentals and purchases too.',
+      picker_hint: 'Tick the cinemas and the platforms you have. Each platform includes its releases and the horror movies that have just arrived in its catalogue. “Digital” includes every digital release, rentals and purchases too.',
       picker_unavailable: 'The list of calendars could not be loaded.',
-      count_one: '{count} release',
-      count_other: '{count} releases',
+      count_one: '{count} title',
+      count_other: '{count} titles',
       subscribe_title: '2 · Subscribe to your picks',
       subscribe_empty: 'Tick at least one calendar above.',
       subscribe_btn: 'Subscribe',
@@ -81,15 +86,17 @@
       gcal_instructions: 'Open Google Calendar → Other calendars (+) → From URL → paste the URL and click “Add calendar”.',
       classic_text: 'Already subscribed? The classic calendar with every release (cinemas and digital) keeps working.',
       classic_link: 'Classic full calendar',
-      movies_title: 'Upcoming releases in your selection',
+      movies_title: 'Releases and new arrivals in your selection',
       loading: 'Loading releases...',
       no_selection: 'Tick at least one calendar to see its releases.',
-      no_movies: 'No upcoming releases in the selected calendars.',
+      no_movies: 'No upcoming releases or new arrivals in the selected calendars.',
       error: 'Releases could not be loaded. Please try again later.',
       error_schema: 'The published data has a format this page does not recognise. Please try again later.',
       badge_rentbuy: 'Rent/buy',
+      badge_arrival: 'Now available',
       no_date: 'No date',
       footer_data: 'Data from',
+      footer_justwatch: 'Streaming availability:',
       footer_source: 'Source on',
       footer_tmdb_notice: 'This product uses the TMDB API but is not endorsed or certified by TMDB.',
       date_locale: 'en-US',
@@ -208,21 +215,23 @@
   }
 
   // --- Filtering and badges ---
-  function compareReleases(a, b) {
-    const da = typeof a.releaseDate === 'string' ? a.releaseDate : '';
-    const db = typeof b.releaseDate === 'string' ? b.releaseDate : '';
-    if (da !== db) return da < db ? -1 : 1;
-    const ta = typeof a.title === 'string' ? a.title : '';
-    const tb = typeof b.title === 'string' ? b.title : '';
-    return ta.localeCompare(tb);
-  }
-
+  // Keeps the order of releases.json (§2: date, title, type, id); arrivals, dated in the
+  // past, come first.
   function filterReleases(releases, selection) {
     const selected = new Set(Array.isArray(selection) ? selection : []);
     return (Array.isArray(releases) ? releases : [])
       .filter((r) => isObject(r) && Array.isArray(r.calendars)
-        && r.calendars.some((slug) => selected.has(slug)))
-      .sort(compareReleases);
+        && r.calendars.some((slug) => selected.has(slug)));
+  }
+
+  // Upcoming releases only (theatrical and digital): arrivals are already available.
+  function upcomingCount(releases) {
+    return (Array.isArray(releases) ? releases : [])
+      .filter((r) => isObject(r) && UPCOMING_TYPES.includes(r.type)).length;
+  }
+
+  function isArrival(release) {
+    return isObject(release) && release.type === 'arrival' && typeof release.arrivalPlatform === 'string';
   }
 
   function hasRentBuyOnly(release, calendars) {
@@ -234,12 +243,17 @@
     return !slugs.some((slug) => platforms.has(slug));
   }
 
-  // Badges in canonical calendar order; slugs missing from `calendars` are skipped.
+  // Badges in canonical calendar order; slugs missing from `calendars` are skipped. An
+  // arrival gets its "now available" badge right after the badge of its platform.
   function releaseBadges(release, calendars) {
     const slugs = new Set(Array.isArray(release.calendars) ? release.calendars : []);
-    const badges = (calendars || [])
-      .filter((c) => slugs.has(c.slug) && c.kind !== 'legacy')
-      .map((c) => ({ kind: c.kind, slug: c.slug, label: typeof c.name === 'string' && c.name ? c.name : c.slug }));
+    const badges = [];
+    for (const c of calendars || []) {
+      if (!slugs.has(c.slug) || c.kind === 'legacy') continue;
+      badges.push({ kind: c.kind, slug: c.slug, label: typeof c.name === 'string' && c.name ? c.name : c.slug });
+      if (isArrival(release) && c.slug === release.arrivalPlatform) badges.push({ kind: 'arrival', slug: null, label: null });
+    }
+    if (isArrival(release) && !badges.some((b) => b.kind === 'arrival')) badges.push({ kind: 'arrival', slug: null, label: null });
     if (hasRentBuyOnly(release, calendars)) badges.push({ kind: 'rentbuy', slug: null, label: null });
     return badges;
   }
@@ -350,6 +364,7 @@
     saveSelection,
     toggleSelection,
     filterReleases,
+    upcomingCount,
     hasRentBuyOnly,
     releaseBadges,
     buildCalendarUrls,
@@ -473,7 +488,7 @@
         generated.textContent = '';
         return;
       }
-      const total = listReleases(state.data).length;
+      const total = upcomingCount(listReleases(state.data));
       stats.textContent = plural(state.lang, 'stats', total, { total });
       const date = formatGenerated(state.data.generated, t('date_locale'));
       generated.textContent = date ? t('generated', { date }) : '';
@@ -531,6 +546,7 @@
 
     function badgeNode(badge) {
       if (badge.kind === 'rentbuy') return el('span', { className: 'movie-badge badge-rentbuy', text: t('badge_rentbuy') });
+      if (badge.kind === 'arrival') return el('span', { className: 'movie-badge badge-arrival', text: t('badge_arrival') });
       return el('span', { className: 'movie-badge badge-' + badge.kind, text: badge.label });
     }
 

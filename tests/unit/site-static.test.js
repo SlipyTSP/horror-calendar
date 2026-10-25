@@ -114,7 +114,7 @@ test('head links to the favicon and touch icon with relative URLs', () => {
   assert.match(html, /<link rel="apple-touch-icon" href="assets\/apple-touch-icon\.png">/);
   assert.match(html, /<meta name="theme-color" content="#0a0a0a">/);
   for (const [, href] of html.matchAll(/<(?:link|script|img|a)\s[^>]*(?:href|src)="([^"]+)"/g)) {
-    if (/^https:\/\/(www\.themoviedb\.org|github\.com)\//.test(href)) continue; // footer credits
+    if (/^https:\/\/(www\.themoviedb\.org|github\.com|www\.justwatch\.com)\//.test(href)) continue; // footer credits
     assert.ok(!/^[a-z]+:|^\/\//i.test(href), href);
   }
 });

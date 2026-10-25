@@ -503,6 +503,12 @@ h1 {
   border: 1px solid rgba(100, 100, 100, 0.4);
 }
 
+.badge-arrival {
+  background: rgba(40, 130, 70, 0.25);
+  color: #7fd89a;
+  border: 1px solid rgba(40, 130, 70, 0.45);
+}
+
 .movie-date {
   font-size: 0.85rem;
   color: var(--red-bright);

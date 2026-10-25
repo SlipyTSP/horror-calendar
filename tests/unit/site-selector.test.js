@@ -39,7 +39,7 @@ test('selectable calendars follow JSON order and exclude the legacy calendar', (
 });
 
 test('calendars with absolute or unsafe files are not offered', () => {
-  const data = { schema: 1, calendars: [
+  const data = { schema: 2, calendars: [
     { slug: 'a', file: 'https://example.org/a.ics', kind: 'platform' },
     { slug: 'b', file: '/b.ics', kind: 'platform' },
     { slug: 'c', file: '../c.ics', kind: 'platform' },
@@ -104,10 +104,12 @@ test('filtering with the sample: prime-video, cines, digital', () => {
   const releases = selector.listReleases(SAMPLE);
   assert.deepEqual(ids(selector.filterReleases(releases, ['prime-video'])), [900005, 900008]);
   assert.deepEqual(ids(selector.filterReleases(releases, ['cines'])), [900001, 900004, 900007]);
-  assert.equal(selector.filterReleases(releases, ['digital']).length, 6);
-  assert.equal(selector.filterReleases(releases, ['cines', 'digital']).length, 9);
+  assert.equal(selector.filterReleases(releases, ['digital']).length, 7);
+  assert.equal(selector.filterReleases(releases, ['cines', 'digital']).length, 10);
   assert.deepEqual(selector.filterReleases(releases, []), []);
-  assert.deepEqual(selector.filterReleases(releases, ['disney-plus']), []);
+  assert.deepEqual(ids(selector.filterReleases(releases, ['disney-plus'])), [900009], 'manual release');
+  assert.deepEqual(ids(selector.filterReleases(releases, ['netflix'])), [900011, 900002], 'arrival first');
+  assert.deepEqual(ids(selector.filterReleases(releases, ['skyshowtime'])), []);
 });
 
 test('filtered counts match calendars[].count in the sample', () => {
@@ -117,10 +119,50 @@ test('filtered counts match calendars[].count in the sample', () => {
   }
 });
 
-test('filtered list is sorted by date then title', () => {
-  const releases = selector.filterReleases(selector.listReleases(SAMPLE), ['cines', 'digital']);
-  const dates = releases.map((r) => r.releaseDate);
-  assert.deepEqual(dates, [...dates].sort());
+test('the filtered list keeps the order of releases.json (§8), it is never re-sorted', () => {
+  const all = selector.listReleases(SAMPLE);
+  const known = SAMPLE.calendars.map((c) => c.slug);
+  assert.deepEqual(selector.filterReleases(all, known), SAMPLE.releases);
+  const reversed = [...all].reverse();
+  assert.deepEqual(selector.filterReleases(reversed, known), reversed);
+});
+
+test('upcoming statistics count only theatrical and digital releases', () => {
+  assert.equal(selector.upcomingCount(selector.listReleases(SAMPLE)), 10);
+  assert.equal(selector.upcomingCount([{ type: 'arrival' }, { type: 'digital' }, null, { type: 'x' }]), 1);
+  assert.equal(selector.upcomingCount(undefined), 0);
+});
+
+test('arrivals get the "now available" badge right after their platform badge', () => {
+  const byId = (id) => SAMPLE.releases.find((r) => r.id === id);
+  const kinds = (r) => selector.releaseBadges(r, SAMPLE.calendars).map((b) => b.label || b.kind);
+  assert.deepEqual(kinds(byId(900010)), ['Movistar Plus+', 'arrival']);
+  assert.deepEqual(kinds(byId(900011)), ['Netflix', 'arrival']);
+  assert.deepEqual(kinds(byId(900009)), ['Disney+', 'Digital'], 'manual release: no arrival badge');
+  const withArrival = SAMPLE.releases.filter((r) => selector.releaseBadges(r, SAMPLE.calendars).some((b) => b.kind === 'arrival'));
+  assert.deepEqual(withArrival.map((r) => r.id), [900010, 900011]);
+  // Platform missing from calendars: the arrival badge is still shown
+  assert.deepEqual(selector.releaseBadges({ type: 'arrival', arrivalPlatform: 'x', calendars: ['x'] }, SAMPLE.calendars)
+    .map((b) => b.kind), ['arrival']);
+  assert.equal(selector.translate('es', 'badge_arrival'), 'Ya disponible');
+  assert.equal(selector.translate('en', 'badge_arrival'), 'Now available');
+});
+
+test('per-calendar counts do not say "estrenos" only (they include arrivals)', () => {
+  assert.equal(selector.plural('es', 'count', 2, { count: 2 }), '2 títulos');
+  assert.equal(selector.plural('en', 'count', 1, { count: 1 }), '1 title');
+  for (const lang of selector.LANGS) {
+    assert.doesNotMatch(selector.I18N[lang].count_one + selector.I18N[lang].count_other, /estreno|release/i, lang);
+  }
+});
+
+test('the JustWatch credit is in the footer, ES/EN, linked to justwatch.com', () => {
+  const html = fs.readFileSync(path.join(SITE, 'index.html'), 'utf8');
+  const footer = html.slice(html.indexOf('<footer>'), html.indexOf('</footer>'));
+  assert.match(footer, /<span data-i18n="footer_justwatch">[^<]+<\/span>\s*<a href="https:\/\/www\.justwatch\.com\/" target="_blank" rel="noopener">JustWatch<\/a>/);
+  assert.match(footer, /href="https:\/\/www\.themoviedb\.org\/"/, 'TMDB credit kept');
+  assert.equal(selector.translate('es', 'footer_justwatch'), 'Disponibilidad en plataformas:');
+  assert.equal(selector.translate('en', 'footer_justwatch'), 'Streaming availability:');
 });
 
 test('releases without calendars or with unknown slugs do not break filtering or badges', () => {
@@ -187,15 +229,18 @@ test('external links only accept http(s)', () => {
 });
 
 test('schema validation', () => {
+  assert.equal(SAMPLE.schema, 2);
   assert.deepEqual(selector.validateData(SAMPLE), { ok: true });
-  assert.deepEqual(selector.validateData({ ...SAMPLE, schema: 2 }), { ok: false, reason: 'schema' });
+  for (const schema of [1, 3, '2', null, undefined]) {
+    assert.deepEqual(selector.validateData({ ...SAMPLE, schema }), { ok: false, reason: 'schema' }, String(schema));
+  }
   assert.deepEqual(selector.validateData({ generated: 'x', total: 3, releases: [] }), { ok: false, reason: 'schema' });
   assert.deepEqual(selector.validateData(null), { ok: false, reason: 'shape' });
   assert.deepEqual(selector.validateData([]), { ok: false, reason: 'shape' });
 });
 
-test('schema 1 with missing fields degrades to empty lists', () => {
-  const data = { schema: 1 };
+test('schema 2 with missing fields degrades to empty lists', () => {
+  const data = { schema: 2 };
   assert.deepEqual(selector.selectableCalendars(data), []);
   assert.deepEqual(selector.listReleases(data), []);
 });
@@ -229,9 +274,9 @@ test('every translate() key used in selector.js exists in the tables', () => {
 });
 
 test('translate substitutes variables and falls back to Spanish, then the key', () => {
-  assert.equal(selector.translate('en', 'count_other', { count: 3 }), '3 releases');
-  assert.equal(selector.plural('es', 'count', 1, { count: 1 }), '1 estreno');
-  assert.equal(selector.plural('es', 'count', 0, { count: 0 }), '0 estrenos');
+  assert.equal(selector.translate('en', 'count_other', { count: 3 }), '3 titles');
+  assert.equal(selector.plural('es', 'count', 1, { count: 1 }), '1 título');
+  assert.equal(selector.plural('es', 'count', 0, { count: 0 }), '0 títulos');
   assert.equal(selector.translate('fr', 'copy_btn'), 'Copiar URL');
   assert.equal(selector.translate('es', 'missing_key'), 'missing_key');
 });
@@ -324,4 +369,13 @@ test('groupByMonth tolerates empty or non-array input', () => {
   assert.deepEqual(selector.groupByMonth([], 'es-ES'), []);
   assert.deepEqual(selector.groupByMonth(undefined, 'es-ES'), []);
   assert.deepEqual(selector.groupByMonth('nope', 'en-US'), []);
+});
+
+test('arrivals are listed under the month of their detection date, before the upcoming releases', () => {
+  const list = selector.filterReleases(SAMPLE.releases, ['movistar-plus', 'netflix']);
+  const groups = selector.groupByMonth(list, 'es-ES');
+  assert.deepEqual(groups.map((g) => [g.label, ids(g.releases)]), [
+    ['Octubre de 2026', [900010]],
+    ['Noviembre de 2026', [900011, 900002]],
+  ]);
 });
