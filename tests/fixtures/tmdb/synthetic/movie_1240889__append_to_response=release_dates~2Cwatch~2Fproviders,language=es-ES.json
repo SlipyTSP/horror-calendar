@@ -1,0 +1,3127 @@
+{
+  "id": 1240889,
+  "imdb_id": "tt91240889",
+  "title": "Adolescencia, sexo y muerte en campamento Miasma",
+  "original_title": "Teenage Sex and Death at Camp Miasma",
+  "overview": "Tras años de secuelas cutres y un fandom en declive, la franquicia slasher 'Camp Miasma' es puesta en manos de una joven y entusiasta directora para que la resucite. Pero cuando visita a la estrella de la película original, una actriz que ahora vive recluida y envuelta en misterio, las dos caen en una espiral de sangre, deseo, miedo y delirio.",
+  "poster_path": "/8UTCpwvHxWPllCJ7YnaCbffmYyD.jpg",
+  "release_date": "2026-11-20",
+  "runtime": 109,
+  "release_dates": {
+    "results": [
+      {
+        "iso_3166_1": "AG",
+        "release_dates": [
+          {
+            "certification": "",
+            "descriptors": [],
+            "iso_639_1": "",
+            "note": "MUBI",
+            "release_date": "2026-10-02T00:00:00.000Z",
+            "type": 4
+          }
+        ]
+      },
+      {
+        "iso_3166_1": "AM",
+        "release_dates": [
+          {
+            "certification": "",
+            "descriptors": [],
+            "iso_639_1": "",
+            "note": "Golden Apricot Yerevan International Film Festival",
+            "release_date": "2026-07-16T00:00:00.000Z",
+            "type": 1
+          }
+        ]
+      },
+      {
+        "iso_3166_1": "AO",
+        "release_dates": [
+          {
+            "certification": "",
+            "descriptors": [],
+            "iso_639_1": "",
+            "note": "MUBI",
+            "release_date": "2026-10-02T00:00:00.000Z",
+            "type": 4
+          }
+        ]
+      },
+      {
+        "iso_3166_1": "AR",
+        "release_dates": [
+          {
+            "certification": "",
+            "descriptors": [],
+            "iso_639_1": "",
+            "note": "MUBI Fest Buenos Aires",
+            "release_date": "2026-10-23T00:00:00.000Z",
+            "type": 1
+          },
+          {
+            "certification": "+16",
+            "descriptors": [],
+            "iso_639_1": "",
+            "note": "",
+            "release_date": "2026-08-13T00:00:00.000Z",
+            "type": 3
+          },
+          {
+            "certification": "+16",
+            "descriptors": [],
+            "iso_639_1": "",
+            "note": "MUBI",
+            "release_date": "2026-10-02T00:00:00.000Z",
+            "type": 4
+          }
+        ]
+      },
+      {
+        "iso_3166_1": "AS",
+        "release_dates": [
+          {
+            "certification": "",
+            "descriptors": [],
+            "iso_639_1": "",
+            "note": "MUBI",
+            "release_date": "2026-10-01T00:00:00.000Z",
+            "type": 4
+          }
+        ]
+      },
+      {
+        "iso_3166_1": "AT",
+        "release_dates": [
+          {
+            "certification": "",
+            "descriptors": [],
+            "iso_639_1": "",
+            "note": "MUBI",
+            "release_date": "2026-10-02T00:00:00.000Z",
+            "type": 4
+          }
+        ]
+      },
+      {
+        "iso_3166_1": "AU",
+        "release_dates": [
+          {
+            "certification": "",
+            "descriptors": [],
+            "iso_639_1": "",
+            "note": "Sydney Film Festival",
+            "release_date": "2026-06-06T00:00:00.000Z",
+            "type": 1
+          },
+          {
+            "certification": "",
+            "descriptors": [],
+            "iso_639_1": "",
+            "note": "New Farm Queer Film Festival",
+            "release_date": "2026-07-30T00:00:00.000Z",
+            "type": 1
+          },
+          {
+            "certification": "",
+            "descriptors": [],
+            "iso_639_1": "",
+            "note": "Newcastle Queer Film Festival",
+            "release_date": "2026-08-05T00:00:00.000Z",
+            "type": 1
+          },
+          {
+            "certification": "MA 15+",
+            "descriptors": [],
+            "iso_639_1": "",
+            "note": "",
+            "release_date": "2026-08-06T00:00:00.000Z",
+            "type": 3
+          },
+          {
+            "certification": "MA 15+",
+            "descriptors": [],
+            "iso_639_1": "",
+            "note": "MUBI",
+            "release_date": "2026-10-02T00:00:00.000Z",
+            "type": 4
+          }
+        ]
+      },
+      {
+        "iso_3166_1": "BA",
+        "release_dates": [
+          {
+            "certification": "",
+            "descriptors": [],
+            "iso_639_1": "",
+            "note": "Sarajevo Film Festival",
+            "release_date": "2026-08-18T00:00:00.000Z",
+            "type": 1
+          }
+        ]
+      },
+      {
+        "iso_3166_1": "BB",
+        "release_dates": [
+          {
+            "certification": "",
+            "descriptors": [],
+            "iso_639_1": "",
+            "note": "MUBI",
+            "release_date": "2026-10-02T00:00:00.000Z",
+            "type": 4
+          }
+        ]
+      },
+      {
+        "iso_3166_1": "BE",
+        "release_dates": [
+          {
+            "certification": "16",
+            "descriptors": [],
+            "iso_639_1": "",
+            "note": "",
+            "release_date": "2026-08-19T00:00:00.000Z",
+            "type": 3
+          }
+        ]
+      },
+      {
+        "iso_3166_1": "BH",
+        "release_dates": [
+          {
+            "certification": "",
+            "descriptors": [],
+            "iso_639_1": "",
+            "note": "MUBI",
+            "release_date": "2026-10-02T00:00:00.000Z",
+            "type": 4
+          }
+        ]
+      },
+      {
+        "iso_3166_1": "BR",
+        "release_dates": [
+          {
+            "certification": "18",
+            "descriptors": [],
+            "iso_639_1": "",
+            "note": "",
+            "release_date": "2026-08-13T00:00:00.000Z",
+            "type": 3
+          },
+          {
+            "certification": "18",
+            "descriptors": [],
+            "iso_639_1": "",
+            "note": "MUBI",
+            "release_date": "2026-10-02T00:00:00.000Z",
+            "type": 4
+          }
+        ]
+      },
+      {
+        "iso_3166_1": "BS",
+        "release_dates": [
+          {
+            "certification": "",
+            "descriptors": [],
+            "iso_639_1": "",
+            "note": "MUBI",
+            "release_date": "2026-10-02T00:00:00.000Z",
+            "type": 4
+          }
+        ]
+      },
+      {
+        "iso_3166_1": "CA",
+        "release_dates": [
+          {
+            "certification": "",
+            "descriptors": [],
+            "iso_639_1": "",
+            "note": "Fantasia Festival",
+            "release_date": "2026-07-17T00:00:00.000Z",
+            "type": 1
+          },
+          {
+            "certification": "",
+            "descriptors": [],
+            "iso_639_1": "",
+            "note": "",
+            "release_date": "2026-08-14T00:00:00.000Z",
+            "type": 2
+          },
+          {
+            "certification": "",
+            "descriptors": [],
+            "iso_639_1": "",
+            "note": "",
+            "release_date": "2026-09-18T00:00:00.000Z",
+            "type": 4
+          },
+          {
+            "certification": "",
+            "descriptors": [],
+            "iso_639_1": "",
+            "note": "MUBI",
+            "release_date": "2026-10-02T00:00:00.000Z",
+            "type": 4
+          }
+        ]
+      },
+      {
+        "iso_3166_1": "CH",
+        "release_dates": [
+          {
+            "certification": "",
+            "descriptors": [],
+            "iso_639_1": "",
+            "note": "Neuchâtel International Fantastic Film Festival",
+            "release_date": "2026-07-04T00:00:00.000Z",
+            "type": 1
+          },
+          {
+            "certification": "",
+            "descriptors": [],
+            "iso_639_1": "",
+            "note": "",
+            "release_date": "2026-08-19T00:00:00.000Z",
+            "type": 3
+          },
+          {
+            "certification": "16",
+            "descriptors": [],
+            "iso_639_1": "de",
+            "note": "",
+            "release_date": "2026-08-20T00:00:00.000Z",
+            "type": 3
+          }
+        ]
+      },
+      {
+        "iso_3166_1": "CK",
+        "release_dates": [
+          {
+            "certification": "",
+            "descriptors": [],
+            "iso_639_1": "",
+            "note": "MUBI",
+            "release_date": "2026-10-01T00:00:00.000Z",
+            "type": 4
+          }
+        ]
+      },
+      {
+        "iso_3166_1": "CL",
+        "release_dates": [
+          {
+            "certification": "14",
+            "descriptors": [],
+            "iso_639_1": "",
+            "note": "",
+            "release_date": "2026-08-13T00:00:00.000Z",
+            "type": 3
+          },
+          {
+            "certification": "14",
+            "descriptors": [],
+            "iso_639_1": "",
+            "note": "MUBI",
+            "release_date": "2026-10-02T00:00:00.000Z",
+            "type": 4
+          }
+        ]
+      },
+      {
+        "iso_3166_1": "CN",
+        "release_dates": [
+          {
+            "certification": "",
+            "descriptors": [],
+            "iso_639_1": "",
+            "note": "Wuhan Bǎilin Film Festival",
+            "release_date": "2026-11-01T00:00:00.000Z",
+            "type": 1
+          }
+        ]
+      },
+      {
+        "iso_3166_1": "CO",
+        "release_dates": [
+          {
+            "certification": "",
+            "descriptors": [],
+            "iso_639_1": "",
+            "note": "",
+            "release_date": "2026-08-13T00:00:00.000Z",
+            "type": 3
+          }
+        ]
+      },
+      {
+        "iso_3166_1": "CZ",
+        "release_dates": [
+          {
+            "certification": "",
+            "descriptors": [],
+            "iso_639_1": "",
+            "note": "Karlovy Vary International Film Festival",
+            "release_date": "2026-07-03T00:00:00.000Z",
+            "type": 1
+          },
+          {
+            "certification": "",
+            "descriptors": [],
+            "iso_639_1": "",
+            "note": "Mezipatra Queer Film Festival",
+            "release_date": "2026-11-10T00:00:00.000Z",
+            "type": 1
+          },
+          {
+            "certification": "15+",
+            "descriptors": [],
+            "iso_639_1": "",
+            "note": "",
+            "release_date": "2026-09-03T00:00:00.000Z",
+            "type": 3
+          }
+        ]
+      },
+      {
+        "iso_3166_1": "DE",
+        "release_dates": [
+          {
+            "certification": "",
+            "descriptors": [],
+            "iso_639_1": "",
+            "note": "Munich International Film Festival",
+            "release_date": "2026-07-02T00:00:00.000Z",
+            "type": 1
+          },
+          {
+            "certification": "",
+            "descriptors": [],
+            "iso_639_1": "",
+            "note": "Dyke* Festival Berlin",
+            "release_date": "2026-08-22T00:00:00.000Z",
+            "type": 1
+          },
+          {
+            "certification": "",
+            "descriptors": [],
+            "iso_639_1": "",
+            "note": "MUBI Fest Berlin",
+            "release_date": "2026-10-03T00:00:00.000Z",
+            "type": 1
+          },
+          {
+            "certification": "16",
+            "descriptors": [
+              "Violence",
+              "Sexuality",
+              "Injury"
+            ],
+            "iso_639_1": "",
+            "note": "",
+            "release_date": "2026-08-20T00:00:00.000Z",
+            "type": 3
+          },
+          {
+            "certification": "16",
+            "descriptors": [],
+            "iso_639_1": "",
+            "note": "MUBI",
+            "release_date": "2026-10-02T00:00:00.000Z",
+            "type": 4
+          }
+        ]
+      },
+      {
+        "iso_3166_1": "DK",
+        "release_dates": [
+          {
+            "certification": "15",
+            "descriptors": [],
+            "iso_639_1": "",
+            "note": "",
+            "release_date": "2026-08-27T00:00:00.000Z",
+            "type": 3
+          }
+        ]
+      },
+      {
+        "iso_3166_1": "DZ",
+        "release_dates": [
+          {
+            "certification": "",
+            "descriptors": [],
+            "iso_639_1": "",
+            "note": "MUBI",
+            "release_date": "2026-10-02T00:00:00.000Z",
+            "type": 4
+          }
+        ]
+      },
+      {
+        "iso_3166_1": "ES",
+        "release_dates": [
+          {
+            "certification": "",
+            "descriptors": [],
+            "iso_639_1": "",
+            "note": "San Sebastián International Film Festival",
+            "release_date": "2026-09-18T00:00:00.000Z",
+            "type": 1
+          },
+          {
+            "certification": "",
+            "descriptors": [],
+            "iso_639_1": "",
+            "note": "Sitges International Fantastic Film Festival of Catalonia",
+            "release_date": "2026-10-09T00:00:00.000Z",
+            "type": 1
+          },
+          {
+            "certification": "",
+            "descriptors": [],
+            "iso_639_1": "",
+            "note": "International Social Film Festival of Catalonia",
+            "release_date": "2026-10-30T00:00:00.000Z",
+            "type": 1
+          },
+          {
+            "certification": "",
+            "descriptors": [],
+            "iso_639_1": "",
+            "note": "Evolution Mallorca International Film Festival",
+            "release_date": "2026-10-31T00:00:00.000Z",
+            "type": 1
+          },
+          {
+            "certification": "",
+            "descriptors": [],
+            "iso_639_1": "",
+            "note": "",
+            "release_date": "2026-11-20T00:00:00.000Z",
+            "type": 3
+          }
+        ]
+      },
+      {
+        "iso_3166_1": "FI",
+        "release_dates": [
+          {
+            "certification": "",
+            "descriptors": [],
+            "iso_639_1": "",
+            "note": "Helsinki International Film Festival",
+            "release_date": "2026-09-18T00:00:00.000Z",
+            "type": 1
+          },
+          {
+            "certification": "K-16",
+            "descriptors": [],
+            "iso_639_1": "",
+            "note": "",
+            "release_date": "2026-08-07T00:00:00.000Z",
+            "type": 3
+          }
+        ]
+      },
+      {
+        "iso_3166_1": "FR",
+        "release_dates": [
+          {
+            "certification": "",
+            "descriptors": [],
+            "iso_639_1": "",
+            "note": "Cannes Film Festival",
+            "release_date": "2026-05-13T00:00:00.000Z",
+            "type": 1
+          },
+          {
+            "certification": "",
+            "descriptors": [],
+            "iso_639_1": "",
+            "note": "Biarritz Film Festival - Nouvelles Vagues",
+            "release_date": "2026-06-25T00:00:00.000Z",
+            "type": 1
+          },
+          {
+            "certification": "",
+            "descriptors": [],
+            "iso_639_1": "",
+            "note": "Deauville American Film Festival",
+            "release_date": "2026-09-11T00:00:00.000Z",
+            "type": 1
+          },
+          {
+            "certification": "12",
+            "descriptors": [],
+            "iso_639_1": "",
+            "note": "",
+            "release_date": "2026-09-17T00:00:00.000Z",
+            "type": 2
+          },
+          {
+            "certification": "12",
+            "descriptors": [],
+            "iso_639_1": "",
+            "note": "MUBI",
+            "release_date": "2026-10-02T00:00:00.000Z",
+            "type": 4
+          }
+        ]
+      },
+      {
+        "iso_3166_1": "GB",
+        "release_dates": [
+          {
+            "certification": "",
+            "descriptors": [],
+            "iso_639_1": "",
+            "note": "SXSW London",
+            "release_date": "2026-06-06T00:00:00.000Z",
+            "type": 1
+          },
+          {
+            "certification": "15",
+            "descriptors": [],
+            "iso_639_1": "",
+            "note": "",
+            "release_date": "2026-08-21T00:00:00.000Z",
+            "type": 3
+          },
+          {
+            "certification": "",
+            "descriptors": [],
+            "iso_639_1": "",
+            "note": "MUBI",
+            "release_date": "2026-10-02T00:00:00.000Z",
+            "type": 4
+          },
+          {
+            "certification": "15",
+            "descriptors": [],
+            "iso_639_1": "",
+            "note": "4k Ultra HD Blu-ray / Blu-ray ",
+            "release_date": "2026-12-14T00:00:00.000Z",
+            "type": 5
+          }
+        ]
+      },
+      {
+        "iso_3166_1": "GR",
+        "release_dates": [
+          {
+            "certification": "",
+            "descriptors": [],
+            "iso_639_1": "",
+            "note": "",
+            "release_date": "2026-08-27T00:00:00.000Z",
+            "type": 3
+          }
+        ]
+      },
+      {
+        "iso_3166_1": "GT",
+        "release_dates": [
+          {
+            "certification": "",
+            "descriptors": [],
+            "iso_639_1": "",
+            "note": "MUBI",
+            "release_date": "2026-10-02T00:00:00.000Z",
+            "type": 4
+          }
+        ]
+      },
+      {
+        "iso_3166_1": "HK",
+        "release_dates": [
+          {
+            "certification": "",
+            "descriptors": [],
+            "iso_639_1": "",
+            "note": "Summer International Film Festival",
+            "release_date": "2026-08-22T00:00:00.000Z",
+            "type": 1
+          },
+          {
+            "certification": "",
+            "descriptors": [],
+            "iso_639_1": "",
+            "note": "MUBI",
+            "release_date": "2026-10-02T00:00:00.000Z",
+            "type": 4
+          }
+        ]
+      },
+      {
+        "iso_3166_1": "HU",
+        "release_dates": [
+          {
+            "certification": "",
+            "descriptors": [],
+            "iso_639_1": "",
+            "note": "Budapest International Film Festival",
+            "release_date": "2026-10-24T00:00:00.000Z",
+            "type": 1
+          }
+        ]
+      },
+      {
+        "iso_3166_1": "ID",
+        "release_dates": [
+          {
+            "certification": "21+",
+            "descriptors": [],
+            "iso_639_1": "",
+            "note": "Jakarta Film Week",
+            "release_date": "2026-10-23T00:00:00.000Z",
+            "type": 1
+          }
+        ]
+      },
+      {
+        "iso_3166_1": "IE",
+        "release_dates": [
+          {
+            "certification": "16",
+            "descriptors": [],
+            "iso_639_1": "",
+            "note": "",
+            "release_date": "2026-08-21T00:00:00.000Z",
+            "type": 3
+          },
+          {
+            "certification": "16",
+            "descriptors": [],
+            "iso_639_1": "",
+            "note": "MUBI",
+            "release_date": "2026-10-02T00:00:00.000Z",
+            "type": 4
+          }
+        ]
+      },
+      {
+        "iso_3166_1": "IL",
+        "release_dates": [
+          {
+            "certification": "",
+            "descriptors": [],
+            "iso_639_1": "",
+            "note": "MUBI",
+            "release_date": "2026-10-02T00:00:00.000Z",
+            "type": 4
+          }
+        ]
+      },
+      {
+        "iso_3166_1": "IN",
+        "release_dates": [
+          {
+            "certification": "",
+            "descriptors": [],
+            "iso_639_1": "",
+            "note": "MUBI",
+            "release_date": "2026-10-02T00:00:00.000Z",
+            "type": 4
+          }
+        ]
+      },
+      {
+        "iso_3166_1": "IS",
+        "release_dates": [
+          {
+            "certification": "",
+            "descriptors": [],
+            "iso_639_1": "",
+            "note": "Reykjavik International Film Festival",
+            "release_date": "2026-09-25T00:00:00.000Z",
+            "type": 1
+          }
+        ]
+      },
+      {
+        "iso_3166_1": "IT",
+        "release_dates": [
+          {
+            "certification": "",
+            "descriptors": [],
+            "iso_639_1": "",
+            "note": "Sicilia Queer Filmfest: International New Visions",
+            "release_date": "2026-05-25T00:00:00.000Z",
+            "type": 1
+          },
+          {
+            "certification": "14+",
+            "descriptors": [],
+            "iso_639_1": "",
+            "note": "",
+            "release_date": "2026-08-19T00:00:00.000Z",
+            "type": 3
+          },
+          {
+            "certification": "14+",
+            "descriptors": [],
+            "iso_639_1": "",
+            "note": "MUBI",
+            "release_date": "2026-10-02T00:00:00.000Z",
+            "type": 4
+          }
+        ]
+      },
+      {
+        "iso_3166_1": "JP",
+        "release_dates": [
+          {
+            "certification": "",
+            "descriptors": [],
+            "iso_639_1": "",
+            "note": "Tokyo International Film Festival",
+            "release_date": "2026-11-02T00:00:00.000Z",
+            "type": 1
+          }
+        ]
+      },
+      {
+        "iso_3166_1": "KR",
+        "release_dates": [
+          {
+            "certification": "19",
+            "descriptors": [],
+            "iso_639_1": "",
+            "note": "Bucheon International Fantastic Film Festival",
+            "release_date": "2026-07-06T00:00:00.000Z",
+            "type": 1
+          }
+        ]
+      },
+      {
+        "iso_3166_1": "KZ",
+        "release_dates": [
+          {
+            "certification": "",
+            "descriptors": [],
+            "iso_639_1": "",
+            "note": "Qyzqaras Film Festival",
+            "release_date": "2026-08-30T00:00:00.000Z",
+            "type": 1
+          }
+        ]
+      },
+      {
+        "iso_3166_1": "LI",
+        "release_dates": [
+          {
+            "certification": "",
+            "descriptors": [],
+            "iso_639_1": "",
+            "note": "Liechtenstein Film Festival",
+            "release_date": "2026-08-07T00:00:00.000Z",
+            "type": 1
+          }
+        ]
+      },
+      {
+        "iso_3166_1": "LV",
+        "release_dates": [
+          {
+            "certification": "",
+            "descriptors": [],
+            "iso_639_1": "",
+            "note": "Riga International Film Festival",
+            "release_date": "2026-10-17T00:00:00.000Z",
+            "type": 1
+          }
+        ]
+      },
+      {
+        "iso_3166_1": "MX",
+        "release_dates": [
+          {
+            "certification": "",
+            "descriptors": [],
+            "iso_639_1": "",
+            "note": "Guanajuato International Film Festival",
+            "release_date": "2026-07-26T00:00:00.000Z",
+            "type": 1
+          },
+          {
+            "certification": "C",
+            "descriptors": [],
+            "iso_639_1": "",
+            "note": "",
+            "release_date": "2026-08-13T00:00:00.000Z",
+            "type": 3
+          },
+          {
+            "certification": "C",
+            "descriptors": [],
+            "iso_639_1": "",
+            "note": "MUBI",
+            "release_date": "2026-10-02T00:00:00.000Z",
+            "type": 4
+          }
+        ]
+      },
+      {
+        "iso_3166_1": "MY",
+        "release_dates": [
+          {
+            "certification": "",
+            "descriptors": [],
+            "iso_639_1": "",
+            "note": "MUBI",
+            "release_date": "2026-10-02T00:00:00.000Z",
+            "type": 4
+          }
+        ]
+      },
+      {
+        "iso_3166_1": "NL",
+        "release_dates": [
+          {
+            "certification": "16",
+            "descriptors": [
+              "Violence",
+              "Fear",
+              "Coarse Language"
+            ],
+            "iso_639_1": "",
+            "note": "",
+            "release_date": "2026-08-20T00:00:00.000Z",
+            "type": 3
+          },
+          {
+            "certification": "16",
+            "descriptors": [],
+            "iso_639_1": "",
+            "note": "MUBI",
+            "release_date": "2026-10-02T00:00:00.000Z",
+            "type": 4
+          }
+        ]
+      },
+      {
+        "iso_3166_1": "NO",
+        "release_dates": [
+          {
+            "certification": "",
+            "descriptors": [],
+            "iso_639_1": "",
+            "note": "Oslo/Fusion International Film Festival",
+            "release_date": "2026-09-19T00:00:00.000Z",
+            "type": 1
+          },
+          {
+            "certification": "15",
+            "descriptors": [],
+            "iso_639_1": "",
+            "note": "",
+            "release_date": "2026-08-14T00:00:00.000Z",
+            "type": 3
+          }
+        ]
+      },
+      {
+        "iso_3166_1": "NU",
+        "release_dates": [
+          {
+            "certification": "",
+            "descriptors": [],
+            "iso_639_1": "",
+            "note": "MUBI",
+            "release_date": "2026-10-01T00:00:00.000Z",
+            "type": 4
+          }
+        ]
+      },
+      {
+        "iso_3166_1": "NZ",
+        "release_dates": [
+          {
+            "certification": "",
+            "descriptors": [],
+            "iso_639_1": "",
+            "note": "New Zealand International Film Festival",
+            "release_date": "2026-08-08T00:00:00.000Z",
+            "type": 1
+          },
+          {
+            "certification": "",
+            "descriptors": [],
+            "iso_639_1": "",
+            "note": "",
+            "release_date": "2026-08-20T00:00:00.000Z",
+            "type": 3
+          },
+          {
+            "certification": "",
+            "descriptors": [],
+            "iso_639_1": "",
+            "note": "MUBI",
+            "release_date": "2026-10-02T00:00:00.000Z",
+            "type": 4
+          }
+        ]
+      },
+      {
+        "iso_3166_1": "PA",
+        "release_dates": [
+          {
+            "certification": "",
+            "descriptors": [],
+            "iso_639_1": "",
+            "note": "MUBI",
+            "release_date": "2026-10-02T00:00:00.000Z",
+            "type": 4
+          }
+        ]
+      },
+      {
+        "iso_3166_1": "PE",
+        "release_dates": [
+          {
+            "certification": "",
+            "descriptors": [],
+            "iso_639_1": "",
+            "note": "Al Este International Film Festival",
+            "release_date": "2026-06-27T00:00:00.000Z",
+            "type": 1
+          },
+          {
+            "certification": "",
+            "descriptors": [],
+            "iso_639_1": "",
+            "note": "MUBI",
+            "release_date": "2026-10-02T00:00:00.000Z",
+            "type": 4
+          }
+        ]
+      },
+      {
+        "iso_3166_1": "PF",
+        "release_dates": [
+          {
+            "certification": "",
+            "descriptors": [],
+            "iso_639_1": "",
+            "note": "MUBI",
+            "release_date": "2026-10-01T00:00:00.000Z",
+            "type": 4
+          }
+        ]
+      },
+      {
+        "iso_3166_1": "PH",
+        "release_dates": [
+          {
+            "certification": "",
+            "descriptors": [],
+            "iso_639_1": "",
+            "note": "QCinema International Film Festival",
+            "release_date": "2026-11-13T00:00:00.000Z",
+            "type": 1
+          },
+          {
+            "certification": "",
+            "descriptors": [],
+            "iso_639_1": "en",
+            "note": "MUBI",
+            "release_date": "2026-10-02T00:00:00.000Z",
+            "type": 4
+          }
+        ]
+      },
+      {
+        "iso_3166_1": "PL",
+        "release_dates": [
+          {
+            "certification": "",
+            "descriptors": [],
+            "iso_639_1": "",
+            "note": "Octopus Film Festival",
+            "release_date": "2026-08-11T00:00:00.000Z",
+            "type": 1
+          },
+          {
+            "certification": "",
+            "descriptors": [],
+            "iso_639_1": "",
+            "note": "Kamera Akcja Festival",
+            "release_date": "2026-10-23T00:00:00.000Z",
+            "type": 1
+          },
+          {
+            "certification": "",
+            "descriptors": [],
+            "iso_639_1": "",
+            "note": "",
+            "release_date": "2026-09-04T00:00:00.000Z",
+            "type": 3
+          }
+        ]
+      },
+      {
+        "iso_3166_1": "PR",
+        "release_dates": [
+          {
+            "certification": "",
+            "descriptors": [],
+            "iso_639_1": "",
+            "note": "MUBI",
+            "release_date": "2026-10-02T00:00:00.000Z",
+            "type": 4
+          }
+        ]
+      },
+      {
+        "iso_3166_1": "PT",
+        "release_dates": [
+          {
+            "certification": "",
+            "descriptors": [],
+            "iso_639_1": "",
+            "note": "Queer Lisboa International Film Festival",
+            "release_date": "2026-09-19T00:00:00.000Z",
+            "type": 1
+          },
+          {
+            "certification": "M/16",
+            "descriptors": [],
+            "iso_639_1": "",
+            "note": "",
+            "release_date": "2026-09-24T00:00:00.000Z",
+            "type": 3
+          }
+        ]
+      },
+      {
+        "iso_3166_1": "RO",
+        "release_dates": [
+          {
+            "certification": "",
+            "descriptors": [],
+            "iso_639_1": "",
+            "note": "MUBI",
+            "release_date": "2026-10-02T00:00:00.000Z",
+            "type": 4
+          }
+        ]
+      },
+      {
+        "iso_3166_1": "RS",
+        "release_dates": [
+          {
+            "certification": "",
+            "descriptors": [],
+            "iso_639_1": "",
+            "note": "",
+            "release_date": "2026-09-10T00:00:00.000Z",
+            "type": 3
+          }
+        ]
+      },
+      {
+        "iso_3166_1": "SE",
+        "release_dates": [
+          {
+            "certification": "",
+            "descriptors": [],
+            "iso_639_1": "",
+            "note": "Way Out West",
+            "release_date": "2026-08-13T00:00:00.000Z",
+            "type": 1
+          },
+          {
+            "certification": "15",
+            "descriptors": [],
+            "iso_639_1": "",
+            "note": "",
+            "release_date": "2026-08-14T00:00:00.000Z",
+            "type": 3
+          }
+        ]
+      },
+      {
+        "iso_3166_1": "SG",
+        "release_dates": [
+          {
+            "certification": "",
+            "descriptors": [],
+            "iso_639_1": "",
+            "note": "Singapore International Film Festival",
+            "release_date": "2026-10-26T00:00:00.000Z",
+            "type": 1
+          }
+        ]
+      },
+      {
+        "iso_3166_1": "SI",
+        "release_dates": [
+          {
+            "certification": "",
+            "descriptors": [],
+            "iso_639_1": "",
+            "note": "Ljubljana International Film Festival",
+            "release_date": "2026-11-13T00:00:00.000Z",
+            "type": 1
+          }
+        ]
+      },
+      {
+        "iso_3166_1": "SK",
+        "release_dates": [
+          {
+            "certification": "",
+            "descriptors": [],
+            "iso_639_1": "",
+            "note": "International Film Festival Cinematik",
+            "release_date": "2026-09-10T00:00:00.000Z",
+            "type": 1
+          },
+          {
+            "certification": "",
+            "descriptors": [],
+            "iso_639_1": "",
+            "note": "",
+            "release_date": "2026-09-10T00:00:00.000Z",
+            "type": 3
+          }
+        ]
+      },
+      {
+        "iso_3166_1": "TH",
+        "release_dates": [
+          {
+            "certification": "",
+            "descriptors": [],
+            "iso_639_1": "",
+            "note": "Bangkok International Film Festival",
+            "release_date": "2026-09-18T00:00:00.000Z",
+            "type": 1
+          },
+          {
+            "certification": "18",
+            "descriptors": [],
+            "iso_639_1": "",
+            "note": "FEARFOLKS Halloween Marathon",
+            "release_date": "2026-10-30T00:00:00.000Z",
+            "type": 1
+          },
+          {
+            "certification": "18",
+            "descriptors": [],
+            "iso_639_1": "",
+            "note": "",
+            "release_date": "2026-10-01T00:00:00.000Z",
+            "type": 3
+          }
+        ]
+      },
+      {
+        "iso_3166_1": "TN",
+        "release_dates": [
+          {
+            "certification": "",
+            "descriptors": [],
+            "iso_639_1": "",
+            "note": "MUBI",
+            "release_date": "2026-10-02T00:00:00.000Z",
+            "type": 4
+          }
+        ]
+      },
+      {
+        "iso_3166_1": "TR",
+        "release_dates": [
+          {
+            "certification": "",
+            "descriptors": [],
+            "iso_639_1": "",
+            "note": "MUBI FEST Istanbul",
+            "release_date": "2026-09-06T00:00:00.000Z",
+            "type": 1
+          },
+          {
+            "certification": "",
+            "descriptors": [],
+            "iso_639_1": "",
+            "note": "MUBI",
+            "release_date": "2026-10-02T00:00:00.000Z",
+            "type": 4
+          }
+        ]
+      },
+      {
+        "iso_3166_1": "TT",
+        "release_dates": [
+          {
+            "certification": "",
+            "descriptors": [],
+            "iso_639_1": "",
+            "note": "MUBI",
+            "release_date": "2026-10-02T00:00:00.000Z",
+            "type": 4
+          }
+        ]
+      },
+      {
+        "iso_3166_1": "TW",
+        "release_dates": [
+          {
+            "certification": "",
+            "descriptors": [],
+            "iso_639_1": "",
+            "note": "Kaohsiung Film Festival ",
+            "release_date": "2026-10-18T00:00:00.000Z",
+            "type": 1
+          },
+          {
+            "certification": "",
+            "descriptors": [],
+            "iso_639_1": "",
+            "note": "",
+            "release_date": "2026-10-30T00:00:00.000Z",
+            "type": 3
+          }
+        ]
+      },
+      {
+        "iso_3166_1": "UA",
+        "release_dates": [
+          {
+            "certification": "",
+            "descriptors": [],
+            "iso_639_1": "",
+            "note": "Kyiv Critic's Week",
+            "release_date": "2026-10-15T00:00:00.000Z",
+            "type": 1
+          },
+          {
+            "certification": "18+",
+            "descriptors": [],
+            "iso_639_1": "",
+            "note": "",
+            "release_date": "2026-10-29T00:00:00.000Z",
+            "type": 3
+          }
+        ]
+      },
+      {
+        "iso_3166_1": "UM",
+        "release_dates": [
+          {
+            "certification": "",
+            "descriptors": [],
+            "iso_639_1": "",
+            "note": "MUBI",
+            "release_date": "2026-10-01T00:00:00.000Z",
+            "type": 4
+          }
+        ]
+      },
+      {
+        "iso_3166_1": "US",
+        "release_dates": [
+          {
+            "certification": "",
+            "descriptors": [],
+            "iso_639_1": "",
+            "note": "NewFest Pride",
+            "release_date": "2026-06-01T00:00:00.000Z",
+            "type": 1
+          },
+          {
+            "certification": "",
+            "descriptors": [],
+            "iso_639_1": "",
+            "note": "Provincetown International Film Festival",
+            "release_date": "2026-06-11T00:00:00.000Z",
+            "type": 1
+          },
+          {
+            "certification": "",
+            "descriptors": [],
+            "iso_639_1": "",
+            "note": "San Francisco International LGBTQ+ Film Festival",
+            "release_date": "2026-06-27T00:00:00.000Z",
+            "type": 1
+          },
+          {
+            "certification": "",
+            "descriptors": [],
+            "iso_639_1": "",
+            "note": "MUBI Fest Chicago",
+            "release_date": "2026-07-10T00:00:00.000Z",
+            "type": 1
+          },
+          {
+            "certification": "R",
+            "descriptors": [],
+            "iso_639_1": "",
+            "note": "Los Angeles, California",
+            "release_date": "2026-07-29T00:00:00.000Z",
+            "type": 1
+          },
+          {
+            "certification": "R",
+            "descriptors": [],
+            "iso_639_1": "",
+            "note": "New York City, New York",
+            "release_date": "2026-08-05T00:00:00.000Z",
+            "type": 1
+          },
+          {
+            "certification": "",
+            "descriptors": [],
+            "iso_639_1": "",
+            "note": "Telluride Film Festival",
+            "release_date": "2026-09-07T00:00:00.000Z",
+            "type": 1
+          },
+          {
+            "certification": "",
+            "descriptors": [],
+            "iso_639_1": "",
+            "note": "SCAD Savannah Film Festival",
+            "release_date": "2026-10-27T00:00:00.000Z",
+            "type": 1
+          },
+          {
+            "certification": "R",
+            "descriptors": [],
+            "iso_639_1": "",
+            "note": "New York City, New York / Los Angeles, California",
+            "release_date": "2026-08-07T00:00:00.000Z",
+            "type": 2
+          },
+          {
+            "certification": "R",
+            "descriptors": [],
+            "iso_639_1": "",
+            "note": "Limited Expansion",
+            "release_date": "2026-08-14T00:00:00.000Z",
+            "type": 2
+          },
+          {
+            "certification": "R",
+            "descriptors": [],
+            "iso_639_1": "",
+            "note": "",
+            "release_date": "2026-08-21T00:00:00.000Z",
+            "type": 3
+          },
+          {
+            "certification": "R",
+            "descriptors": [],
+            "iso_639_1": "",
+            "note": "",
+            "release_date": "2026-09-18T00:00:00.000Z",
+            "type": 4
+          },
+          {
+            "certification": "R",
+            "descriptors": [],
+            "iso_639_1": "",
+            "note": "MUBI",
+            "release_date": "2026-10-02T00:00:00.000Z",
+            "type": 4
+          }
+        ]
+      },
+      {
+        "iso_3166_1": "UY",
+        "release_dates": [
+          {
+            "certification": "",
+            "descriptors": [],
+            "iso_639_1": "",
+            "note": "",
+            "release_date": "2026-08-13T00:00:00.000Z",
+            "type": 3
+          },
+          {
+            "certification": "",
+            "descriptors": [],
+            "iso_639_1": "",
+            "note": "",
+            "release_date": "2026-09-24T00:00:00.000Z",
+            "type": 3
+          }
+        ]
+      }
+    ]
+  },
+  "watch/providers": {
+    "results": {
+      "AE": {
+        "link": "https://www.themoviedb.org/movie/1240889-teenage-sex-and-death-at-camp-miasma/watch?locale=AE",
+        "flatrate": [
+          {
+            "logo_path": "/k7iSlvgWzZuO4zU5PcBjhABMuia.png",
+            "provider_id": 11,
+            "provider_name": "MUBI",
+            "display_priority": 20
+          }
+        ]
+      },
+      "AG": {
+        "link": "https://www.themoviedb.org/movie/1240889-teenage-sex-and-death-at-camp-miasma/watch?locale=AG",
+        "flatrate": [
+          {
+            "logo_path": "/k7iSlvgWzZuO4zU5PcBjhABMuia.png",
+            "provider_id": 11,
+            "provider_name": "MUBI",
+            "display_priority": 14
+          }
+        ]
+      },
+      "AO": {
+        "link": "https://www.themoviedb.org/movie/1240889-teenage-sex-and-death-at-camp-miasma/watch?locale=AO",
+        "flatrate": [
+          {
+            "logo_path": "/k7iSlvgWzZuO4zU5PcBjhABMuia.png",
+            "provider_id": 11,
+            "provider_name": "MUBI",
+            "display_priority": 5
+          }
+        ]
+      },
+      "AR": {
+        "link": "https://www.themoviedb.org/movie/1240889-teenage-sex-and-death-at-camp-miasma/watch?locale=AR",
+        "buy": [
+          {
+            "logo_path": "/qdEGArH3lKfFnAtYXMkSYk5wxuG.png",
+            "provider_id": 2,
+            "provider_name": "Apple TV Store",
+            "display_priority": 4
+          },
+          {
+            "logo_path": "/jn6TLbtaTZntTRX9UYucHJvpQx1.png",
+            "provider_id": 10,
+            "provider_name": "Amazon Video",
+            "display_priority": 46
+          }
+        ],
+        "flatrate": [
+          {
+            "logo_path": "/k7iSlvgWzZuO4zU5PcBjhABMuia.png",
+            "provider_id": 11,
+            "provider_name": "MUBI",
+            "display_priority": 8
+          },
+          {
+            "logo_path": "/w1hl8HszsPf5aAGT0mVY0O6LYP4.png",
+            "provider_id": 201,
+            "provider_name": "MUBI Amazon Channel",
+            "display_priority": 42
+          }
+        ]
+      },
+      "AT": {
+        "link": "https://www.themoviedb.org/movie/1240889-teenage-sex-and-death-at-camp-miasma/watch?locale=AT",
+        "flatrate": [
+          {
+            "logo_path": "/k7iSlvgWzZuO4zU5PcBjhABMuia.png",
+            "provider_id": 11,
+            "provider_name": "MUBI",
+            "display_priority": 141
+          },
+          {
+            "logo_path": "/w1hl8HszsPf5aAGT0mVY0O6LYP4.png",
+            "provider_id": 201,
+            "provider_name": "MUBI Amazon Channel",
+            "display_priority": 142
+          }
+        ],
+        "buy": [
+          {
+            "logo_path": "/jn6TLbtaTZntTRX9UYucHJvpQx1.png",
+            "provider_id": 10,
+            "provider_name": "Amazon Video",
+            "display_priority": 7
+          },
+          {
+            "logo_path": "/qdEGArH3lKfFnAtYXMkSYk5wxuG.png",
+            "provider_id": 2,
+            "provider_name": "Apple TV Store",
+            "display_priority": 8
+          }
+        ]
+      },
+      "AU": {
+        "link": "https://www.themoviedb.org/movie/1240889-teenage-sex-and-death-at-camp-miasma/watch?locale=AU",
+        "flatrate": [
+          {
+            "logo_path": "/k7iSlvgWzZuO4zU5PcBjhABMuia.png",
+            "provider_id": 11,
+            "provider_name": "MUBI",
+            "display_priority": 25
+          },
+          {
+            "logo_path": "/w1hl8HszsPf5aAGT0mVY0O6LYP4.png",
+            "provider_id": 201,
+            "provider_name": "MUBI Amazon Channel",
+            "display_priority": 75
+          }
+        ]
+      },
+      "BB": {
+        "link": "https://www.themoviedb.org/movie/1240889-teenage-sex-and-death-at-camp-miasma/watch?locale=BB",
+        "flatrate": [
+          {
+            "logo_path": "/k7iSlvgWzZuO4zU5PcBjhABMuia.png",
+            "provider_id": 11,
+            "provider_name": "MUBI",
+            "display_priority": 26
+          }
+        ]
+      },
+      "BE": {
+        "link": "https://www.themoviedb.org/movie/1240889-teenage-sex-and-death-at-camp-miasma/watch?locale=BE",
+        "flatrate": [
+          {
+            "logo_path": "/w1hl8HszsPf5aAGT0mVY0O6LYP4.png",
+            "provider_id": 201,
+            "provider_name": "MUBI Amazon Channel",
+            "display_priority": 66
+          }
+        ]
+      },
+      "BF": {
+        "link": "https://www.themoviedb.org/movie/1240889-teenage-sex-and-death-at-camp-miasma/watch?locale=BF",
+        "flatrate": [
+          {
+            "logo_path": "/k7iSlvgWzZuO4zU5PcBjhABMuia.png",
+            "provider_id": 11,
+            "provider_name": "MUBI",
+            "display_priority": 5
+          }
+        ]
+      },
+      "BH": {
+        "link": "https://www.themoviedb.org/movie/1240889-teenage-sex-and-death-at-camp-miasma/watch?locale=BH",
+        "flatrate": [
+          {
+            "logo_path": "/k7iSlvgWzZuO4zU5PcBjhABMuia.png",
+            "provider_id": 11,
+            "provider_name": "MUBI",
+            "display_priority": 30
+          }
+        ]
+      },
+      "BM": {
+        "link": "https://www.themoviedb.org/movie/1240889-teenage-sex-and-death-at-camp-miasma/watch?locale=BM",
+        "flatrate": [
+          {
+            "logo_path": "/k7iSlvgWzZuO4zU5PcBjhABMuia.png",
+            "provider_id": 11,
+            "provider_name": "MUBI",
+            "display_priority": 28
+          }
+        ]
+      },
+      "BO": {
+        "link": "https://www.themoviedb.org/movie/1240889-teenage-sex-and-death-at-camp-miasma/watch?locale=BO",
+        "buy": [
+          {
+            "logo_path": "/qdEGArH3lKfFnAtYXMkSYk5wxuG.png",
+            "provider_id": 2,
+            "provider_name": "Apple TV Store",
+            "display_priority": 4
+          }
+        ],
+        "flatrate": [
+          {
+            "logo_path": "/k7iSlvgWzZuO4zU5PcBjhABMuia.png",
+            "provider_id": 11,
+            "provider_name": "MUBI",
+            "display_priority": 32
+          }
+        ]
+      },
+      "BR": {
+        "link": "https://www.themoviedb.org/movie/1240889-teenage-sex-and-death-at-camp-miasma/watch?locale=BR",
+        "buy": [
+          {
+            "logo_path": "/qdEGArH3lKfFnAtYXMkSYk5wxuG.png",
+            "provider_id": 2,
+            "provider_name": "Apple TV Store",
+            "display_priority": 8
+          },
+          {
+            "logo_path": "/jn6TLbtaTZntTRX9UYucHJvpQx1.png",
+            "provider_id": 10,
+            "provider_name": "Amazon Video",
+            "display_priority": 12
+          }
+        ],
+        "flatrate": [
+          {
+            "logo_path": "/k7iSlvgWzZuO4zU5PcBjhABMuia.png",
+            "provider_id": 11,
+            "provider_name": "MUBI",
+            "display_priority": 11
+          },
+          {
+            "logo_path": "/w1hl8HszsPf5aAGT0mVY0O6LYP4.png",
+            "provider_id": 201,
+            "provider_name": "MUBI Amazon Channel",
+            "display_priority": 58
+          }
+        ]
+      },
+      "BS": {
+        "link": "https://www.themoviedb.org/movie/1240889-teenage-sex-and-death-at-camp-miasma/watch?locale=BS",
+        "flatrate": [
+          {
+            "logo_path": "/k7iSlvgWzZuO4zU5PcBjhABMuia.png",
+            "provider_id": 11,
+            "provider_name": "MUBI",
+            "display_priority": 27
+          }
+        ]
+      },
+      "BY": {
+        "link": "https://www.themoviedb.org/movie/1240889-teenage-sex-and-death-at-camp-miasma/watch?locale=BY",
+        "flatrate": [
+          {
+            "logo_path": "/k7iSlvgWzZuO4zU5PcBjhABMuia.png",
+            "provider_id": 11,
+            "provider_name": "MUBI",
+            "display_priority": 7
+          }
+        ]
+      },
+      "BZ": {
+        "link": "https://www.themoviedb.org/movie/1240889-teenage-sex-and-death-at-camp-miasma/watch?locale=BZ",
+        "flatrate": [
+          {
+            "logo_path": "/k7iSlvgWzZuO4zU5PcBjhABMuia.png",
+            "provider_id": 11,
+            "provider_name": "MUBI",
+            "display_priority": 11
+          }
+        ]
+      },
+      "CA": {
+        "link": "https://www.themoviedb.org/movie/1240889-teenage-sex-and-death-at-camp-miasma/watch?locale=CA",
+        "buy": [
+          {
+            "logo_path": "/qdEGArH3lKfFnAtYXMkSYk5wxuG.png",
+            "provider_id": 2,
+            "provider_name": "Apple TV Store",
+            "display_priority": 8
+          },
+          {
+            "logo_path": "/jn6TLbtaTZntTRX9UYucHJvpQx1.png",
+            "provider_id": 10,
+            "provider_name": "Amazon Video",
+            "display_priority": 56
+          }
+        ],
+        "flatrate": [
+          {
+            "logo_path": "/k7iSlvgWzZuO4zU5PcBjhABMuia.png",
+            "provider_id": 11,
+            "provider_name": "MUBI",
+            "display_priority": 36
+          },
+          {
+            "logo_path": "/w1hl8HszsPf5aAGT0mVY0O6LYP4.png",
+            "provider_id": 201,
+            "provider_name": "MUBI Amazon Channel",
+            "display_priority": 155
+          }
+        ]
+      },
+      "CD": {
+        "link": "https://www.themoviedb.org/movie/1240889-teenage-sex-and-death-at-camp-miasma/watch?locale=CD",
+        "flatrate": [
+          {
+            "logo_path": "/k7iSlvgWzZuO4zU5PcBjhABMuia.png",
+            "provider_id": 11,
+            "provider_name": "MUBI",
+            "display_priority": 4
+          }
+        ]
+      },
+      "CH": {
+        "link": "https://www.themoviedb.org/movie/1240889-teenage-sex-and-death-at-camp-miasma/watch?locale=CH",
+        "flatrate": [
+          {
+            "logo_path": "/qmFZGxSNeiv4pDiQRLoiTLF4jIg.png",
+            "provider_id": 2115,
+            "provider_name": "Cinu",
+            "display_priority": 48
+          },
+          {
+            "logo_path": "/k7iSlvgWzZuO4zU5PcBjhABMuia.png",
+            "provider_id": 11,
+            "provider_name": "MUBI",
+            "display_priority": 66
+          },
+          {
+            "logo_path": "/w1hl8HszsPf5aAGT0mVY0O6LYP4.png",
+            "provider_id": 201,
+            "provider_name": "MUBI Amazon Channel",
+            "display_priority": 82
+          }
+        ],
+        "buy": [
+          {
+            "logo_path": "/omviag2i66PzB1VqDc48pbwTC8Z.png",
+            "provider_id": 150,
+            "provider_name": "blue TV",
+            "display_priority": 5
+          },
+          {
+            "logo_path": "/qdEGArH3lKfFnAtYXMkSYk5wxuG.png",
+            "provider_id": 2,
+            "provider_name": "Apple TV Store",
+            "display_priority": 6
+          },
+          {
+            "logo_path": "/nNkZ1JKe6vNhzti14KiKEUWHE6H.png",
+            "provider_id": 130,
+            "provider_name": "Sky Store",
+            "display_priority": 14
+          },
+          {
+            "logo_path": "/jn6TLbtaTZntTRX9UYucHJvpQx1.png",
+            "provider_id": 10,
+            "provider_name": "Amazon Video",
+            "display_priority": 72
+          }
+        ]
+      },
+      "CI": {
+        "link": "https://www.themoviedb.org/movie/1240889-teenage-sex-and-death-at-camp-miasma/watch?locale=CI",
+        "flatrate": [
+          {
+            "logo_path": "/k7iSlvgWzZuO4zU5PcBjhABMuia.png",
+            "provider_id": 11,
+            "provider_name": "MUBI",
+            "display_priority": 26
+          }
+        ]
+      },
+      "CL": {
+        "link": "https://www.themoviedb.org/movie/1240889-teenage-sex-and-death-at-camp-miasma/watch?locale=CL",
+        "buy": [
+          {
+            "logo_path": "/qdEGArH3lKfFnAtYXMkSYk5wxuG.png",
+            "provider_id": 2,
+            "provider_name": "Apple TV Store",
+            "display_priority": 4
+          },
+          {
+            "logo_path": "/jn6TLbtaTZntTRX9UYucHJvpQx1.png",
+            "provider_id": 10,
+            "provider_name": "Amazon Video",
+            "display_priority": 53
+          }
+        ],
+        "flatrate": [
+          {
+            "logo_path": "/w1hl8HszsPf5aAGT0mVY0O6LYP4.png",
+            "provider_id": 201,
+            "provider_name": "MUBI Amazon Channel",
+            "display_priority": 37
+          },
+          {
+            "logo_path": "/k7iSlvgWzZuO4zU5PcBjhABMuia.png",
+            "provider_id": 11,
+            "provider_name": "MUBI",
+            "display_priority": 49
+          }
+        ]
+      },
+      "CM": {
+        "link": "https://www.themoviedb.org/movie/1240889-teenage-sex-and-death-at-camp-miasma/watch?locale=CM",
+        "flatrate": [
+          {
+            "logo_path": "/k7iSlvgWzZuO4zU5PcBjhABMuia.png",
+            "provider_id": 11,
+            "provider_name": "MUBI",
+            "display_priority": 5
+          }
+        ]
+      },
+      "CO": {
+        "link": "https://www.themoviedb.org/movie/1240889-teenage-sex-and-death-at-camp-miasma/watch?locale=CO",
+        "buy": [
+          {
+            "logo_path": "/qdEGArH3lKfFnAtYXMkSYk5wxuG.png",
+            "provider_id": 2,
+            "provider_name": "Apple TV Store",
+            "display_priority": 4
+          },
+          {
+            "logo_path": "/jn6TLbtaTZntTRX9UYucHJvpQx1.png",
+            "provider_id": 10,
+            "provider_name": "Amazon Video",
+            "display_priority": 54
+          }
+        ],
+        "flatrate": [
+          {
+            "logo_path": "/w1hl8HszsPf5aAGT0mVY0O6LYP4.png",
+            "provider_id": 201,
+            "provider_name": "MUBI Amazon Channel",
+            "display_priority": 38
+          },
+          {
+            "logo_path": "/k7iSlvgWzZuO4zU5PcBjhABMuia.png",
+            "provider_id": 11,
+            "provider_name": "MUBI",
+            "display_priority": 50
+          }
+        ]
+      },
+      "CR": {
+        "link": "https://www.themoviedb.org/movie/1240889-teenage-sex-and-death-at-camp-miasma/watch?locale=CR",
+        "flatrate": [
+          {
+            "logo_path": "/k7iSlvgWzZuO4zU5PcBjhABMuia.png",
+            "provider_id": 11,
+            "provider_name": "MUBI",
+            "display_priority": 32
+          }
+        ],
+        "buy": [
+          {
+            "logo_path": "/qdEGArH3lKfFnAtYXMkSYk5wxuG.png",
+            "provider_id": 2,
+            "provider_name": "Apple TV Store",
+            "display_priority": 5
+          }
+        ]
+      },
+      "CU": {
+        "link": "https://www.themoviedb.org/movie/1240889-teenage-sex-and-death-at-camp-miasma/watch?locale=CU",
+        "flatrate": [
+          {
+            "logo_path": "/k7iSlvgWzZuO4zU5PcBjhABMuia.png",
+            "provider_id": 11,
+            "provider_name": "MUBI",
+            "display_priority": 9
+          }
+        ]
+      },
+      "CV": {
+        "link": "https://www.themoviedb.org/movie/1240889-teenage-sex-and-death-at-camp-miasma/watch?locale=CV",
+        "flatrate": [
+          {
+            "logo_path": "/k7iSlvgWzZuO4zU5PcBjhABMuia.png",
+            "provider_id": 11,
+            "provider_name": "MUBI",
+            "display_priority": 14
+          }
+        ]
+      },
+      "CY": {
+        "link": "https://www.themoviedb.org/movie/1240889-teenage-sex-and-death-at-camp-miasma/watch?locale=CY",
+        "flatrate": [
+          {
+            "logo_path": "/k7iSlvgWzZuO4zU5PcBjhABMuia.png",
+            "provider_id": 11,
+            "provider_name": "MUBI",
+            "display_priority": 10
+          }
+        ]
+      },
+      "CZ": {
+        "link": "https://www.themoviedb.org/movie/1240889-teenage-sex-and-death-at-camp-miasma/watch?locale=CZ",
+        "flatrate": [
+          {
+            "logo_path": "/k7iSlvgWzZuO4zU5PcBjhABMuia.png",
+            "provider_id": 11,
+            "provider_name": "MUBI",
+            "display_priority": 33
+          },
+          {
+            "logo_path": "/w1hl8HszsPf5aAGT0mVY0O6LYP4.png",
+            "provider_id": 201,
+            "provider_name": "MUBI Amazon Channel",
+            "display_priority": 46
+          }
+        ]
+      },
+      "DE": {
+        "link": "https://www.themoviedb.org/movie/1240889-teenage-sex-and-death-at-camp-miasma/watch?locale=DE",
+        "flatrate": [
+          {
+            "logo_path": "/k7iSlvgWzZuO4zU5PcBjhABMuia.png",
+            "provider_id": 11,
+            "provider_name": "MUBI",
+            "display_priority": 29
+          },
+          {
+            "logo_path": "/w1hl8HszsPf5aAGT0mVY0O6LYP4.png",
+            "provider_id": 201,
+            "provider_name": "MUBI Amazon Channel",
+            "display_priority": 35
+          }
+        ],
+        "buy": [
+          {
+            "logo_path": "/qdEGArH3lKfFnAtYXMkSYk5wxuG.png",
+            "provider_id": 2,
+            "provider_name": "Apple TV Store",
+            "display_priority": 7
+          },
+          {
+            "logo_path": "/jn6TLbtaTZntTRX9UYucHJvpQx1.png",
+            "provider_id": 10,
+            "provider_name": "Amazon Video",
+            "display_priority": 9
+          },
+          {
+            "logo_path": "/872dfVu1biZISJ8rO143CZZutPR.png",
+            "provider_id": 35,
+            "provider_name": "Rakuten TV",
+            "display_priority": 23
+          }
+        ]
+      },
+      "DO": {
+        "link": "https://www.themoviedb.org/movie/1240889-teenage-sex-and-death-at-camp-miasma/watch?locale=DO",
+        "flatrate": [
+          {
+            "logo_path": "/k7iSlvgWzZuO4zU5PcBjhABMuia.png",
+            "provider_id": 11,
+            "provider_name": "MUBI",
+            "display_priority": 33
+          }
+        ]
+      },
+      "DZ": {
+        "link": "https://www.themoviedb.org/movie/1240889-teenage-sex-and-death-at-camp-miasma/watch?locale=DZ",
+        "flatrate": [
+          {
+            "logo_path": "/k7iSlvgWzZuO4zU5PcBjhABMuia.png",
+            "provider_id": 11,
+            "provider_name": "MUBI",
+            "display_priority": 28
+          }
+        ]
+      },
+      "EC": {
+        "link": "https://www.themoviedb.org/movie/1240889-teenage-sex-and-death-at-camp-miasma/watch?locale=EC",
+        "buy": [
+          {
+            "logo_path": "/qdEGArH3lKfFnAtYXMkSYk5wxuG.png",
+            "provider_id": 2,
+            "provider_name": "Apple TV Store",
+            "display_priority": 7
+          }
+        ],
+        "flatrate": [
+          {
+            "logo_path": "/k7iSlvgWzZuO4zU5PcBjhABMuia.png",
+            "provider_id": 11,
+            "provider_name": "MUBI",
+            "display_priority": 32
+          }
+        ]
+      },
+      "EG": {
+        "link": "https://www.themoviedb.org/movie/1240889-teenage-sex-and-death-at-camp-miasma/watch?locale=EG",
+        "flatrate": [
+          {
+            "logo_path": "/k7iSlvgWzZuO4zU5PcBjhABMuia.png",
+            "provider_id": 11,
+            "provider_name": "MUBI",
+            "display_priority": 35
+          }
+        ]
+      },
+      "FJ": {
+        "link": "https://www.themoviedb.org/movie/1240889-teenage-sex-and-death-at-camp-miasma/watch?locale=FJ",
+        "flatrate": [
+          {
+            "logo_path": "/k7iSlvgWzZuO4zU5PcBjhABMuia.png",
+            "provider_id": 11,
+            "provider_name": "MUBI",
+            "display_priority": 13
+          }
+        ]
+      },
+      "FR": {
+        "link": "https://www.themoviedb.org/movie/1240889-teenage-sex-and-death-at-camp-miasma/watch?locale=FR",
+        "buy": [
+          {
+            "logo_path": "/qdEGArH3lKfFnAtYXMkSYk5wxuG.png",
+            "provider_id": 2,
+            "provider_name": "Apple TV Store",
+            "display_priority": 5
+          },
+          {
+            "logo_path": "/jn6TLbtaTZntTRX9UYucHJvpQx1.png",
+            "provider_id": 10,
+            "provider_name": "Amazon Video",
+            "display_priority": 34
+          }
+        ],
+        "flatrate": [
+          {
+            "logo_path": "/k7iSlvgWzZuO4zU5PcBjhABMuia.png",
+            "provider_id": 11,
+            "provider_name": "MUBI",
+            "display_priority": 16
+          },
+          {
+            "logo_path": "/w1hl8HszsPf5aAGT0mVY0O6LYP4.png",
+            "provider_id": 201,
+            "provider_name": "MUBI Amazon Channel",
+            "display_priority": 39
+          }
+        ]
+      },
+      "GB": {
+        "link": "https://www.themoviedb.org/movie/1240889-teenage-sex-and-death-at-camp-miasma/watch?locale=GB",
+        "buy": [
+          {
+            "logo_path": "/qdEGArH3lKfFnAtYXMkSYk5wxuG.png",
+            "provider_id": 2,
+            "provider_name": "Apple TV Store",
+            "display_priority": 7
+          },
+          {
+            "logo_path": "/872dfVu1biZISJ8rO143CZZutPR.png",
+            "provider_id": 35,
+            "provider_name": "Rakuten TV",
+            "display_priority": 8
+          },
+          {
+            "logo_path": "/jn6TLbtaTZntTRX9UYucHJvpQx1.png",
+            "provider_id": 10,
+            "provider_name": "Amazon Video",
+            "display_priority": 10
+          }
+        ],
+        "flatrate": [
+          {
+            "logo_path": "/k7iSlvgWzZuO4zU5PcBjhABMuia.png",
+            "provider_id": 11,
+            "provider_name": "MUBI",
+            "display_priority": 18
+          },
+          {
+            "logo_path": "/w1hl8HszsPf5aAGT0mVY0O6LYP4.png",
+            "provider_id": 201,
+            "provider_name": "MUBI Amazon Channel",
+            "display_priority": 38
+          }
+        ]
+      },
+      "GF": {
+        "link": "https://www.themoviedb.org/movie/1240889-teenage-sex-and-death-at-camp-miasma/watch?locale=GF",
+        "flatrate": [
+          {
+            "logo_path": "/k7iSlvgWzZuO4zU5PcBjhABMuia.png",
+            "provider_id": 11,
+            "provider_name": "MUBI",
+            "display_priority": 27
+          }
+        ]
+      },
+      "GG": {
+        "link": "https://www.themoviedb.org/movie/1240889-teenage-sex-and-death-at-camp-miasma/watch?locale=GG",
+        "flatrate": [
+          {
+            "logo_path": "/k7iSlvgWzZuO4zU5PcBjhABMuia.png",
+            "provider_id": 11,
+            "provider_name": "MUBI",
+            "display_priority": 54
+          },
+          {
+            "logo_path": "/w1hl8HszsPf5aAGT0mVY0O6LYP4.png",
+            "provider_id": 201,
+            "provider_name": "MUBI Amazon Channel",
+            "display_priority": 55
+          }
+        ],
+        "buy": [
+          {
+            "logo_path": "/jn6TLbtaTZntTRX9UYucHJvpQx1.png",
+            "provider_id": 10,
+            "provider_name": "Amazon Video",
+            "display_priority": 80
+          }
+        ]
+      },
+      "GH": {
+        "link": "https://www.themoviedb.org/movie/1240889-teenage-sex-and-death-at-camp-miasma/watch?locale=GH",
+        "flatrate": [
+          {
+            "logo_path": "/k7iSlvgWzZuO4zU5PcBjhABMuia.png",
+            "provider_id": 11,
+            "provider_name": "MUBI",
+            "display_priority": 16
+          }
+        ]
+      },
+      "GI": {
+        "link": "https://www.themoviedb.org/movie/1240889-teenage-sex-and-death-at-camp-miasma/watch?locale=GI",
+        "flatrate": [
+          {
+            "logo_path": "/k7iSlvgWzZuO4zU5PcBjhABMuia.png",
+            "provider_id": 11,
+            "provider_name": "MUBI",
+            "display_priority": 28
+          }
+        ]
+      },
+      "GQ": {
+        "link": "https://www.themoviedb.org/movie/1240889-teenage-sex-and-death-at-camp-miasma/watch?locale=GQ",
+        "flatrate": [
+          {
+            "logo_path": "/k7iSlvgWzZuO4zU5PcBjhABMuia.png",
+            "provider_id": 11,
+            "provider_name": "MUBI",
+            "display_priority": 14
+          }
+        ]
+      },
+      "GR": {
+        "link": "https://www.themoviedb.org/movie/1240889-teenage-sex-and-death-at-camp-miasma/watch?locale=GR",
+        "flatrate": [
+          {
+            "logo_path": "/w1hl8HszsPf5aAGT0mVY0O6LYP4.png",
+            "provider_id": 201,
+            "provider_name": "MUBI Amazon Channel",
+            "display_priority": 38
+          }
+        ]
+      },
+      "GT": {
+        "link": "https://www.themoviedb.org/movie/1240889-teenage-sex-and-death-at-camp-miasma/watch?locale=GT",
+        "flatrate": [
+          {
+            "logo_path": "/k7iSlvgWzZuO4zU5PcBjhABMuia.png",
+            "provider_id": 11,
+            "provider_name": "MUBI",
+            "display_priority": 32
+          }
+        ],
+        "buy": [
+          {
+            "logo_path": "/qdEGArH3lKfFnAtYXMkSYk5wxuG.png",
+            "provider_id": 2,
+            "provider_name": "Apple TV Store",
+            "display_priority": 6
+          }
+        ]
+      },
+      "GY": {
+        "link": "https://www.themoviedb.org/movie/1240889-teenage-sex-and-death-at-camp-miasma/watch?locale=GY",
+        "flatrate": [
+          {
+            "logo_path": "/k7iSlvgWzZuO4zU5PcBjhABMuia.png",
+            "provider_id": 11,
+            "provider_name": "MUBI",
+            "display_priority": 6
+          }
+        ]
+      },
+      "HK": {
+        "link": "https://www.themoviedb.org/movie/1240889-teenage-sex-and-death-at-camp-miasma/watch?locale=HK",
+        "flatrate": [
+          {
+            "logo_path": "/k7iSlvgWzZuO4zU5PcBjhABMuia.png",
+            "provider_id": 11,
+            "provider_name": "MUBI",
+            "display_priority": 37
+          }
+        ]
+      },
+      "HN": {
+        "link": "https://www.themoviedb.org/movie/1240889-teenage-sex-and-death-at-camp-miasma/watch?locale=HN",
+        "flatrate": [
+          {
+            "logo_path": "/k7iSlvgWzZuO4zU5PcBjhABMuia.png",
+            "provider_id": 11,
+            "provider_name": "MUBI",
+            "display_priority": 32
+          }
+        ],
+        "buy": [
+          {
+            "logo_path": "/qdEGArH3lKfFnAtYXMkSYk5wxuG.png",
+            "provider_id": 2,
+            "provider_name": "Apple TV Store",
+            "display_priority": 5
+          }
+        ]
+      },
+      "IE": {
+        "link": "https://www.themoviedb.org/movie/1240889-teenage-sex-and-death-at-camp-miasma/watch?locale=IE",
+        "flatrate": [
+          {
+            "logo_path": "/k7iSlvgWzZuO4zU5PcBjhABMuia.png",
+            "provider_id": 11,
+            "provider_name": "MUBI",
+            "display_priority": 55
+          }
+        ],
+        "buy": [
+          {
+            "logo_path": "/qdEGArH3lKfFnAtYXMkSYk5wxuG.png",
+            "provider_id": 2,
+            "provider_name": "Apple TV Store",
+            "display_priority": 8
+          },
+          {
+            "logo_path": "/872dfVu1biZISJ8rO143CZZutPR.png",
+            "provider_id": 35,
+            "provider_name": "Rakuten TV",
+            "display_priority": 13
+          },
+          {
+            "logo_path": "/jn6TLbtaTZntTRX9UYucHJvpQx1.png",
+            "provider_id": 10,
+            "provider_name": "Amazon Video",
+            "display_priority": 43
+          }
+        ]
+      },
+      "IL": {
+        "link": "https://www.themoviedb.org/movie/1240889-teenage-sex-and-death-at-camp-miasma/watch?locale=IL",
+        "flatrate": [
+          {
+            "logo_path": "/k7iSlvgWzZuO4zU5PcBjhABMuia.png",
+            "provider_id": 11,
+            "provider_name": "MUBI",
+            "display_priority": 28
+          }
+        ]
+      },
+      "IN": {
+        "link": "https://www.themoviedb.org/movie/1240889-teenage-sex-and-death-at-camp-miasma/watch?locale=IN",
+        "flatrate": [
+          {
+            "logo_path": "/k7iSlvgWzZuO4zU5PcBjhABMuia.png",
+            "provider_id": 11,
+            "provider_name": "MUBI",
+            "display_priority": 7
+          }
+        ]
+      },
+      "IQ": {
+        "link": "https://www.themoviedb.org/movie/1240889-teenage-sex-and-death-at-camp-miasma/watch?locale=IQ",
+        "flatrate": [
+          {
+            "logo_path": "/k7iSlvgWzZuO4zU5PcBjhABMuia.png",
+            "provider_id": 11,
+            "provider_name": "MUBI",
+            "display_priority": 30
+          }
+        ]
+      },
+      "IS": {
+        "link": "https://www.themoviedb.org/movie/1240889-teenage-sex-and-death-at-camp-miasma/watch?locale=IS",
+        "flatrate": [
+          {
+            "logo_path": "/k7iSlvgWzZuO4zU5PcBjhABMuia.png",
+            "provider_id": 11,
+            "provider_name": "MUBI",
+            "display_priority": 31
+          }
+        ]
+      },
+      "IT": {
+        "link": "https://www.themoviedb.org/movie/1240889-teenage-sex-and-death-at-camp-miasma/watch?locale=IT",
+        "buy": [
+          {
+            "logo_path": "/qdEGArH3lKfFnAtYXMkSYk5wxuG.png",
+            "provider_id": 2,
+            "provider_name": "Apple TV Store",
+            "display_priority": 7
+          },
+          {
+            "logo_path": "/872dfVu1biZISJ8rO143CZZutPR.png",
+            "provider_id": 35,
+            "provider_name": "Rakuten TV",
+            "display_priority": 12
+          },
+          {
+            "logo_path": "/jn6TLbtaTZntTRX9UYucHJvpQx1.png",
+            "provider_id": 10,
+            "provider_name": "Amazon Video",
+            "display_priority": 35
+          }
+        ],
+        "flatrate": [
+          {
+            "logo_path": "/k7iSlvgWzZuO4zU5PcBjhABMuia.png",
+            "provider_id": 11,
+            "provider_name": "MUBI",
+            "display_priority": 15
+          },
+          {
+            "logo_path": "/w1hl8HszsPf5aAGT0mVY0O6LYP4.png",
+            "provider_id": 201,
+            "provider_name": "MUBI Amazon Channel",
+            "display_priority": 48
+          }
+        ]
+      },
+      "JM": {
+        "link": "https://www.themoviedb.org/movie/1240889-teenage-sex-and-death-at-camp-miasma/watch?locale=JM",
+        "flatrate": [
+          {
+            "logo_path": "/k7iSlvgWzZuO4zU5PcBjhABMuia.png",
+            "provider_id": 11,
+            "provider_name": "MUBI",
+            "display_priority": 26
+          }
+        ]
+      },
+      "JO": {
+        "link": "https://www.themoviedb.org/movie/1240889-teenage-sex-and-death-at-camp-miasma/watch?locale=JO",
+        "flatrate": [
+          {
+            "logo_path": "/k7iSlvgWzZuO4zU5PcBjhABMuia.png",
+            "provider_id": 11,
+            "provider_name": "MUBI",
+            "display_priority": 32
+          }
+        ]
+      },
+      "KE": {
+        "link": "https://www.themoviedb.org/movie/1240889-teenage-sex-and-death-at-camp-miasma/watch?locale=KE",
+        "flatrate": [
+          {
+            "logo_path": "/k7iSlvgWzZuO4zU5PcBjhABMuia.png",
+            "provider_id": 11,
+            "provider_name": "MUBI",
+            "display_priority": 15
+          }
+        ]
+      },
+      "KW": {
+        "link": "https://www.themoviedb.org/movie/1240889-teenage-sex-and-death-at-camp-miasma/watch?locale=KW",
+        "flatrate": [
+          {
+            "logo_path": "/k7iSlvgWzZuO4zU5PcBjhABMuia.png",
+            "provider_id": 11,
+            "provider_name": "MUBI",
+            "display_priority": 32
+          }
+        ]
+      },
+      "LB": {
+        "link": "https://www.themoviedb.org/movie/1240889-teenage-sex-and-death-at-camp-miasma/watch?locale=LB",
+        "flatrate": [
+          {
+            "logo_path": "/k7iSlvgWzZuO4zU5PcBjhABMuia.png",
+            "provider_id": 11,
+            "provider_name": "MUBI",
+            "display_priority": 29
+          }
+        ]
+      },
+      "LC": {
+        "link": "https://www.themoviedb.org/movie/1240889-teenage-sex-and-death-at-camp-miasma/watch?locale=LC",
+        "flatrate": [
+          {
+            "logo_path": "/k7iSlvgWzZuO4zU5PcBjhABMuia.png",
+            "provider_id": 11,
+            "provider_name": "MUBI",
+            "display_priority": 14
+          }
+        ]
+      },
+      "LI": {
+        "link": "https://www.themoviedb.org/movie/1240889-teenage-sex-and-death-at-camp-miasma/watch?locale=LI",
+        "flatrate": [
+          {
+            "logo_path": "/k7iSlvgWzZuO4zU5PcBjhABMuia.png",
+            "provider_id": 11,
+            "provider_name": "MUBI",
+            "display_priority": 33
+          }
+        ]
+      },
+      "LY": {
+        "link": "https://www.themoviedb.org/movie/1240889-teenage-sex-and-death-at-camp-miasma/watch?locale=LY",
+        "flatrate": [
+          {
+            "logo_path": "/k7iSlvgWzZuO4zU5PcBjhABMuia.png",
+            "provider_id": 11,
+            "provider_name": "MUBI",
+            "display_priority": 28
+          }
+        ]
+      },
+      "MA": {
+        "link": "https://www.themoviedb.org/movie/1240889-teenage-sex-and-death-at-camp-miasma/watch?locale=MA",
+        "flatrate": [
+          {
+            "logo_path": "/k7iSlvgWzZuO4zU5PcBjhABMuia.png",
+            "provider_id": 11,
+            "provider_name": "MUBI",
+            "display_priority": 28
+          }
+        ]
+      },
+      "MC": {
+        "link": "https://www.themoviedb.org/movie/1240889-teenage-sex-and-death-at-camp-miasma/watch?locale=MC",
+        "flatrate": [
+          {
+            "logo_path": "/k7iSlvgWzZuO4zU5PcBjhABMuia.png",
+            "provider_id": 11,
+            "provider_name": "MUBI",
+            "display_priority": 27
+          }
+        ]
+      },
+      "MD": {
+        "link": "https://www.themoviedb.org/movie/1240889-teenage-sex-and-death-at-camp-miasma/watch?locale=MD",
+        "flatrate": [
+          {
+            "logo_path": "/k7iSlvgWzZuO4zU5PcBjhABMuia.png",
+            "provider_id": 11,
+            "provider_name": "MUBI",
+            "display_priority": 27
+          }
+        ]
+      },
+      "MG": {
+        "link": "https://www.themoviedb.org/movie/1240889-teenage-sex-and-death-at-camp-miasma/watch?locale=MG",
+        "flatrate": [
+          {
+            "logo_path": "/k7iSlvgWzZuO4zU5PcBjhABMuia.png",
+            "provider_id": 11,
+            "provider_name": "MUBI",
+            "display_priority": 5
+          }
+        ]
+      },
+      "ML": {
+        "link": "https://www.themoviedb.org/movie/1240889-teenage-sex-and-death-at-camp-miasma/watch?locale=ML",
+        "flatrate": [
+          {
+            "logo_path": "/k7iSlvgWzZuO4zU5PcBjhABMuia.png",
+            "provider_id": 11,
+            "provider_name": "MUBI",
+            "display_priority": 5
+          }
+        ]
+      },
+      "MT": {
+        "link": "https://www.themoviedb.org/movie/1240889-teenage-sex-and-death-at-camp-miasma/watch?locale=MT",
+        "flatrate": [
+          {
+            "logo_path": "/k7iSlvgWzZuO4zU5PcBjhABMuia.png",
+            "provider_id": 11,
+            "provider_name": "MUBI",
+            "display_priority": 27
+          }
+        ]
+      },
+      "MU": {
+        "link": "https://www.themoviedb.org/movie/1240889-teenage-sex-and-death-at-camp-miasma/watch?locale=MU",
+        "flatrate": [
+          {
+            "logo_path": "/k7iSlvgWzZuO4zU5PcBjhABMuia.png",
+            "provider_id": 11,
+            "provider_name": "MUBI",
+            "display_priority": 15
+          }
+        ]
+      },
+      "MW": {
+        "link": "https://www.themoviedb.org/movie/1240889-teenage-sex-and-death-at-camp-miasma/watch?locale=MW",
+        "flatrate": [
+          {
+            "logo_path": "/k7iSlvgWzZuO4zU5PcBjhABMuia.png",
+            "provider_id": 11,
+            "provider_name": "MUBI",
+            "display_priority": 4
+          }
+        ]
+      },
+      "MX": {
+        "link": "https://www.themoviedb.org/movie/1240889-teenage-sex-and-death-at-camp-miasma/watch?locale=MX",
+        "flatrate": [
+          {
+            "logo_path": "/k7iSlvgWzZuO4zU5PcBjhABMuia.png",
+            "provider_id": 11,
+            "provider_name": "MUBI",
+            "display_priority": 11
+          },
+          {
+            "logo_path": "/w1hl8HszsPf5aAGT0mVY0O6LYP4.png",
+            "provider_id": 201,
+            "provider_name": "MUBI Amazon Channel",
+            "display_priority": 56
+          }
+        ],
+        "buy": [
+          {
+            "logo_path": "/qdEGArH3lKfFnAtYXMkSYk5wxuG.png",
+            "provider_id": 2,
+            "provider_name": "Apple TV Store",
+            "display_priority": 4
+          },
+          {
+            "logo_path": "/jn6TLbtaTZntTRX9UYucHJvpQx1.png",
+            "provider_id": 10,
+            "provider_name": "Amazon Video",
+            "display_priority": 7
+          }
+        ]
+      },
+      "MY": {
+        "link": "https://www.themoviedb.org/movie/1240889-teenage-sex-and-death-at-camp-miasma/watch?locale=MY",
+        "flatrate": [
+          {
+            "logo_path": "/k7iSlvgWzZuO4zU5PcBjhABMuia.png",
+            "provider_id": 11,
+            "provider_name": "MUBI",
+            "display_priority": 31
+          }
+        ]
+      },
+      "MZ": {
+        "link": "https://www.themoviedb.org/movie/1240889-teenage-sex-and-death-at-camp-miasma/watch?locale=MZ",
+        "flatrate": [
+          {
+            "logo_path": "/k7iSlvgWzZuO4zU5PcBjhABMuia.png",
+            "provider_id": 11,
+            "provider_name": "MUBI",
+            "display_priority": 17
+          }
+        ]
+      },
+      "NE": {
+        "link": "https://www.themoviedb.org/movie/1240889-teenage-sex-and-death-at-camp-miasma/watch?locale=NE",
+        "flatrate": [
+          {
+            "logo_path": "/k7iSlvgWzZuO4zU5PcBjhABMuia.png",
+            "provider_id": 11,
+            "provider_name": "MUBI",
+            "display_priority": 26
+          }
+        ]
+      },
+      "NG": {
+        "link": "https://www.themoviedb.org/movie/1240889-teenage-sex-and-death-at-camp-miasma/watch?locale=NG",
+        "flatrate": [
+          {
+            "logo_path": "/k7iSlvgWzZuO4zU5PcBjhABMuia.png",
+            "provider_id": 11,
+            "provider_name": "MUBI",
+            "display_priority": 30
+          }
+        ]
+      },
+      "NI": {
+        "link": "https://www.themoviedb.org/movie/1240889-teenage-sex-and-death-at-camp-miasma/watch?locale=NI",
+        "flatrate": [
+          {
+            "logo_path": "/k7iSlvgWzZuO4zU5PcBjhABMuia.png",
+            "provider_id": 11,
+            "provider_name": "MUBI",
+            "display_priority": 15
+          }
+        ]
+      },
+      "NL": {
+        "link": "https://www.themoviedb.org/movie/1240889-teenage-sex-and-death-at-camp-miasma/watch?locale=NL",
+        "flatrate": [
+          {
+            "logo_path": "/k7iSlvgWzZuO4zU5PcBjhABMuia.png",
+            "provider_id": 11,
+            "provider_name": "MUBI",
+            "display_priority": 57
+          },
+          {
+            "logo_path": "/w1hl8HszsPf5aAGT0mVY0O6LYP4.png",
+            "provider_id": 201,
+            "provider_name": "MUBI Amazon Channel",
+            "display_priority": 59
+          }
+        ]
+      },
+      "NZ": {
+        "link": "https://www.themoviedb.org/movie/1240889-teenage-sex-and-death-at-camp-miasma/watch?locale=NZ",
+        "flatrate": [
+          {
+            "logo_path": "/k7iSlvgWzZuO4zU5PcBjhABMuia.png",
+            "provider_id": 11,
+            "provider_name": "MUBI",
+            "display_priority": 46
+          },
+          {
+            "logo_path": "/w1hl8HszsPf5aAGT0mVY0O6LYP4.png",
+            "provider_id": 201,
+            "provider_name": "MUBI Amazon Channel",
+            "display_priority": 48
+          }
+        ]
+      },
+      "OM": {
+        "link": "https://www.themoviedb.org/movie/1240889-teenage-sex-and-death-at-camp-miasma/watch?locale=OM",
+        "flatrate": [
+          {
+            "logo_path": "/k7iSlvgWzZuO4zU5PcBjhABMuia.png",
+            "provider_id": 11,
+            "provider_name": "MUBI",
+            "display_priority": 32
+          }
+        ]
+      },
+      "PA": {
+        "link": "https://www.themoviedb.org/movie/1240889-teenage-sex-and-death-at-camp-miasma/watch?locale=PA",
+        "flatrate": [
+          {
+            "logo_path": "/k7iSlvgWzZuO4zU5PcBjhABMuia.png",
+            "provider_id": 11,
+            "provider_name": "MUBI",
+            "display_priority": 33
+          }
+        ]
+      },
+      "PE": {
+        "link": "https://www.themoviedb.org/movie/1240889-teenage-sex-and-death-at-camp-miasma/watch?locale=PE",
+        "buy": [
+          {
+            "logo_path": "/qdEGArH3lKfFnAtYXMkSYk5wxuG.png",
+            "provider_id": 2,
+            "provider_name": "Apple TV Store",
+            "display_priority": 4
+          },
+          {
+            "logo_path": "/jn6TLbtaTZntTRX9UYucHJvpQx1.png",
+            "provider_id": 10,
+            "provider_name": "Amazon Video",
+            "display_priority": 40
+          }
+        ],
+        "flatrate": [
+          {
+            "logo_path": "/k7iSlvgWzZuO4zU5PcBjhABMuia.png",
+            "provider_id": 11,
+            "provider_name": "MUBI",
+            "display_priority": 34
+          }
+        ]
+      },
+      "PF": {
+        "link": "https://www.themoviedb.org/movie/1240889-teenage-sex-and-death-at-camp-miasma/watch?locale=PF",
+        "flatrate": [
+          {
+            "logo_path": "/k7iSlvgWzZuO4zU5PcBjhABMuia.png",
+            "provider_id": 11,
+            "provider_name": "MUBI",
+            "display_priority": 12
+          }
+        ]
+      },
+      "PG": {
+        "link": "https://www.themoviedb.org/movie/1240889-teenage-sex-and-death-at-camp-miasma/watch?locale=PG",
+        "flatrate": [
+          {
+            "logo_path": "/k7iSlvgWzZuO4zU5PcBjhABMuia.png",
+            "provider_id": 11,
+            "provider_name": "MUBI",
+            "display_priority": 5
+          }
+        ]
+      },
+      "PH": {
+        "link": "https://www.themoviedb.org/movie/1240889-teenage-sex-and-death-at-camp-miasma/watch?locale=PH",
+        "flatrate": [
+          {
+            "logo_path": "/k7iSlvgWzZuO4zU5PcBjhABMuia.png",
+            "provider_id": 11,
+            "provider_name": "MUBI",
+            "display_priority": 32
+          }
+        ]
+      },
+      "PK": {
+        "link": "https://www.themoviedb.org/movie/1240889-teenage-sex-and-death-at-camp-miasma/watch?locale=PK",
+        "flatrate": [
+          {
+            "logo_path": "/k7iSlvgWzZuO4zU5PcBjhABMuia.png",
+            "provider_id": 11,
+            "provider_name": "MUBI",
+            "display_priority": 9
+          }
+        ]
+      },
+      "PS": {
+        "link": "https://www.themoviedb.org/movie/1240889-teenage-sex-and-death-at-camp-miasma/watch?locale=PS",
+        "flatrate": [
+          {
+            "logo_path": "/k7iSlvgWzZuO4zU5PcBjhABMuia.png",
+            "provider_id": 11,
+            "provider_name": "MUBI",
+            "display_priority": 27
+          }
+        ]
+      },
+      "PT": {
+        "link": "https://www.themoviedb.org/movie/1240889-teenage-sex-and-death-at-camp-miasma/watch?locale=PT",
+        "flatrate": [
+          {
+            "logo_path": "/w1hl8HszsPf5aAGT0mVY0O6LYP4.png",
+            "provider_id": 201,
+            "provider_name": "MUBI Amazon Channel",
+            "display_priority": 40
+          }
+        ]
+      },
+      "PY": {
+        "link": "https://www.themoviedb.org/movie/1240889-teenage-sex-and-death-at-camp-miasma/watch?locale=PY",
+        "flatrate": [
+          {
+            "logo_path": "/k7iSlvgWzZuO4zU5PcBjhABMuia.png",
+            "provider_id": 11,
+            "provider_name": "MUBI",
+            "display_priority": 31
+          }
+        ],
+        "buy": [
+          {
+            "logo_path": "/qdEGArH3lKfFnAtYXMkSYk5wxuG.png",
+            "provider_id": 2,
+            "provider_name": "Apple TV Store",
+            "display_priority": 5
+          }
+        ]
+      },
+      "QA": {
+        "link": "https://www.themoviedb.org/movie/1240889-teenage-sex-and-death-at-camp-miasma/watch?locale=QA",
+        "flatrate": [
+          {
+            "logo_path": "/k7iSlvgWzZuO4zU5PcBjhABMuia.png",
+            "provider_id": 11,
+            "provider_name": "MUBI",
+            "display_priority": 32
+          }
+        ]
+      },
+      "RO": {
+        "link": "https://www.themoviedb.org/movie/1240889-teenage-sex-and-death-at-camp-miasma/watch?locale=RO",
+        "flatrate": [
+          {
+            "logo_path": "/k7iSlvgWzZuO4zU5PcBjhABMuia.png",
+            "provider_id": 11,
+            "provider_name": "MUBI",
+            "display_priority": 27
+          },
+          {
+            "logo_path": "/w1hl8HszsPf5aAGT0mVY0O6LYP4.png",
+            "provider_id": 201,
+            "provider_name": "MUBI Amazon Channel",
+            "display_priority": 39
+          }
+        ]
+      },
+      "RU": {
+        "link": "https://www.themoviedb.org/movie/1240889-teenage-sex-and-death-at-camp-miasma/watch?locale=RU",
+        "flatrate": [
+          {
+            "logo_path": "/k7iSlvgWzZuO4zU5PcBjhABMuia.png",
+            "provider_id": 11,
+            "provider_name": "MUBI",
+            "display_priority": 30
+          }
+        ]
+      },
+      "SA": {
+        "link": "https://www.themoviedb.org/movie/1240889-teenage-sex-and-death-at-camp-miasma/watch?locale=SA",
+        "flatrate": [
+          {
+            "logo_path": "/k7iSlvgWzZuO4zU5PcBjhABMuia.png",
+            "provider_id": 11,
+            "provider_name": "MUBI",
+            "display_priority": 32
+          }
+        ]
+      },
+      "SC": {
+        "link": "https://www.themoviedb.org/movie/1240889-teenage-sex-and-death-at-camp-miasma/watch?locale=SC",
+        "flatrate": [
+          {
+            "logo_path": "/k7iSlvgWzZuO4zU5PcBjhABMuia.png",
+            "provider_id": 11,
+            "provider_name": "MUBI",
+            "display_priority": 14
+          }
+        ]
+      },
+      "SE": {
+        "link": "https://www.themoviedb.org/movie/1240889-teenage-sex-and-death-at-camp-miasma/watch?locale=SE",
+        "rent": [
+          {
+            "logo_path": "/dmt94TXdeHGnA211Lo1tBQO0fXH.png",
+            "provider_id": 517,
+            "provider_name": "TriArt Play",
+            "display_priority": 19
+          }
+        ]
+      },
+      "SK": {
+        "link": "https://www.themoviedb.org/movie/1240889-teenage-sex-and-death-at-camp-miasma/watch?locale=SK",
+        "flatrate": [
+          {
+            "logo_path": "/k7iSlvgWzZuO4zU5PcBjhABMuia.png",
+            "provider_id": 11,
+            "provider_name": "MUBI",
+            "display_priority": 39
+          },
+          {
+            "logo_path": "/w1hl8HszsPf5aAGT0mVY0O6LYP4.png",
+            "provider_id": 201,
+            "provider_name": "MUBI Amazon Channel",
+            "display_priority": 52
+          }
+        ]
+      },
+      "SM": {
+        "link": "https://www.themoviedb.org/movie/1240889-teenage-sex-and-death-at-camp-miasma/watch?locale=SM",
+        "flatrate": [
+          {
+            "logo_path": "/k7iSlvgWzZuO4zU5PcBjhABMuia.png",
+            "provider_id": 11,
+            "provider_name": "MUBI",
+            "display_priority": 28
+          }
+        ]
+      },
+      "SN": {
+        "link": "https://www.themoviedb.org/movie/1240889-teenage-sex-and-death-at-camp-miasma/watch?locale=SN",
+        "flatrate": [
+          {
+            "logo_path": "/k7iSlvgWzZuO4zU5PcBjhABMuia.png",
+            "provider_id": 11,
+            "provider_name": "MUBI",
+            "display_priority": 14
+          }
+        ]
+      },
+      "SV": {
+        "link": "https://www.themoviedb.org/movie/1240889-teenage-sex-and-death-at-camp-miasma/watch?locale=SV",
+        "flatrate": [
+          {
+            "logo_path": "/k7iSlvgWzZuO4zU5PcBjhABMuia.png",
+            "provider_id": 11,
+            "provider_name": "MUBI",
+            "display_priority": 33
+          }
+        ]
+      },
+      "TC": {
+        "link": "https://www.themoviedb.org/movie/1240889-teenage-sex-and-death-at-camp-miasma/watch?locale=TC",
+        "flatrate": [
+          {
+            "logo_path": "/k7iSlvgWzZuO4zU5PcBjhABMuia.png",
+            "provider_id": 11,
+            "provider_name": "MUBI",
+            "display_priority": 13
+          }
+        ]
+      },
+      "TD": {
+        "link": "https://www.themoviedb.org/movie/1240889-teenage-sex-and-death-at-camp-miasma/watch?locale=TD",
+        "flatrate": [
+          {
+            "logo_path": "/k7iSlvgWzZuO4zU5PcBjhABMuia.png",
+            "provider_id": 11,
+            "provider_name": "MUBI",
+            "display_priority": 6
+          }
+        ]
+      },
+      "TN": {
+        "link": "https://www.themoviedb.org/movie/1240889-teenage-sex-and-death-at-camp-miasma/watch?locale=TN",
+        "flatrate": [
+          {
+            "logo_path": "/k7iSlvgWzZuO4zU5PcBjhABMuia.png",
+            "provider_id": 11,
+            "provider_name": "MUBI",
+            "display_priority": 29
+          }
+        ]
+      },
+      "TR": {
+        "link": "https://www.themoviedb.org/movie/1240889-teenage-sex-and-death-at-camp-miasma/watch?locale=TR",
+        "buy": [
+          {
+            "logo_path": "/qdEGArH3lKfFnAtYXMkSYk5wxuG.png",
+            "provider_id": 2,
+            "provider_name": "Apple TV Store",
+            "display_priority": 5
+          }
+        ],
+        "flatrate": [
+          {
+            "logo_path": "/k7iSlvgWzZuO4zU5PcBjhABMuia.png",
+            "provider_id": 11,
+            "provider_name": "MUBI",
+            "display_priority": 6
+          }
+        ]
+      },
+      "TT": {
+        "link": "https://www.themoviedb.org/movie/1240889-teenage-sex-and-death-at-camp-miasma/watch?locale=TT",
+        "flatrate": [
+          {
+            "logo_path": "/k7iSlvgWzZuO4zU5PcBjhABMuia.png",
+            "provider_id": 11,
+            "provider_name": "MUBI",
+            "display_priority": 15
+          }
+        ]
+      },
+      "TZ": {
+        "link": "https://www.themoviedb.org/movie/1240889-teenage-sex-and-death-at-camp-miasma/watch?locale=TZ",
+        "flatrate": [
+          {
+            "logo_path": "/k7iSlvgWzZuO4zU5PcBjhABMuia.png",
+            "provider_id": 11,
+            "provider_name": "MUBI",
+            "display_priority": 30
+          }
+        ]
+      },
+      "UG": {
+        "link": "https://www.themoviedb.org/movie/1240889-teenage-sex-and-death-at-camp-miasma/watch?locale=UG",
+        "flatrate": [
+          {
+            "logo_path": "/k7iSlvgWzZuO4zU5PcBjhABMuia.png",
+            "provider_id": 11,
+            "provider_name": "MUBI",
+            "display_priority": 16
+          }
+        ]
+      },
+      "US": {
+        "link": "https://www.themoviedb.org/movie/1240889-teenage-sex-and-death-at-camp-miasma/watch?locale=US",
+        "buy": [
+          {
+            "logo_path": "/jn6TLbtaTZntTRX9UYucHJvpQx1.png",
+            "provider_id": 10,
+            "provider_name": "Amazon Video",
+            "display_priority": 10
+          },
+          {
+            "logo_path": "/qdEGArH3lKfFnAtYXMkSYk5wxuG.png",
+            "provider_id": 2,
+            "provider_name": "Apple TV Store",
+            "display_priority": 11
+          },
+          {
+            "logo_path": "/wpOt6x0dRxTrIzuBosto4LGd7E9.png",
+            "provider_id": 7,
+            "provider_name": "Fandango At Home",
+            "display_priority": 39
+          }
+        ],
+        "flatrate": [
+          {
+            "logo_path": "/k7iSlvgWzZuO4zU5PcBjhABMuia.png",
+            "provider_id": 11,
+            "provider_name": "MUBI",
+            "display_priority": 58
+          },
+          {
+            "logo_path": "/w1hl8HszsPf5aAGT0mVY0O6LYP4.png",
+            "provider_id": 201,
+            "provider_name": "MUBI Amazon Channel",
+            "display_priority": 87
+          }
+        ]
+      },
+      "UY": {
+        "link": "https://www.themoviedb.org/movie/1240889-teenage-sex-and-death-at-camp-miasma/watch?locale=UY",
+        "flatrate": [
+          {
+            "logo_path": "/k7iSlvgWzZuO4zU5PcBjhABMuia.png",
+            "provider_id": 11,
+            "provider_name": "MUBI",
+            "display_priority": 33
+          }
+        ]
+      },
+      "VA": {
+        "link": "https://www.themoviedb.org/movie/1240889-teenage-sex-and-death-at-camp-miasma/watch?locale=VA",
+        "flatrate": [
+          {
+            "logo_path": "/k7iSlvgWzZuO4zU5PcBjhABMuia.png",
+            "provider_id": 11,
+            "provider_name": "MUBI",
+            "display_priority": 9
+          }
+        ]
+      },
+      "VE": {
+        "link": "https://www.themoviedb.org/movie/1240889-teenage-sex-and-death-at-camp-miasma/watch?locale=VE",
+        "flatrate": [
+          {
+            "logo_path": "/k7iSlvgWzZuO4zU5PcBjhABMuia.png",
+            "provider_id": 11,
+            "provider_name": "MUBI",
+            "display_priority": 29
+          }
+        ]
+      },
+      "YE": {
+        "link": "https://www.themoviedb.org/movie/1240889-teenage-sex-and-death-at-camp-miasma/watch?locale=YE",
+        "flatrate": [
+          {
+            "logo_path": "/k7iSlvgWzZuO4zU5PcBjhABMuia.png",
+            "provider_id": 11,
+            "provider_name": "MUBI",
+            "display_priority": 28
+          }
+        ]
+      },
+      "ZA": {
+        "link": "https://www.themoviedb.org/movie/1240889-teenage-sex-and-death-at-camp-miasma/watch?locale=ZA",
+        "flatrate": [
+          {
+            "logo_path": "/k7iSlvgWzZuO4zU5PcBjhABMuia.png",
+            "provider_id": 11,
+            "provider_name": "MUBI",
+            "display_priority": 27
+          }
+        ]
+      },
+      "ZM": {
+        "link": "https://www.themoviedb.org/movie/1240889-teenage-sex-and-death-at-camp-miasma/watch?locale=ZM",
+        "flatrate": [
+          {
+            "logo_path": "/k7iSlvgWzZuO4zU5PcBjhABMuia.png",
+            "provider_id": 11,
+            "provider_name": "MUBI",
+            "display_priority": 14
+          }
+        ]
+      },
+      "ZW": {
+        "link": "https://www.themoviedb.org/movie/1240889-teenage-sex-and-death-at-camp-miasma/watch?locale=ZW",
+        "flatrate": [
+          {
+            "logo_path": "/k7iSlvgWzZuO4zU5PcBjhABMuia.png",
+            "provider_id": 11,
+            "provider_name": "MUBI",
+            "display_priority": 5
+          }
+        ]
+      }
+    }
+  }
+}

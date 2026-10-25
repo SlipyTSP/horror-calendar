@@ -1,0 +1,366 @@
+{
+  "id": 1702511,
+  "imdb_id": "tt91702511",
+  "title": "The Class: Online",
+  "original_title": "The Class: Online",
+  "overview": "",
+  "poster_path": "/5JFM2gtt6ohK6DsBhfPITwy5sUB.jpg",
+  "release_date": "2026-11-01",
+  "runtime": 52,
+  "release_dates": {
+    "results": [
+      {
+        "iso_3166_1": "AU",
+        "release_dates": [
+          {
+            "certification": "R 18+",
+            "descriptors": [],
+            "iso_639_1": "id",
+            "note": "Shudder (Limited)",
+            "release_date": "2026-10-30T00:00:00.000Z",
+            "type": 4
+          }
+        ]
+      },
+      {
+        "iso_3166_1": "BR",
+        "release_dates": [
+          {
+            "certification": "16",
+            "descriptors": [
+              "Extreme Violence"
+            ],
+            "iso_639_1": "id",
+            "note": "Prime Video",
+            "release_date": "2026-10-30T00:00:00.000Z",
+            "type": 4
+          }
+        ]
+      },
+      {
+        "iso_3166_1": "CA",
+        "release_dates": [
+          {
+            "certification": "R",
+            "descriptors": [
+              "Violence",
+              "Not Recommended For Children",
+              "Frightening Scenes"
+            ],
+            "iso_639_1": "id",
+            "note": "Shudder (Limited)",
+            "release_date": "2026-10-30T00:00:00.000Z",
+            "type": 4
+          }
+        ]
+      },
+      {
+        "iso_3166_1": "CN",
+        "release_dates": [
+          {
+            "certification": "",
+            "descriptors": [],
+            "iso_639_1": "id",
+            "note": "",
+            "release_date": "2026-10-30T00:00:00.000Z",
+            "type": 4
+          }
+        ]
+      },
+      {
+        "iso_3166_1": "CO",
+        "release_dates": [
+          {
+            "certification": "",
+            "descriptors": [],
+            "iso_639_1": "id",
+            "note": "Netflix",
+            "release_date": "2026-10-30T00:00:00.000Z",
+            "type": 4
+          }
+        ]
+      },
+      {
+        "iso_3166_1": "DE",
+        "release_dates": [
+          {
+            "certification": "16",
+            "descriptors": [
+              "Violence",
+              "Self-harm",
+              "Language",
+              "Threat"
+            ],
+            "iso_639_1": "id",
+            "note": "Shudder (Limited)",
+            "release_date": "2026-10-30T00:00:00.000Z",
+            "type": 4
+          }
+        ]
+      },
+      {
+        "iso_3166_1": "ES",
+        "release_dates": [
+          {
+            "certification": "18",
+            "descriptors": [],
+            "iso_639_1": "id",
+            "note": "Netflix",
+            "release_date": "2026-11-01T00:00:00.000Z",
+            "type": 4
+          }
+        ]
+      },
+      {
+        "iso_3166_1": "FI",
+        "release_dates": [
+          {
+            "certification": "K-16",
+            "descriptors": [
+              "contains violence"
+            ],
+            "iso_639_1": "id",
+            "note": "Netflix",
+            "release_date": "2026-10-31T00:00:00.000Z",
+            "type": 4
+          }
+        ]
+      },
+      {
+        "iso_3166_1": "GB",
+        "release_dates": [
+          {
+            "certification": "18",
+            "descriptors": [],
+            "iso_639_1": "id",
+            "note": "Shudder (Limited)",
+            "release_date": "2026-10-30T00:00:00.000Z",
+            "type": 4
+          }
+        ]
+      },
+      {
+        "iso_3166_1": "GR",
+        "release_dates": [
+          {
+            "certification": "K18",
+            "descriptors": [],
+            "iso_639_1": "id",
+            "note": "",
+            "release_date": "2026-10-30T00:00:00.000Z",
+            "type": 4
+          }
+        ]
+      },
+      {
+        "iso_3166_1": "ID",
+        "release_dates": [
+          {
+            "certification": "17+",
+            "descriptors": [],
+            "iso_639_1": "id",
+            "note": "",
+            "release_date": "2026-10-20T00:00:00.000Z",
+            "type": 1
+          },
+          {
+            "certification": "17+",
+            "descriptors": [],
+            "iso_639_1": "id",
+            "note": "",
+            "release_date": "2026-10-29T00:00:00.000Z",
+            "type": 4
+          }
+        ]
+      },
+      {
+        "iso_3166_1": "IR",
+        "release_dates": [
+          {
+            "certification": "",
+            "descriptors": [],
+            "iso_639_1": "id",
+            "note": "",
+            "release_date": "2026-10-30T00:00:00.000Z",
+            "type": 4
+          }
+        ]
+      },
+      {
+        "iso_3166_1": "IT",
+        "release_dates": [
+          {
+            "certification": "18+",
+            "descriptors": [],
+            "iso_639_1": "id",
+            "note": "Sky",
+            "release_date": "2026-10-30T00:00:00.000Z",
+            "type": 4
+          }
+        ]
+      },
+      {
+        "iso_3166_1": "JP",
+        "release_dates": [
+          {
+            "certification": "R18+",
+            "descriptors": [],
+            "iso_639_1": "id",
+            "note": "Prime Video",
+            "release_date": "2026-10-31T00:00:00.000Z",
+            "type": 4
+          }
+        ]
+      },
+      {
+        "iso_3166_1": "KR",
+        "release_dates": [
+          {
+            "certification": "19",
+            "descriptors": [],
+            "iso_639_1": "id",
+            "note": "Netflix",
+            "release_date": "2026-10-30T00:00:00.000Z",
+            "type": 4
+          }
+        ]
+      },
+      {
+        "iso_3166_1": "MX",
+        "release_dates": [
+          {
+            "certification": "B-15",
+            "descriptors": [],
+            "iso_639_1": "id",
+            "note": "Prime Video",
+            "release_date": "2026-10-31T00:00:00.000Z",
+            "type": 4
+          }
+        ]
+      },
+      {
+        "iso_3166_1": "MY",
+        "release_dates": [
+          {
+            "certification": "18SG",
+            "descriptors": [],
+            "iso_639_1": "id",
+            "note": "",
+            "release_date": "2026-10-29T00:00:00.000Z",
+            "type": 4
+          }
+        ]
+      },
+      {
+        "iso_3166_1": "NL",
+        "release_dates": [
+          {
+            "certification": "18",
+            "descriptors": [
+              "Fear",
+              "Violence"
+            ],
+            "iso_639_1": "id",
+            "note": "Netflix",
+            "release_date": "2026-11-01T00:00:00.000Z",
+            "type": 4
+          }
+        ]
+      },
+      {
+        "iso_3166_1": "NO",
+        "release_dates": [
+          {
+            "certification": "18",
+            "descriptors": [],
+            "iso_639_1": "id",
+            "note": "",
+            "release_date": "2026-11-01T00:00:00.000Z",
+            "type": 4
+          }
+        ]
+      },
+      {
+        "iso_3166_1": "NZ",
+        "release_dates": [
+          {
+            "certification": "R18",
+            "descriptors": [],
+            "iso_639_1": "id",
+            "note": "Netflix",
+            "release_date": "2026-11-01T00:00:00.000Z",
+            "type": 4
+          }
+        ]
+      },
+      {
+        "iso_3166_1": "PE",
+        "release_dates": [
+          {
+            "certification": "",
+            "descriptors": [],
+            "iso_639_1": "id",
+            "note": "",
+            "release_date": "2026-11-01T00:00:00.000Z",
+            "type": 4
+          }
+        ]
+      },
+      {
+        "iso_3166_1": "PH",
+        "release_dates": [
+          {
+            "certification": "R-16",
+            "descriptors": [],
+            "iso_639_1": "id",
+            "note": "",
+            "release_date": "2026-10-30T00:00:00.000Z",
+            "type": 4
+          }
+        ]
+      },
+      {
+        "iso_3166_1": "TH",
+        "release_dates": [
+          {
+            "certification": "18",
+            "descriptors": [],
+            "iso_639_1": "id",
+            "note": "Netflix",
+            "release_date": "2026-10-30T00:00:00.000Z",
+            "type": 4
+          }
+        ]
+      },
+      {
+        "iso_3166_1": "US",
+        "release_dates": [
+          {
+            "certification": "R",
+            "descriptors": [],
+            "iso_639_1": "id",
+            "note": "Shudder (Limited)",
+            "release_date": "2026-10-30T00:00:00.000Z",
+            "type": 4
+          }
+        ]
+      },
+      {
+        "iso_3166_1": "VN",
+        "release_dates": [
+          {
+            "certification": "",
+            "descriptors": [],
+            "iso_639_1": "id",
+            "note": "",
+            "release_date": "2026-10-31T00:00:00.000Z",
+            "type": 4
+          }
+        ]
+      }
+    ]
+  },
+  "watch/providers": {
+    "results": {}
+  }
+}

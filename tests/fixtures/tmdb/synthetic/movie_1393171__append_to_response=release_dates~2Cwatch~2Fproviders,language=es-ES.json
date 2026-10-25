@@ -1,0 +1,30 @@
+{
+  "id": 1393171,
+  "imdb_id": "tt91393171",
+  "title": "Chicken Boy",
+  "original_title": "Chicken Boy",
+  "overview": "",
+  "poster_path": "/2X85MHB4WF2AozpOWCeR4GDLfay.jpg",
+  "release_date": "2026-12-01",
+  "runtime": 81,
+  "release_dates": {
+    "results": [
+      {
+        "iso_3166_1": "ES",
+        "release_dates": [
+          {
+            "certification": "",
+            "descriptors": [],
+            "iso_639_1": "en",
+            "note": "",
+            "release_date": "2026-12-01T00:00:00.000Z",
+            "type": 4
+          }
+        ]
+      }
+    ]
+  },
+  "watch/providers": {
+    "results": {}
+  }
+}

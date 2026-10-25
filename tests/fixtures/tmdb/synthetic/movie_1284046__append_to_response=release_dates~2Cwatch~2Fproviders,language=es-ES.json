@@ -1,0 +1,526 @@
+{
+  "id": 1284046,
+  "imdb_id": "tt91284046",
+  "title": "Aniquilación",
+  "original_title": "Onslaught",
+  "overview": "Una francotiradora del ejército utiliza sus habilidades para proteger a su hija de un escuadrón de máquinas asesinas que escapó de una base militar secreta, mientras unos mercenarios intentan contenerla.",
+  "poster_path": "/bKq74yT1Gca4JCd7E6IAHPLWBg0.jpg",
+  "release_date": "2026-10-30",
+  "runtime": 88,
+  "release_dates": {
+    "results": [
+      {
+        "iso_3166_1": "AR",
+        "release_dates": [
+          {
+            "certification": "+16",
+            "descriptors": [],
+            "iso_639_1": "",
+            "note": "",
+            "release_date": "2026-11-12T00:00:00.000Z",
+            "type": 3
+          }
+        ]
+      },
+      {
+        "iso_3166_1": "AZ",
+        "release_dates": [
+          {
+            "certification": "",
+            "descriptors": [],
+            "iso_639_1": "",
+            "note": "18+",
+            "release_date": "2026-10-01T00:00:00.000Z",
+            "type": 3
+          }
+        ]
+      },
+      {
+        "iso_3166_1": "BR",
+        "release_dates": [
+          {
+            "certification": "18",
+            "descriptors": [
+              "Drugs",
+              "Inappropriate Language",
+              "Nudity",
+              "Extreme Violence"
+            ],
+            "iso_639_1": "",
+            "note": "",
+            "release_date": "2026-10-01T00:00:00.000Z",
+            "type": 3
+          }
+        ]
+      },
+      {
+        "iso_3166_1": "CA",
+        "release_dates": [
+          {
+            "certification": "18A",
+            "descriptors": [],
+            "iso_639_1": "",
+            "note": "",
+            "release_date": "2026-09-04T00:00:00.000Z",
+            "type": 3
+          }
+        ]
+      },
+      {
+        "iso_3166_1": "CL",
+        "release_dates": [
+          {
+            "certification": "18",
+            "descriptors": [],
+            "iso_639_1": "",
+            "note": "",
+            "release_date": "2026-10-08T00:00:00.000Z",
+            "type": 3
+          }
+        ]
+      },
+      {
+        "iso_3166_1": "CO",
+        "release_dates": [
+          {
+            "certification": "",
+            "descriptors": [],
+            "iso_639_1": "",
+            "note": "S15",
+            "release_date": "2026-10-15T00:00:00.000Z",
+            "type": 3
+          }
+        ]
+      },
+      {
+        "iso_3166_1": "DE",
+        "release_dates": [
+          {
+            "certification": "16",
+            "descriptors": [
+              "Violence",
+              "Injury"
+            ],
+            "iso_639_1": "",
+            "note": "",
+            "release_date": "2026-09-03T00:00:00.000Z",
+            "type": 3
+          }
+        ]
+      },
+      {
+        "iso_3166_1": "ES",
+        "release_dates": [
+          {
+            "certification": "",
+            "descriptors": [],
+            "iso_639_1": "",
+            "note": "Sitges International Fantastic Film Festival of Catalonia",
+            "release_date": "2026-10-15T00:00:00.000Z",
+            "type": 1
+          },
+          {
+            "certification": "16",
+            "descriptors": [],
+            "iso_639_1": "",
+            "note": "",
+            "release_date": "2026-10-30T00:00:00.000Z",
+            "type": 3
+          }
+        ]
+      },
+      {
+        "iso_3166_1": "GB",
+        "release_dates": [
+          {
+            "certification": "15",
+            "descriptors": [],
+            "iso_639_1": "",
+            "note": "",
+            "release_date": "2026-12-11T00:00:00.000Z",
+            "type": 3
+          }
+        ]
+      },
+      {
+        "iso_3166_1": "GR",
+        "release_dates": [
+          {
+            "certification": "",
+            "descriptors": [],
+            "iso_639_1": "",
+            "note": "",
+            "release_date": "2026-09-17T00:00:00.000Z",
+            "type": 3
+          }
+        ]
+      },
+      {
+        "iso_3166_1": "IE",
+        "release_dates": [
+          {
+            "certification": "",
+            "descriptors": [],
+            "iso_639_1": "",
+            "note": "",
+            "release_date": "2026-12-11T00:00:00.000Z",
+            "type": 3
+          }
+        ]
+      },
+      {
+        "iso_3166_1": "IT",
+        "release_dates": [
+          {
+            "certification": "14+",
+            "descriptors": [],
+            "iso_639_1": "",
+            "note": "",
+            "release_date": "2026-10-01T00:00:00.000Z",
+            "type": 3
+          }
+        ]
+      },
+      {
+        "iso_3166_1": "KZ",
+        "release_dates": [
+          {
+            "certification": "",
+            "descriptors": [],
+            "iso_639_1": "",
+            "note": "",
+            "release_date": "2026-10-01T00:00:00.000Z",
+            "type": 3
+          }
+        ]
+      },
+      {
+        "iso_3166_1": "LT",
+        "release_dates": [
+          {
+            "certification": "N-16",
+            "descriptors": [],
+            "iso_639_1": "",
+            "note": "",
+            "release_date": "2026-09-04T00:00:00.000Z",
+            "type": 3
+          }
+        ]
+      },
+      {
+        "iso_3166_1": "LV",
+        "release_dates": [
+          {
+            "certification": "16+",
+            "descriptors": [],
+            "iso_639_1": "",
+            "note": "",
+            "release_date": "2026-09-18T00:00:00.000Z",
+            "type": 3
+          }
+        ]
+      },
+      {
+        "iso_3166_1": "MX",
+        "release_dates": [
+          {
+            "certification": "C",
+            "descriptors": [],
+            "iso_639_1": "",
+            "note": "",
+            "release_date": "2026-10-22T00:00:00.000Z",
+            "type": 3
+          }
+        ]
+      },
+      {
+        "iso_3166_1": "NO",
+        "release_dates": [
+          {
+            "certification": "",
+            "descriptors": [],
+            "iso_639_1": "",
+            "note": "Ramaskrik Film Festival",
+            "release_date": "2026-10-14T00:00:00.000Z",
+            "type": 1
+          }
+        ]
+      },
+      {
+        "iso_3166_1": "PE",
+        "release_dates": [
+          {
+            "certification": "",
+            "descriptors": [],
+            "iso_639_1": "",
+            "note": "M14",
+            "release_date": "2026-11-12T00:00:00.000Z",
+            "type": 3
+          }
+        ]
+      },
+      {
+        "iso_3166_1": "PH",
+        "release_dates": [
+          {
+            "certification": "R-16",
+            "descriptors": [],
+            "iso_639_1": "",
+            "note": "",
+            "release_date": "2026-09-02T00:00:00.000Z",
+            "type": 3
+          }
+        ]
+      },
+      {
+        "iso_3166_1": "PL",
+        "release_dates": [
+          {
+            "certification": "",
+            "descriptors": [],
+            "iso_639_1": "",
+            "note": "Splat!FilmFest",
+            "release_date": "2026-10-23T00:00:00.000Z",
+            "type": 1
+          }
+        ]
+      },
+      {
+        "iso_3166_1": "PR",
+        "release_dates": [
+          {
+            "certification": "R",
+            "descriptors": [],
+            "iso_639_1": "",
+            "note": "",
+            "release_date": "2026-09-03T00:00:00.000Z",
+            "type": 3
+          }
+        ]
+      },
+      {
+        "iso_3166_1": "PT",
+        "release_dates": [
+          {
+            "certification": "M/16",
+            "descriptors": [],
+            "iso_639_1": "",
+            "note": "",
+            "release_date": "2026-09-03T00:00:00.000Z",
+            "type": 3
+          }
+        ]
+      },
+      {
+        "iso_3166_1": "RU",
+        "release_dates": [
+          {
+            "certification": "18+",
+            "descriptors": [],
+            "iso_639_1": "ru",
+            "note": "",
+            "release_date": "2026-09-17T00:00:00.000Z",
+            "type": 3
+          }
+        ]
+      },
+      {
+        "iso_3166_1": "TH",
+        "release_dates": [
+          {
+            "certification": "18",
+            "descriptors": [],
+            "iso_639_1": "",
+            "note": "",
+            "release_date": "2026-10-22T00:00:00.000Z",
+            "type": 3
+          }
+        ]
+      },
+      {
+        "iso_3166_1": "TR",
+        "release_dates": [
+          {
+            "certification": "18+",
+            "descriptors": [
+              "Violence / Horror",
+              "Sexuality",
+              "Negative examples"
+            ],
+            "iso_639_1": "",
+            "note": "",
+            "release_date": "2026-09-04T00:00:00.000Z",
+            "type": 3
+          }
+        ]
+      },
+      {
+        "iso_3166_1": "UA",
+        "release_dates": [
+          {
+            "certification": "16+",
+            "descriptors": [],
+            "iso_639_1": "",
+            "note": "",
+            "release_date": "2026-09-03T00:00:00.000Z",
+            "type": 3
+          }
+        ]
+      },
+      {
+        "iso_3166_1": "US",
+        "release_dates": [
+          {
+            "certification": "R",
+            "descriptors": [],
+            "iso_639_1": "",
+            "note": "",
+            "release_date": "2026-09-04T00:00:00.000Z",
+            "type": 3
+          },
+          {
+            "certification": "R",
+            "descriptors": [],
+            "iso_639_1": "",
+            "note": "",
+            "release_date": "2026-10-06T00:00:00.000Z",
+            "type": 4
+          }
+        ]
+      },
+      {
+        "iso_3166_1": "VE",
+        "release_dates": [
+          {
+            "certification": "",
+            "descriptors": [],
+            "iso_639_1": "",
+            "note": "",
+            "release_date": "2026-10-22T00:00:00.000Z",
+            "type": 3
+          }
+        ]
+      }
+    ]
+  },
+  "watch/providers": {
+    "results": {
+      "CA": {
+        "link": "https://www.themoviedb.org/movie/1284046-onslaught/watch?locale=CA",
+        "buy": [
+          {
+            "logo_path": "/qdEGArH3lKfFnAtYXMkSYk5wxuG.png",
+            "provider_id": 2,
+            "provider_name": "Apple TV Store",
+            "display_priority": 8
+          },
+          {
+            "logo_path": "/fyUUKmDdzpJjSwsXPN4Rpi7jTu5.png",
+            "provider_id": 140,
+            "provider_name": "CosmoGo",
+            "display_priority": 13
+          },
+          {
+            "logo_path": "/jn6TLbtaTZntTRX9UYucHJvpQx1.png",
+            "provider_id": 10,
+            "provider_name": "Amazon Video",
+            "display_priority": 56
+          }
+        ],
+        "rent": [
+          {
+            "logo_path": "/qdEGArH3lKfFnAtYXMkSYk5wxuG.png",
+            "provider_id": 2,
+            "provider_name": "Apple TV Store",
+            "display_priority": 8
+          },
+          {
+            "logo_path": "/fyUUKmDdzpJjSwsXPN4Rpi7jTu5.png",
+            "provider_id": 140,
+            "provider_name": "CosmoGo",
+            "display_priority": 13
+          },
+          {
+            "logo_path": "/jn6TLbtaTZntTRX9UYucHJvpQx1.png",
+            "provider_id": 10,
+            "provider_name": "Amazon Video",
+            "display_priority": 56
+          }
+        ]
+      },
+      "US": {
+        "link": "https://www.themoviedb.org/movie/1284046-onslaught/watch?locale=US",
+        "rent": [
+          {
+            "logo_path": "/jn6TLbtaTZntTRX9UYucHJvpQx1.png",
+            "provider_id": 10,
+            "provider_name": "Amazon Video",
+            "display_priority": 10
+          },
+          {
+            "logo_path": "/qdEGArH3lKfFnAtYXMkSYk5wxuG.png",
+            "provider_id": 2,
+            "provider_name": "Apple TV Store",
+            "display_priority": 11
+          },
+          {
+            "logo_path": "/aZRENwYILujqs0RVOZutTh0BVGV.png",
+            "provider_id": 3,
+            "provider_name": "Google Play Movies",
+            "display_priority": 22
+          },
+          {
+            "logo_path": "/5Maob4o5w8oZnNeYpCDyVFD3M7X.png",
+            "provider_id": 192,
+            "provider_name": "YouTube",
+            "display_priority": 23
+          },
+          {
+            "logo_path": "/wpOt6x0dRxTrIzuBosto4LGd7E9.png",
+            "provider_id": 7,
+            "provider_name": "Fandango At Home",
+            "display_priority": 39
+          },
+          {
+            "logo_path": "/blAEhvx3XX8sV0fFVFk88FFjubs.png",
+            "provider_id": 538,
+            "provider_name": "Plex",
+            "display_priority": 126
+          }
+        ],
+        "buy": [
+          {
+            "logo_path": "/jn6TLbtaTZntTRX9UYucHJvpQx1.png",
+            "provider_id": 10,
+            "provider_name": "Amazon Video",
+            "display_priority": 10
+          },
+          {
+            "logo_path": "/qdEGArH3lKfFnAtYXMkSYk5wxuG.png",
+            "provider_id": 2,
+            "provider_name": "Apple TV Store",
+            "display_priority": 11
+          },
+          {
+            "logo_path": "/aZRENwYILujqs0RVOZutTh0BVGV.png",
+            "provider_id": 3,
+            "provider_name": "Google Play Movies",
+            "display_priority": 22
+          },
+          {
+            "logo_path": "/5Maob4o5w8oZnNeYpCDyVFD3M7X.png",
+            "provider_id": 192,
+            "provider_name": "YouTube",
+            "display_priority": 23
+          },
+          {
+            "logo_path": "/wpOt6x0dRxTrIzuBosto4LGd7E9.png",
+            "provider_id": 7,
+            "provider_name": "Fandango At Home",
+            "display_priority": 39
+          }
+        ]
+      }
+    }
+  }
+}

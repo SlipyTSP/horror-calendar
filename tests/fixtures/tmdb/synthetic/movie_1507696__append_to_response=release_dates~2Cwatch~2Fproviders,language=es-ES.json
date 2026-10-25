@@ -1,0 +1,116 @@
+{
+  "id": 1507696,
+  "imdb_id": "tt91507696",
+  "title": "Apocalipsis Z: Nuevo mundo",
+  "original_title": "Apocalipsis Z: Nuevo mundo",
+  "overview": "Cuando una misión especial parte hacia la península en busca de suministros vitales, Roberto se une al equipo con dudosas intenciones. La peligrosa operación se transforma en una carrera desesperada por la supervivencia, y Roberto y sus compañeros se encontrarán entre hordas de infectados y lealtades divididas.",
+  "poster_path": "/wgSMJ3083ad5qKC4QzzVNJ4cv5D.jpg",
+  "release_date": "2026-10-30",
+  "runtime": 99,
+  "release_dates": {
+    "results": [
+      {
+        "iso_3166_1": "BR",
+        "release_dates": [
+          {
+            "certification": "16",
+            "descriptors": [],
+            "iso_639_1": "",
+            "note": "Prime Video",
+            "release_date": "2026-10-30T00:00:00.000Z",
+            "type": 4
+          }
+        ]
+      },
+      {
+        "iso_3166_1": "DE",
+        "release_dates": [
+          {
+            "certification": "",
+            "descriptors": [],
+            "iso_639_1": "",
+            "note": "Prime Video",
+            "release_date": "2026-10-30T00:00:00.000Z",
+            "type": 4
+          }
+        ]
+      },
+      {
+        "iso_3166_1": "ES",
+        "release_dates": [
+          {
+            "certification": "",
+            "descriptors": [],
+            "iso_639_1": "",
+            "note": "Sitges Film Festival",
+            "release_date": "2026-10-09T00:00:00.000Z",
+            "type": 1
+          },
+          {
+            "certification": "",
+            "descriptors": [],
+            "iso_639_1": "",
+            "note": "Prime Video",
+            "release_date": "2026-10-30T00:00:00.000Z",
+            "type": 4
+          }
+        ]
+      },
+      {
+        "iso_3166_1": "GB",
+        "release_dates": [
+          {
+            "certification": "",
+            "descriptors": [],
+            "iso_639_1": "",
+            "note": "Prime Video",
+            "release_date": "2026-10-30T00:00:00.000Z",
+            "type": 4
+          }
+        ]
+      },
+      {
+        "iso_3166_1": "PH",
+        "release_dates": [
+          {
+            "certification": "",
+            "descriptors": [],
+            "iso_639_1": "",
+            "note": "Prime Video",
+            "release_date": "2026-10-30T00:00:00.000Z",
+            "type": 4
+          }
+        ]
+      },
+      {
+        "iso_3166_1": "SG",
+        "release_dates": [
+          {
+            "certification": "",
+            "descriptors": [],
+            "iso_639_1": "",
+            "note": "Prime Video",
+            "release_date": "2026-10-30T00:00:00.000Z",
+            "type": 4
+          }
+        ]
+      },
+      {
+        "iso_3166_1": "US",
+        "release_dates": [
+          {
+            "certification": "",
+            "descriptors": [],
+            "iso_639_1": "",
+            "note": "Prime Video",
+            "release_date": "2026-10-30T00:00:00.000Z",
+            "type": 4
+          }
+        ]
+      }
+    ]
+  },
+  "watch/providers": {
+    "results": {}
+  }
+}
