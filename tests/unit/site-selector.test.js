@@ -283,3 +283,50 @@ test('posterUrl rejects absolute URLs, traversal and injection attempts', () => 
     assert.equal(selector.posterUrl(p), null, JSON.stringify(p));
   }
 });
+
+test('groupByMonth groups the filtered sample by month in Spanish', () => {
+  const list = selector.filterReleases(SAMPLE.releases, ['cines', 'digital']);
+  const groups = selector.groupByMonth(list, 'es-ES');
+  assert.deepEqual(groups.map((g) => g.key), ['2026-11', '2026-12', '2027-01']);
+  assert.deepEqual(groups.map((g) => g.label), ['Noviembre de 2026', 'Diciembre de 2026', 'Enero de 2027']);
+  assert.deepEqual(groups.flatMap((g) => g.releases), list, 'order and content preserved');
+  for (const g of groups) {
+    for (const r of g.releases) assert.ok(r.releaseDate.startsWith(g.key), r.id);
+  }
+});
+
+test('groupByMonth labels months in English', () => {
+  const list = selector.filterReleases(SAMPLE.releases, ['cines', 'digital']);
+  const groups = selector.groupByMonth(list, 'en-US');
+  assert.deepEqual(groups.map((g) => g.label), ['November 2026', 'December 2026', 'January 2027']);
+});
+
+test('groupByMonth keeps a single-calendar selection in order', () => {
+  const list = selector.filterReleases(SAMPLE.releases, ['cines']);
+  const groups = selector.groupByMonth(list, 'es-ES');
+  assert.deepEqual(groups.flatMap((g) => g.releases).map((r) => r.id), ids(list));
+  assert.ok(groups.every((g) => g.releases.length > 0));
+});
+
+test('groupByMonth puts invalid or missing dates in a final unlabeled group', () => {
+  const list = [
+    { id: 1, releaseDate: '2026-11-06' },
+    { id: 2, releaseDate: 'garbage' },
+    { id: 3, releaseDate: '2026-11-20' },
+    { id: 4 },
+    { id: 5, releaseDate: '2026-02-30' },
+    { id: 6, releaseDate: '2026-12-01' },
+    null,
+  ];
+  const groups = selector.groupByMonth(list, 'es-ES');
+  assert.deepEqual(groups.map((g) => g.key), ['2026-11', '2026-12', null]);
+  assert.equal(groups[2].label, null);
+  assert.deepEqual(groups[0].releases.map((r) => r.id), [1, 3]);
+  assert.deepEqual(groups[2].releases.map((r) => r && r.id), [2, 4, 5, null]);
+});
+
+test('groupByMonth tolerates empty or non-array input', () => {
+  assert.deepEqual(selector.groupByMonth([], 'es-ES'), []);
+  assert.deepEqual(selector.groupByMonth(undefined, 'es-ES'), []);
+  assert.deepEqual(selector.groupByMonth('nope', 'en-US'), []);
+});
