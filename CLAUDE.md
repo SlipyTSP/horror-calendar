@@ -59,10 +59,13 @@ src/
   manual.js      — Altas manuales (§10): loadManualEntries (validación, nunca lanza),
                    buildManualReleases (ventana, detalle, regla de duración, TMDB gana
                    con ::warning:: si difieren las fechas y plataforma curada sumada)
-  arrivals.js    — Llegadas (§11): readSnapshot (solo https, 5 MB, JSON inválido →
-                   semilla), fetchProviderIds, fetchCatalogue, diffPlatform (guardas),
-                   computeArrivals (arrastre, ventana ARRIVAL_DAYS, descarte del estreno
-                   anunciado, regla de duración) y buildSnapshot. Best effort
+  arrivals.js    — Llegadas (§11): readSnapshot (solo https, sin redirecciones, 5 MB
+                   leídos por trozos, JSON inválido → semilla), fetchProviderIds,
+                   fetchCatalogue, diffPlatform (guardas), computeArrivals (arrastre,
+                   ventana ARRIVAL_DAYS, descarte del estreno anunciado, regla de
+                   duración), carryForwardArrivals (si computeArrivals falla: foto
+                   anterior arrastrada, vacía solo sin foto válida) y buildSnapshot.
+                   Best effort
   platforms.js   — PLATFORMS (§5), matchPlatform, platformName, assignCalendars (unión
                    nota + flatrate + plataformas curadas para tmdb; solo la curada para
                    manual; arrivalPlatform para llegadas) y calendarDefinitions
