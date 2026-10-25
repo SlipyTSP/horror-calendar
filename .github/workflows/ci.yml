@@ -58,6 +58,8 @@ jobs:
           TMDB_API_KEY: ${{ secrets.TMDB_API_KEY }}
           TMDB_LANGUAGE: es-ES
           TMDB_REGION: ES
+          # Read-only use of the published providers snapshot (arrivals, docs/data-model.md §11)
+          SNAPSHOT_URL: https://slipytsp.github.io/horror-calendar/providers-snapshot.json
 
       - name: Write release table to the job summary
         run: node scripts/summary.js >> "$GITHUB_STEP_SUMMARY"
