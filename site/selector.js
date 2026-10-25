@@ -296,6 +296,37 @@
     return date.toLocaleString(locale, { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' });
   }
 
+  function capitalize(text, locale) {
+    return text ? text.charAt(0).toLocaleUpperCase(locale) + text.slice(1) : text;
+  }
+
+  // Groups an already filtered and sorted list into consecutive months, keeping the
+  // order. Releases without a valid date go to one final group with key null; its
+  // label is null so the caller provides the translated text.
+  function groupByMonth(releases, locale) {
+    const groups = [];
+    const byKey = new Map();
+    const undated = [];
+    for (const release of Array.isArray(releases) ? releases : []) {
+      const date = isObject(release) ? parseLocalDate(release.releaseDate) : null;
+      if (!date) {
+        undated.push(release);
+        continue;
+      }
+      const key = release.releaseDate.slice(0, 7);
+      let group = byKey.get(key);
+      if (!group) {
+        const label = capitalize(date.toLocaleDateString(locale, { month: 'long', year: 'numeric' }), locale);
+        group = { key, label, releases: [] };
+        byKey.set(key, group);
+        groups.push(group);
+      }
+      group.releases.push(release);
+    }
+    if (undated.length > 0) groups.push({ key: null, label: null, releases: undated });
+    return groups;
+  }
+
   const api = {
     SCHEMA_VERSION,
     STORAGE_KEY,
@@ -323,6 +354,7 @@
     formatReleaseDate,
     formatGenerated,
     posterUrl,
+    groupByMonth,
   };
 
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
