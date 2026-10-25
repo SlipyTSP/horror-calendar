@@ -5,6 +5,8 @@ Spanish cinemas and what arrives on the streaming platforms available in Spain. 
 comes from [TMDB](https://www.themoviedb.org/), it is refreshed every Monday and published
 on GitHub Pages together with a small web page to pick the calendars.
 
+**Live page:** <https://slipytsp.github.io/horror-calendar/>
+
 ## What you can subscribe to
 
 Every build publishes one calendar per audience, so you subscribe only to what you can
@@ -28,10 +30,12 @@ Rules that shape the calendars:
 
 ## Usage
 
-Open the published page and tick the calendars you want; each one has a subscribe button
+Open the [published page](https://slipytsp.github.io/horror-calendar/) and tick the
+calendars you want; each one has a subscribe button
 (`webcal://`) and a copyable URL. On iOS: *Settings → Calendar → Accounts → Add Account →
 Other → Add Subscribed Calendar* and paste the URL. Calendar apps refresh the feeds about
-once a day; the data itself is rebuilt every Monday at 06:00 UTC.
+once a day; the data itself is rebuilt every Monday at 06:00 UTC. The page also lists the
+upcoming releases grouped by month, with their TMDB posters.
 
 ## Configuration
 
@@ -55,7 +59,9 @@ src/tmdb.js       two regional discover/movie queries (theatrical 3|2, digital 4
 src/platforms.js  platform config; release note + flatrate → platform calendars
 src/calendar.js   one RFC 5545 VCALENDAR per calendar
 src/index.js      writes output/*.ics and output/releases.json
-site/             static page that reads releases.json
+site/             static page that reads releases.json (no build, no framework)
+site/assets/      favicon, Apple touch icon and Open Graph image
+site/fonts/       self-hosted Creepster display font (woff2) and its OFL license
 ```
 
 The data contract between the Node side and the web is `docs/data-model.md`; the phase
@@ -99,9 +105,14 @@ npx --yes serve site        # or: python3 -m http.server -d site
 ## Data attribution
 
 This product uses the TMDB API but is not endorsed or certified by TMDB. Movie data,
-release dates, providers and synopses come from [The Movie Database](https://www.themoviedb.org/);
-streaming availability in TMDB is provided by JustWatch.
+release dates, providers, synopses and poster images come from
+[The Movie Database](https://www.themoviedb.org/); posters are loaded from TMDB's image
+servers and are not stored in this repository. Streaming availability in TMDB is provided
+by JustWatch.
 
 ## License
 
-[MIT](LICENSE).
+Code: [MIT](LICENSE).
+
+The Creepster font in `site/fonts/` is © 2011 Font Diner, Inc and is distributed under the
+[SIL Open Font License 1.1](site/fonts/OFL.txt), not under the MIT license.
