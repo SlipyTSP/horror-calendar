@@ -386,6 +386,20 @@ h1 {
 
 @keyframes spin { to { transform: rotate(360deg); } }
 
+.month-group + .month-group {
+  margin-top: 2rem;
+}
+
+.month-title {
+  font-size: 1rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--text);
+  padding-bottom: 0.5rem;
+  margin-bottom: 1rem;
+  border-bottom: 1px solid var(--border);
+}
+
 .movie-list {
   display: flex;
   flex-direction: column;
