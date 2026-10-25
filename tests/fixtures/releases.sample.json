@@ -1,31 +1,157 @@
 {
-  "schema": 1,
+  "schema": 2,
   "generated": "2026-11-02T06:03:00.000Z",
   "region": "ES",
-  "window": { "from": "2026-11-02", "to": "2027-01-31" },
+  "window": {
+    "from": "2026-11-02",
+    "to": "2027-01-31"
+  },
+  "arrivalWindow": {
+    "from": "2026-10-03",
+    "to": "2026-11-02"
+  },
   "calendars": [
-    { "slug": "cines", "file": "horror-cines.ics", "name": "Cines", "kind": "cinema", "count": 3 },
-    { "slug": "netflix", "file": "horror-netflix.ics", "name": "Netflix", "kind": "platform", "count": 1 },
-    { "slug": "prime-video", "file": "horror-prime-video.ics", "name": "Prime Video", "kind": "platform", "count": 2 },
-    { "slug": "hbo-max", "file": "horror-hbo-max.ics", "name": "HBO Max", "kind": "platform", "count": 1 },
-    { "slug": "movistar-plus", "file": "horror-movistar-plus.ics", "name": "Movistar Plus+", "kind": "platform", "count": 0 },
-    { "slug": "filmin", "file": "horror-filmin.ics", "name": "Filmin", "kind": "platform", "count": 1 },
-    { "slug": "disney-plus", "file": "horror-disney-plus.ics", "name": "Disney+", "kind": "platform", "count": 0 },
-    { "slug": "skyshowtime", "file": "horror-skyshowtime.ics", "name": "SkyShowtime", "kind": "platform", "count": 0 },
-    { "slug": "apple-tv-plus", "file": "horror-apple-tv-plus.ics", "name": "Apple TV+", "kind": "platform", "count": 0 },
-    { "slug": "digital", "file": "horror-digital.ics", "name": "Digital", "kind": "aggregate", "count": 6 },
-    { "slug": "all", "file": "horror.ics", "name": "Todo", "kind": "legacy", "count": 9 }
+    {
+      "slug": "cines",
+      "file": "horror-cines.ics",
+      "name": "Cines",
+      "kind": "cinema",
+      "count": 3
+    },
+    {
+      "slug": "netflix",
+      "file": "horror-netflix.ics",
+      "name": "Netflix",
+      "kind": "platform",
+      "count": 2
+    },
+    {
+      "slug": "prime-video",
+      "file": "horror-prime-video.ics",
+      "name": "Prime Video",
+      "kind": "platform",
+      "count": 2
+    },
+    {
+      "slug": "hbo-max",
+      "file": "horror-hbo-max.ics",
+      "name": "HBO Max",
+      "kind": "platform",
+      "count": 1
+    },
+    {
+      "slug": "movistar-plus",
+      "file": "horror-movistar-plus.ics",
+      "name": "Movistar Plus+",
+      "kind": "platform",
+      "count": 1
+    },
+    {
+      "slug": "filmin",
+      "file": "horror-filmin.ics",
+      "name": "Filmin",
+      "kind": "platform",
+      "count": 1
+    },
+    {
+      "slug": "disney-plus",
+      "file": "horror-disney-plus.ics",
+      "name": "Disney+",
+      "kind": "platform",
+      "count": 1
+    },
+    {
+      "slug": "skyshowtime",
+      "file": "horror-skyshowtime.ics",
+      "name": "SkyShowtime",
+      "kind": "platform",
+      "count": 0
+    },
+    {
+      "slug": "apple-tv-plus",
+      "file": "horror-apple-tv-plus.ics",
+      "name": "Apple TV+",
+      "kind": "platform",
+      "count": 0
+    },
+    {
+      "slug": "digital",
+      "file": "horror-digital.ics",
+      "name": "Digital",
+      "kind": "aggregate",
+      "count": 7
+    },
+    {
+      "slug": "all",
+      "file": "horror.ics",
+      "name": "Todo",
+      "kind": "legacy",
+      "count": 10
+    }
   ],
   "releases": [
+    {
+      "id": 900010,
+      "title": "Noche de Lobos",
+      "originalTitle": "Wolf Night",
+      "releaseDate": "2026-10-26",
+      "type": "arrival",
+      "source": "providers",
+      "calendars": [
+        "movistar-plus"
+      ],
+      "providers": {
+        "flatrate": [],
+        "rentBuy": []
+      },
+      "releaseNote": null,
+      "arrivalPlatform": "movistar-plus",
+      "sourceUrl": null,
+      "runtime": 101,
+      "posterPath": "/sample-900010.jpg",
+      "overview": "Un pueblo de montaña queda aislado por la nieve la misma noche en que vuelven los aullidos.",
+      "tmdbUrl": "https://www.themoviedb.org/movie/900010"
+    },
+    {
+      "id": 900011,
+      "title": "La Niña del Pantano",
+      "originalTitle": "The Marsh Girl",
+      "releaseDate": "2026-11-02",
+      "type": "arrival",
+      "source": "providers",
+      "calendars": [
+        "netflix"
+      ],
+      "providers": {
+        "flatrate": [],
+        "rentBuy": []
+      },
+      "releaseNote": null,
+      "arrivalPlatform": "netflix",
+      "sourceUrl": null,
+      "runtime": 88,
+      "posterPath": null,
+      "overview": "",
+      "tmdbUrl": "https://www.themoviedb.org/movie/900011"
+    },
     {
       "id": 900001,
       "title": "La Casa Vacía",
       "originalTitle": "The Empty House",
       "releaseDate": "2026-11-06",
       "type": "theatrical",
-      "calendars": ["cines"],
-      "providers": { "flatrate": [], "rentBuy": [] },
+      "source": "tmdb",
+      "calendars": [
+        "cines"
+      ],
+      "providers": {
+        "flatrate": [],
+        "rentBuy": []
+      },
       "releaseNote": null,
+      "arrivalPlatform": null,
+      "sourceUrl": null,
+      "runtime": 98,
       "posterPath": "/sample-900001.jpg",
       "overview": "Una familia hereda una casa en la que nadie ha vivido jamás; cada noche aparece una habitación nueva.",
       "tmdbUrl": "https://www.themoviedb.org/movie/900001"
@@ -36,9 +162,21 @@
       "originalTitle": "Night Ritual",
       "releaseDate": "2026-11-13",
       "type": "digital",
-      "calendars": ["digital", "netflix"],
-      "providers": { "flatrate": ["Netflix"], "rentBuy": [] },
+      "source": "tmdb",
+      "calendars": [
+        "digital",
+        "netflix"
+      ],
+      "providers": {
+        "flatrate": [
+          "Netflix"
+        ],
+        "rentBuy": []
+      },
       "releaseNote": "Netflix",
+      "arrivalPlatform": null,
+      "sourceUrl": null,
+      "runtime": 104,
       "posterPath": "/sample-900002.jpg",
       "overview": "Un grupo de estudiantes graba un ritual para una asignatura; la grabación sigue cambiando después de entregarla.",
       "tmdbUrl": "https://www.themoviedb.org/movie/900002"
@@ -49,12 +187,47 @@
       "originalTitle": "Voices Below",
       "releaseDate": "2026-11-20",
       "type": "digital",
-      "calendars": ["digital"],
-      "providers": { "flatrate": [], "rentBuy": ["Apple TV", "Rakuten TV"] },
+      "source": "tmdb",
+      "calendars": [
+        "digital"
+      ],
+      "providers": {
+        "flatrate": [],
+        "rentBuy": [
+          "Apple TV",
+          "Rakuten TV"
+        ]
+      },
       "releaseNote": null,
+      "arrivalPlatform": null,
+      "sourceUrl": null,
+      "runtime": 87,
       "posterPath": "/sample-900003.jpg",
       "overview": "Un técnico de mantenimiento descubre que el sótano del edificio responde a las preguntas que se hacen en voz alta.",
       "tmdbUrl": "https://www.themoviedb.org/movie/900003"
+    },
+    {
+      "id": 900009,
+      "title": "El Pozo",
+      "originalTitle": "The Well",
+      "releaseDate": "2026-11-25",
+      "type": "digital",
+      "source": "manual",
+      "calendars": [
+        "digital",
+        "disney-plus"
+      ],
+      "providers": {
+        "flatrate": [],
+        "rentBuy": []
+      },
+      "releaseNote": null,
+      "arrivalPlatform": null,
+      "sourceUrl": "https://example.com/prensa/el-pozo-disney-plus",
+      "runtime": 97,
+      "posterPath": "/sample-900009.jpg",
+      "overview": "Tres hermanos vuelven a la granja familiar y descubren que el pozo seco responde cuando le hablan.",
+      "tmdbUrl": "https://www.themoviedb.org/movie/900009"
     },
     {
       "id": 900004,
@@ -62,9 +235,18 @@
       "originalTitle": "Yesterday's Shadows",
       "releaseDate": "2026-11-27",
       "type": "theatrical",
-      "calendars": ["cines"],
-      "providers": { "flatrate": [], "rentBuy": [] },
+      "source": "tmdb",
+      "calendars": [
+        "cines"
+      ],
+      "providers": {
+        "flatrate": [],
+        "rentBuy": []
+      },
       "releaseNote": null,
+      "arrivalPlatform": null,
+      "sourceUrl": null,
+      "runtime": 112,
       "posterPath": "/sample-900004.jpg",
       "overview": "Las sombras de un pueblo costero llegan un día tarde; la de la protagonista acaba de dejar de llegar.",
       "tmdbUrl": "https://www.themoviedb.org/movie/900004"
@@ -75,9 +257,25 @@
       "originalTitle": "The Harvest",
       "releaseDate": "2026-12-04",
       "type": "digital",
-      "calendars": ["digital", "prime-video", "filmin"],
-      "providers": { "flatrate": ["Amazon Prime Video", "Filmin"], "rentBuy": ["Google Play Movies"] },
+      "source": "tmdb",
+      "calendars": [
+        "digital",
+        "prime-video",
+        "filmin"
+      ],
+      "providers": {
+        "flatrate": [
+          "Amazon Prime Video",
+          "Filmin"
+        ],
+        "rentBuy": [
+          "Google Play Movies"
+        ]
+      },
       "releaseNote": null,
+      "arrivalPlatform": null,
+      "sourceUrl": null,
+      "runtime": 95,
       "posterPath": null,
       "overview": "En una comarca agrícola la cosecha de este año madura de noche y solo cuando nadie mira.",
       "tmdbUrl": "https://www.themoviedb.org/movie/900005"
@@ -88,9 +286,19 @@
       "originalTitle": "The Red Tide",
       "releaseDate": "2026-12-11",
       "type": "digital",
-      "calendars": ["digital", "prime-video"],
-      "providers": { "flatrate": [], "rentBuy": [] },
+      "source": "tmdb",
+      "calendars": [
+        "digital",
+        "prime-video"
+      ],
+      "providers": {
+        "flatrate": [],
+        "rentBuy": []
+      },
       "releaseNote": "Prime Video",
+      "arrivalPlatform": null,
+      "sourceUrl": null,
+      "runtime": 91,
       "posterPath": "/sample-900008.jpg",
       "overview": "Cada marea baja deja en la playa un objeto que perdió alguien del pueblo; esta vez es una persona.",
       "tmdbUrl": "https://www.themoviedb.org/movie/900008"
@@ -101,9 +309,20 @@
       "originalTitle": "El Faro del Fin",
       "releaseDate": "2026-12-18",
       "type": "digital",
-      "calendars": ["digital"],
-      "providers": { "flatrate": ["Atresplayer"], "rentBuy": [] },
+      "source": "tmdb",
+      "calendars": [
+        "digital"
+      ],
+      "providers": {
+        "flatrate": [
+          "Atresplayer"
+        ],
+        "rentBuy": []
+      },
       "releaseNote": "Atresplayer",
+      "arrivalPlatform": null,
+      "sourceUrl": null,
+      "runtime": 89,
       "posterPath": null,
       "overview": "",
       "tmdbUrl": "https://www.themoviedb.org/movie/900006"
@@ -114,9 +333,23 @@
       "originalTitle": "Yesterday's Shadows",
       "releaseDate": "2027-01-15",
       "type": "digital",
-      "calendars": ["digital", "hbo-max"],
-      "providers": { "flatrate": ["HBO Max"], "rentBuy": ["Apple TV"] },
+      "source": "tmdb",
+      "calendars": [
+        "digital",
+        "hbo-max"
+      ],
+      "providers": {
+        "flatrate": [
+          "HBO Max"
+        ],
+        "rentBuy": [
+          "Apple TV"
+        ]
+      },
       "releaseNote": null,
+      "arrivalPlatform": null,
+      "sourceUrl": null,
+      "runtime": 112,
       "posterPath": "/sample-900004.jpg",
       "overview": "Las sombras de un pueblo costero llegan un día tarde; la de la protagonista acaba de dejar de llegar.",
       "tmdbUrl": "https://www.themoviedb.org/movie/900004"
@@ -127,9 +360,18 @@
       "originalTitle": "The Last Train",
       "releaseDate": "2027-01-29",
       "type": "theatrical",
-      "calendars": ["cines"],
-      "providers": { "flatrate": [], "rentBuy": [] },
+      "source": "tmdb",
+      "calendars": [
+        "cines"
+      ],
+      "providers": {
+        "flatrate": [],
+        "rentBuy": []
+      },
       "releaseNote": null,
+      "arrivalPlatform": null,
+      "sourceUrl": null,
+      "runtime": null,
       "posterPath": "/sample-900007.jpg",
       "overview": "El último tren de la noche lleva años saliendo con un vagón más de los que tiene.",
       "tmdbUrl": "https://www.themoviedb.org/movie/900007"
