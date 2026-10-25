@@ -435,3 +435,37 @@ test('the runtime rule log lists a release once even when its manual entry is re
   assert.ok(log.lines.some((l) => /Runtime rule \(MIN_RUNTIME=40\): removed 1 release\.$/.test(l)), log.lines.join('\n'));
   assert.equal(log.lines.filter((l) => /\(TMDB 1739309, digital, 20 min\)$/.test(l)).length, 1);
 });
+
+test('a crash of the arrivals step after reading a valid snapshot carries it forward (§11)', async () => {
+  const previous = {
+    schema: 1, generated: '2026-10-16T06:00:00.000Z', region: 'ES', maxAgeYears: 3,
+    platforms: { netflix: [920001, 920002], filmin: [920041] },
+    arrivals: [
+      { id: 920041, platform: 'filmin', detected: '2026-10-16', title: 'Carried' },
+      { id: 920001, platform: 'netflix', detected: '2026-09-01', title: 'Expired' },
+    ],
+  };
+  const fetchImpl = createFixtureFetch({
+    routes: { [SNAPSHOT_URL]: { body: previous }, [detailKey(920041)]: manualDetail(920041, { title: 'Llegada Filmin' }) },
+  });
+  const computeArrivalsImpl = async () => { throw new Error('boom'); };
+  const { code, outDir, log } = await runMain({ fetchImpl, env: { ...ENV, SNAPSHOT_URL }, computeArrivalsImpl });
+  assert.equal(code, 0);
+  assert.match(warnings(log).join('\n'), /Platform arrivals failed \(boom\); previous snapshot carried forward/);
+
+  const snap = readJson(outDir, 'providers-snapshot.json');
+  assert.deepEqual(snap.platforms, previous.platforms);
+  assert.deepEqual(snap.arrivals, [{ id: 920041, platform: 'filmin', detected: '2026-10-16', title: 'Carried' }]);
+  const doc = readJson(outDir, 'releases.json');
+  assert.deepEqual(doc.releases.filter((r) => r.type === 'arrival').map((r) => [r.id, r.releaseDate, r.calendars]),
+    [[920041, '2026-10-16', ['filmin']]]);
+});
+
+test('a crash of the arrivals step without a usable snapshot writes an empty one', async () => {
+  const computeArrivalsImpl = async () => { throw new Error('boom'); };
+  const { code, outDir, log } = await runMain({ env: { ...ENV }, computeArrivalsImpl });
+  assert.equal(code, 0);
+  assert.match(warnings(log).join('\n'), /no previous snapshot, empty snapshot written/);
+  const snap = readJson(outDir, 'providers-snapshot.json');
+  assert.deepEqual([snap.platforms, snap.arrivals], [{}, []]);
+});

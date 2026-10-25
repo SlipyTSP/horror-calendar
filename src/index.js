@@ -12,7 +12,7 @@ const {
 const { assignCalendars, matchPlatform } = require('./platforms');
 const { generateCalendars } = require('./calendar');
 const { loadManualEntries, buildManualReleases } = require('./manual');
-const { computeArrivals, emptySnapshot, SNAPSHOT_FILE } = require('./arrivals');
+const { computeArrivals, carryForwardArrivals, readSnapshot, SNAPSHOT_FILE } = require('./arrivals');
 
 const ROOT_DIR = path.join(__dirname, '..');
 const OUTPUT_DIR = path.join(ROOT_DIR, 'output');
@@ -48,6 +48,7 @@ const errorMessage = (err) => String(err?.message || err);
  * @param {Function} [options.sleep] - Delay between retries
  * @param {Function} [options.log] - Standard output (also ::warning:: annotations)
  * @param {Function} [options.error] - Error output
+ * @param {Function} [options.computeArrivalsImpl] - Arrivals step (injectable for tests)
  * @returns {Promise<number>}
  */
 async function main({
@@ -59,6 +60,7 @@ async function main({
   sleep,
   log = console.log,
   error = console.error,
+  computeArrivalsImpl = computeArrivals,
 } = {}) {
   const apiKey = String(env?.TMDB_API_KEY ?? '').trim();
   const redact = (text) => (apiKey ? String(text).split(apiKey).join('***') : String(text));
@@ -93,24 +95,23 @@ async function main({
 
     // Platform arrivals (§11): best effort, the snapshot is always written
     log('\nPlatform arrivals...');
+    const digitalReleases = releases.filter((r) => r.type === 'digital');
+    let previous = null;
     let arrivals;
     try {
-      arrivals = await computeArrivals({
-        context,
-        fetchImpl,
-        now,
-        digitalReleases: releases.filter((r) => r.type === 'digital'),
-        manualEntries,
-        log: out,
-        warn,
+      previous = await readSnapshot({
+        url: settings.snapshotUrl, fetchImpl, region, maxAgeYears: settings.arrivalMaxAgeYears, log: out, warn,
+      });
+      arrivals = await computeArrivalsImpl({
+        context, fetchImpl, now, digitalReleases, manualEntries, previous, log: out, warn,
       });
     } catch (err) {
-      warn(`Platform arrivals failed (${errorMessage(err)}); none this build, empty snapshot written.`);
-      arrivals = {
-        releases: [],
-        removed: [],
-        snapshot: emptySnapshot({ now, region, maxAgeYears: settings.arrivalMaxAgeYears }),
-      };
+      // Previous snapshot carried forward (empty only when none was read), §11
+      warn(`Platform arrivals failed (${errorMessage(err)}); ${previous
+        ? 'previous snapshot carried forward' : 'no previous snapshot, empty snapshot written'}.`);
+      arrivals = await carryForwardArrivals({
+        context, previous, now, digitalReleases, manualEntries, log: out, warn,
+      });
     }
     releases.push(...arrivals.releases);
     releases.sort(compareReleases);
