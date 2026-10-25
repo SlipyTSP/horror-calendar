@@ -20,6 +20,7 @@
   const DEFAULT_SELECTION = ['cines'];
   const SELECTABLE_KINDS = ['cinema', 'platform', 'aggregate'];
   const LEGACY_FILE = 'horror.ics';
+  const POSTER_BASE = 'https://image.tmdb.org/t/p/w342';
 
   // --- Translations ---
   const I18N = {
@@ -263,6 +264,15 @@
     }
   }
 
+  // --- Posters ---
+  // Only a single TMDB-style file name ("/abc_D-1.jpg") is accepted: no extra slashes,
+  // no "..", no scheme, so the result can only ever point at image.tmdb.org.
+  function posterUrl(posterPath) {
+    if (typeof posterPath !== 'string') return null;
+    if (!/^\/[A-Za-z0-9_-]+\.(jpg|jpeg|png|webp)$/.test(posterPath)) return null;
+    return POSTER_BASE + posterPath;
+  }
+
   // --- Dates ---
   // YYYY-MM-DD parsed as a local date: new Date('YYYY-MM-DD') would be UTC midnight and
   // show the previous day west of Greenwich.
@@ -312,6 +322,7 @@
     parseLocalDate,
     formatReleaseDate,
     formatGenerated,
+    posterUrl,
   };
 
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
