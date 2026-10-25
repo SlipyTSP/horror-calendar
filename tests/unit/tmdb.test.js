@@ -687,3 +687,15 @@ test('compareReleases: date, title (es), then theatrical, digital, arrival, then
   ];
   assert.deepEqual([...list].sort(compareReleases).map((x) => x.id), [1, 2, 3, 0, 4, 5]);
 });
+
+test('numeric settings accept decimal integers only (§7): 1e1, 0x10, 10.5 fall back with a warning', () => {
+  for (const value of ['1e1', '0x10', '10.5', '+10', '1_0', '10 days', '٣٠']) {
+    const w = sink();
+    assert.equal(resolveSettings({ WINDOW_DAYS: value }, NOW, w).windowDays, 90, value);
+    assert.equal(w.lines.length, 1, value);
+    assert.match(w.lines[0], /WINDOW_DAYS=.*using 90/);
+  }
+  const w = sink();
+  assert.equal(resolveSettings({ WINDOW_DAYS: ' 010 ', MIN_RUNTIME: '0' }, NOW, w).windowDays, 10);
+  assert.deepEqual(w.lines, []);
+});

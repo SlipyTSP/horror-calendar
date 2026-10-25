@@ -64,8 +64,10 @@ const defaultSleep = (ms) => new Promise((resolve) => { setTimeout(resolve, ms);
  * @returns {number}
  */
 function parseIntSetting(value, fallback, { min, max, name }, warn) {
-  if (value === undefined || value === null || String(value).trim() === '') return fallback;
-  const parsed = Number(String(value).trim());
+  const raw = value === undefined || value === null ? '' : String(value).trim();
+  if (raw === '') return fallback;
+  // Decimal integers only: "1e1", "0x10" or "10.5" are not accepted even if Number() reads them
+  const parsed = /^-?\d+$/.test(raw) ? Number(raw) : NaN;
   if (!Number.isInteger(parsed) || parsed < min || parsed > max) {
     warn(`${name}="${value}" is not an integer between ${min} and ${max}; using ${fallback}.`);
     return fallback;
