@@ -56,6 +56,7 @@
       no_date: 'Sin fecha',
       footer_data: 'Datos de',
       footer_source: 'Código en',
+      footer_tmdb_notice: 'Este producto usa la API de TMDB pero no está avalado ni certificado por TMDB.',
       date_locale: 'es-ES',
     },
     en: {
@@ -90,6 +91,7 @@
       no_date: 'No date',
       footer_data: 'Data from',
       footer_source: 'Source on',
+      footer_tmdb_notice: 'This product uses the TMDB API but is not endorsed or certified by TMDB.',
       date_locale: 'en-US',
     },
   };
