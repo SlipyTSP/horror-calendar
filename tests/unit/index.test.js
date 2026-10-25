@@ -419,3 +419,19 @@ test('E2 one detail request per movie id across sources; an announced digital re
   assert.match(log.lines.join('\n'), /\(TMDB 1507696\) on Prime Video is its announced digital release; dropped/);
   assert.ok(readJson(outDir, 'providers-snapshot.json').platforms['prime-video'].includes(1507696));
 });
+
+test('the runtime rule log lists a release once even when its manual entry is removed too', async () => {
+  // 1739309 is a TMDB digital release (2026-10-31); its manual entry has another date, so it
+  // is not "TMDB wins" (the TMDB release was removed) and goes through the same short detail
+  const file = writeManual({
+    schema: 1,
+    releases: [{ id: 1739309, releaseDate: '2026-11-20', platform: 'filmin', sourceUrl: 'https://example.com/prensa/short' }],
+  });
+  const fetchImpl = createFixtureFetch({
+    routes: { [detailKey(1739309)]: { body: { ...detailFixture(1739309), runtime: 20 } } },
+  });
+  const { code, log } = await runMain({ fetchImpl, env: { ...ENV, MANUAL_RELEASES_FILE: file } });
+  assert.equal(code, 0);
+  assert.ok(log.lines.some((l) => /Runtime rule \(MIN_RUNTIME=40\): removed 1 release\.$/.test(l)), log.lines.join('\n'));
+  assert.equal(log.lines.filter((l) => /\(TMDB 1739309, digital, 20 min\)$/.test(l)).length, 1);
+});
