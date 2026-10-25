@@ -527,6 +527,11 @@ footer {
   font-size: 0.8rem;
 }
 
+.footer-notice {
+  margin-top: 0.5rem;
+  font-size: 0.75rem;
+}
+
 footer a {
   color: var(--red-bright);
   text-decoration: none;
