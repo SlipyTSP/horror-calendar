@@ -67,9 +67,12 @@ function validateManualDocument(doc) {
     candidates.push({ index, entry: { id: raw.id, releaseDate: raw.releaseDate, platform: raw.platform, sourceUrl } });
   });
 
-  // One entry per id: a repeated id is ambiguous, so every entry with it is skipped
+  // One entry per id: a repeated id is ambiguous, so every entry with it is skipped. Every
+  // raw entry with an integer id counts, valid or not
   const seen = new Map();
-  for (const { entry } of candidates) seen.set(entry.id, (seen.get(entry.id) ?? 0) + 1);
+  for (const raw of doc.releases) {
+    if (Number.isInteger(raw?.id)) seen.set(raw.id, (seen.get(raw.id) ?? 0) + 1);
+  }
   const entries = [];
   for (const { index, entry } of candidates) {
     if (seen.get(entry.id) > 1) {
