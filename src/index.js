@@ -115,7 +115,16 @@ async function main({
     releases.push(...arrivals.releases);
     releases.sort(compareReleases);
 
-    const removed = [...tmdbRemoved, ...manual.removed, ...arrivals.removed];
+    // One line per movie and type: a TMDB release removed by the rule may also come back
+    // through its manual entry (same detail, same result)
+    const removed = [];
+    const removedKeys = new Set();
+    for (const r of [...tmdbRemoved, ...manual.removed, ...arrivals.removed]) {
+      const key = `${r.id}:${r.type}`;
+      if (removedKeys.has(key)) continue;
+      removedKeys.add(key);
+      removed.push(r);
+    }
     log(`\nRuntime rule (MIN_RUNTIME=${settings.minRuntime}): removed ${removed.length} release${removed.length === 1 ? '' : 's'}.`);
     for (const r of removed) out(`  - ${describeRemoved(r)}`);
 
