@@ -29,7 +29,7 @@ planning folder; this file is what a coding session needs.
 | F0 — Foundations | `feat/f0-foundations` | [#1](https://github.com/SlipyTSP/horror-calendar/pull/1) | merged |
 | F1 — Regional data core + calendars | `feat/f1-regional-data` | [#2](https://github.com/SlipyTSP/horror-calendar/pull/2) | merged |
 | F2 — Web selector | `feat/f2-web-selector` | [#3](https://github.com/SlipyTSP/horror-calendar/pull/3) | merged |
-| F3 light — Visual polish | `feat/f3-visual-polish` | | optional (after F1 + F2) |
+| F3 light — Visual polish | `feat/f3-visual-polish` | [#4](https://github.com/SlipyTSP/horror-calendar/pull/4) | in review |
 
 Each phase updates its own row when it opens its PR.
 
