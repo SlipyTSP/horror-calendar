@@ -75,33 +75,42 @@ test('renders the data model shape from tests/fixtures/releases.sample.json', ()
   const text = out.text();
   const rows = tableRows(text);
 
-  assert.match(text, /\| Date \| Title \| Type \| Calendars \| Release note \|/);
+  assert.match(text, /\| Date \| Title \| Type \| Source \| Runtime \| Calendars \| Release note \|/);
   assert.match(text, /Region: ES · window 2026-11-02 → 2027-01-31/);
+  assert.match(text, /Arrivals detected 2026-10-03 → 2026-11-02/);
   assert.equal(rows.length, sample.releases.length);
   for (const [i, r] of sample.releases.entries()) {
-    assert.ok(rows[i].startsWith(`| ${r.releaseDate} | ${r.title} | ${r.type} | `), rows[i]);
+    const runtime = r.runtime === null ? '—' : `${r.runtime} min`;
+    assert.ok(rows[i].startsWith(`| ${r.releaseDate} | ${r.title} | ${r.type} | ${r.source} | ${runtime} | `), rows[i]);
     for (const slug of r.calendars) assert.ok(rows[i].includes(slug), `${slug} missing in ${rows[i]}`);
     for (const name of r.providers.rentBuy) assert.ok(rows[i].includes(name), `${name} missing in ${rows[i]}`);
     assert.ok(rows[i].endsWith(r.releaseNote ? ` | ${r.releaseNote} |` : ' | — |'), rows[i]);
   }
-  assert.equal(rows.find((row) => row.includes('La Marea Roja')), '| 2026-12-11 | La Marea Roja | digital | digital, prime-video | Prime Video |');
+  assert.equal(rows.find((row) => row.includes('La Marea Roja')),
+    '| 2026-12-11 | La Marea Roja | digital | tmdb | 91 min | digital, prime-video | Prime Video |');
+  assert.equal(rows.find((row) => row.includes('El Último Tren')), '| 2027-01-29 | El Último Tren | theatrical | tmdb | — | cines | — |');
+  assert.equal(rows.find((row) => row.includes('El Pozo')), '| 2026-11-25 | El Pozo | digital | manual | 97 min | digital, disney-plus | — |');
+  assert.equal(rows[0], '| 2026-10-26 | Noche de Lobos | arrival | providers | 101 min | movistar-plus | — |');
 });
 
 test('the data model shape gets a per-calendar count table in canonical order', () => {
   const sample = JSON.parse(fs.readFileSync(SAMPLE, 'utf-8'));
   const rows = calendarRows(renderSummary(sample));
-  assert.deepEqual(rows, sample.calendars.map((c) => `| ${c.slug} | ${c.file} | ${c.count} |`));
-  assert.equal(rows[0], '| cines | horror-cines.ics | 3 |');
-  assert.equal(rows.at(-1), '| all | horror.ics | 9 |');
+  const arrivals = { netflix: 1, 'movistar-plus': 1 };
+  assert.deepEqual(rows, sample.calendars.map((c) => `| ${c.slug} | ${c.file} | ${c.count} | ${arrivals[c.slug] ?? 0} |`));
+  assert.equal(rows[0], '| cines | horror-cines.ics | 3 | 0 |');
+  assert.equal(rows[1], '| netflix | horror-netflix.ics | 2 | 1 |');
+  assert.equal(rows.at(-1), '| all | horror.ics | 10 | 0 |');
 });
 
 test('without calendars metadata the counts are computed from the releases', () => {
   const sample = JSON.parse(fs.readFileSync(SAMPLE, 'utf-8'));
   const rows = calendarRows(renderSummary({ releases: sample.releases }));
-  assert.ok(rows.includes('| cines | — | 3 |'));
-  assert.ok(rows.includes('| prime-video | — | 2 |'));
-  assert.ok(rows.includes('| digital | — | 6 |'));
-  assert.equal(rows.at(-1), '| all | horror.ics | 9 |');
+  assert.ok(rows.includes('| cines | — | 3 | 0 |'));
+  assert.ok(rows.includes('| prime-video | — | 2 | 0 |'));
+  assert.ok(rows.includes('| movistar-plus | — | 1 | 1 |'));
+  assert.ok(rows.includes('| digital | — | 7 | 0 |'));
+  assert.equal(rows.at(-1), '| all | horror.ics | 10 | 0 |');
 });
 
 test('an empty releases list produces an empty table, not an error', () => {
