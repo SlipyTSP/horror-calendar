@@ -256,3 +256,30 @@ test('site/ contains no absolute link to the production host', () => {
     assert.ok(!/slipytsp\.github\.io/i.test(text), file);
   }
 });
+
+test('posterUrl builds the TMDB w342 URL for valid poster paths', () => {
+  assert.equal(selector.posterUrl('/sample-900001.jpg'), 'https://image.tmdb.org/t/p/w342/sample-900001.jpg');
+  for (const p of ['/abc.jpeg', '/A_b-9.png', '/x.webp', '/kqjL17yufvn9OVLyXYpvtyrFfak.jpg']) {
+    assert.equal(selector.posterUrl(p), 'https://image.tmdb.org/t/p/w342' + p, p);
+  }
+  for (const release of SAMPLE.releases) {
+    const url = selector.posterUrl(release.posterPath);
+    if (release.posterPath === null) assert.equal(url, null);
+    else assert.ok(url.startsWith('https://image.tmdb.org/t/p/w342/'), release.posterPath);
+  }
+});
+
+test('posterUrl returns null for missing, empty or malformed paths', () => {
+  for (const p of [null, undefined, '', '/', 42, {}, [], 'abc.jpg', '/abc', '/abc.gif',
+    '/abc.JPG.exe', '/abc.jpg ', ' /abc.jpg', '/a b.jpg', '/abc.jpg?x=1', '/abc.jpg#x']) {
+    assert.equal(selector.posterUrl(p), null, String(p));
+  }
+});
+
+test('posterUrl rejects absolute URLs, traversal and injection attempts', () => {
+  for (const p of ['https://evil.example/x.jpg', '//evil.example/x.jpg', '/../x.jpg',
+    '/../../t/p/original/x.jpg', '/a/b.jpg', '/..%2fx.jpg', 'javascript:alert(1)//.jpg',
+    '/x.jpg"onerror="alert(1)', '/x.jpg\n', '\\x.jpg', '/x.jpg/', '/x\u0000.jpg']) {
+    assert.equal(selector.posterUrl(p), null, JSON.stringify(p));
+  }
+});
