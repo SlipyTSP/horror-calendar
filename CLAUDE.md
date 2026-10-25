@@ -20,14 +20,19 @@ en `docs/phases.md`; el modelo de datos, en `docs/data-model.md`.
 ```bash
 npm ci                              # Instalar dependencias (usa el lockfile)
 npm start                           # Ejecuta src/index.js — consulta TMDB y escribe output/
-                                    # (11 .ics + releases.json); exit 1 en los casos de §7
+                                    # (11 .ics + releases.json + providers-snapshot.json);
+                                    # exit 1 solo en los casos de §7 (nunca por altas
+                                    # manuales ni llegadas)
 npm test                            # Test runner nativo (node --test): tests/unit/*.test.js
-node scripts/summary.js [archivo]   # Tablas Markdown de output/releases.json (o del archivo dado)
+node scripts/summary.js [archivo]   # Tablas Markdown de output/releases.json (o del archivo dado):
+                                    # títulos y llegadas por calendario; source y duración por release
 node scripts/capture-fixtures.js    # Captura respuestas reales de TMDB en tests/fixtures/tmdb/
                                     # (necesita key; lo ejecuta el propietario, nunca CI)
 ```
 
-La API key se lee de `.env` (ver `.env.example`). En CI va por `secrets.TMDB_API_KEY`.
+La API key se lee de `.env` (ver `.env.example`, con todas las variables de §7). En CI va
+por `secrets.TMDB_API_KEY`; ambos workflows pasan `SNAPSHOT_URL` con la copia publicada de
+`providers-snapshot.json`. En local, sin `SNAPSHOT_URL`, las llegadas van en modo semilla.
 
 Vista previa local de la web: `cp tests/fixtures/releases.sample.json site/releases.json`
 y cualquier servidor estático sobre `site/` (las copias locales están en `.gitignore`).
@@ -36,22 +41,37 @@ y cualquier servidor estático sobre `site/` (las copias locales están en `.git
 
 ```
 src/
-  index.js       — Entry point. main({ fetchImpl, now, env, outDir, … }) devuelve el
-                   exit code; solo se ejecuta si require.main === module (carga dotenv
-                   ahí). getHorrorReleases → assignCalendars → generateCalendars; escribe
-                   los 11 .ics y releases.json (§4), preview por release y ::warning::
-                   por cada releaseNote sin alias
-  tmdb.js        — Cliente TMDB: getHorrorReleases / fetchHorrorReleases (este último
-                   añade region, window y contadores). Dos discover regionales,
-                   watch/providers + release_dates solo para digitales, sinopsis EN de
-                   respaldo, pool de 5, reintentos 429/5xx con Retry-After, umbral de
-                   fallos de detalle del 20 %. fetch, now, env y sleep inyectables
-  platforms.js   — PLATFORMS (§5), matchPlatform, assignCalendars (unión nota +
-                   flatrate) y calendarDefinitions (orden canónico)
+  index.js       — Entry point. main({ fetchImpl, now, env, outDir, rootDir, … }) devuelve
+                   el exit code; solo se ejecuta si require.main === module (carga dotenv
+                   ahí). resolveSettings → fetchHorrorReleases → altas manuales →
+                   assignCalendars → llegadas → generateCalendars; escribe los 11 .ics,
+                   releases.json (schema 2, §4) y providers-snapshot.json (§11, siempre),
+                   log de la regla de duración, preview por release y ::warning:: por
+                   cada releaseNote sin alias. Manual y llegadas van en try/catch
+  tmdb.js        — Cliente TMDB: resolveSettings (todas las variables de §7),
+                   createContext (GET con reintentos 429/5xx y Retry-After, caché de
+                   detalle por id compartida por las tres fuentes, contadores por
+                   categoría), getHorrorReleases / fetchHorrorReleases (dos discover
+                   regionales, un GET /movie/{id}?append_to_response=release_dates,
+                   watch/providers por id, regla de duración, sinopsis EN de respaldo,
+                   pool de 5, umbral del 20 % solo sobre releases tmdb), parseDetail,
+                   passesRuntimeRule, compareReleases. fetch, now, env y sleep inyectables
+  manual.js      — Altas manuales (§10): loadManualEntries (validación, nunca lanza),
+                   buildManualReleases (ventana, detalle, regla de duración, TMDB gana
+                   con ::warning:: si difieren las fechas y plataforma curada sumada)
+  arrivals.js    — Llegadas (§11): readSnapshot (solo https, 5 MB, JSON inválido →
+                   semilla), fetchProviderIds, fetchCatalogue, diffPlatform (guardas),
+                   computeArrivals (arrastre, ventana ARRIVAL_DAYS, descarte del estreno
+                   anunciado, regla de duración) y buildSnapshot. Best effort
+  platforms.js   — PLATFORMS (§5), matchPlatform, platformName, assignCalendars (unión
+                   nota + flatrate + plataformas curadas para tmdb; solo la curada para
+                   manual; arrivalPlatform para llegadas) y calendarDefinitions
   calendar.js    — generateCalendars(releases, { now }) → un VCALENDAR por calendario
-                   (RFC 5545: folding a 75 octetos, escape, CRLF). Exporta también
-                   generateICS, escapeText, foldLine, generateUID, buildDescription y
-                   buildWhereLine
+                   (RFC 5545: folding a 75 octetos, escape, CRLF); horror.ics = cines +
+                   digital, sin llegadas. Exporta también generateICS, escapeText,
+                   foldLine, generateUID, buildDescription y buildWhereLine
+data/
+  manual-releases.json — Altas manuales del propietario (§10). Los tests no lo leen
 scripts/
   summary.js     — Tablas Markdown de releases.json: contadores por calendario y una
                    fila por release con calendarios y nota (tolera el formato antiguo);
@@ -61,15 +81,20 @@ scripts/
                    manifest.json; sin reintentos, nunca escribe la key; imprime
                    provider_name y notas tipo 4 vistas en la región
 site/
-  index.html     — Web pública: marcado e i18n ES/EN vía data-i18n. El deploy copia
-                   site/ entero a GitHub Pages
-  styles.css     — Estilos de la página
-  selector.js    — Selector de calendarios (ES2020, sin build): lee releases.json con
-                   URL relativa, persiste la selección en localStorage y pinta
-                   suscripciones y lista filtrada. La lógica pura se exporta para
+  index.html     — Web pública: marcado, meta OG/Twitter e i18n ES/EN vía data-i18n;
+                   pie con créditos de TMDB y JustWatch. El deploy copia site/ entero
+                   a GitHub Pages
+  styles.css     — Estilos de la página (Creepster local, resto fuentes del sistema)
+  selector.js    — Selector de calendarios (ES2020, sin build): lee releases.json
+                   (schema 2) con URL relativa, persiste la selección en localStorage y
+                   pinta suscripciones y lista filtrada en el orden de releases (posters,
+                   meses, insignia de llegada). La lógica pura se exporta para
                    node --test (guarda module.exports); el DOM solo si existe document
+  assets/        — favicon.svg, apple-touch-icon.png (180x180) y og-image.png (1200x630)
+  fonts/         — creepster-latin-400-normal.woff2 y su licencia OFL.txt
 output/          — Generado por npm start: horror-cines.ics, horror-<plataforma>.ics,
-                   horror-digital.ics, horror.ics y releases.json; ignorado por git
+                   horror-digital.ics, horror.ics, releases.json y
+                   providers-snapshot.json; ignorado por git
 docs/
   data-model.md  — Contrato de datos entre la capa Node y la web (solo lectura)
   phases.md      — Plan de fases, reparto de ficheros y criterios de aceptación
@@ -86,12 +111,15 @@ tests/
   fixtures/tmdb/ — Respuestas TMDB capturadas + manifest.json (solo las recaptura el
                    propietario)
   fixtures/tmdb/synthetic/ — Fixtures escritas a mano para lo que la captura no cubre
-                   (release_dates observados el 2026-10-23, sinopsis EN, casos límite)
+                   (detalle combinado de F4 por release capturada, lista de proveedores
+                   y catálogos de llegadas, sinopsis EN, casos límite; ver su README)
 .github/workflows/
   ci.yml         — PR, push a main y manual: job test (npm test) y job dry-run
-                   (npm start real, tabla en el resumen, artefacto output/ 14 días)
-  update-calendar.yml — Cron lunes 06:00 UTC: npm test, npm start, copia site/ +
-                   output/*.ics + output/releases.json y deploy a GitHub Pages;
+                   (npm start real con SNAPSHOT_URL publicada, solo lectura; tabla en
+                   el resumen, artefacto output/ 14 días)
+  update-calendar.yml — Cron lunes 06:00 UTC: npm test, npm start con SNAPSHOT_URL,
+                   copia site/ + output/*.ics + output/releases.json +
+                   output/providers-snapshot.json y deploy a GitHub Pages;
                    job keepalive que rehabilita el workflow vía API (sin commits)
 ```
 
@@ -107,29 +135,54 @@ Cada fase que cambie la estructura actualiza esta sección en el mismo PR.
 - Solo `flatrate` de `watch/providers` (región ES) cuenta como "incluido en suscripción"
   (los tiers `ads`/`free` solo si son alias de una plataforma configurada); `rent` y `buy`
   se fusionan en `rentBuy`, se etiquetan como alquiler/compra y nunca crean pertenencia.
-- `release_dates` se pide solo para releases digitales y solo para obtener `releaseNote`
-  (nota tipo 4 de la región cuyo día coincide con `releaseDate`; si ninguna coincide, la
-  primera tipo 4 con nota). Nunca para inferir el tipo ni para buscar en otras regiones.
-- Pertenencia a calendarios de plataforma = unión de `matchPlatform(releaseNote)` y
-  `matchPlatform` de cada `flatrate` (alias en `src/platforms.js`). Una nota sin alias se
-  avisa con `::warning::` al final de `npm start`.
+- Un solo detalle por película y build: `GET /movie/{id}` con `language` y
+  `append_to_response=release_dates,watch/providers` (da `runtime`, `imdb_id` y, para
+  digitales, providers y nota). La caché por id la comparten tmdb, manual y llegadas.
+  Un detalle fallido conserva la release tmdb; el umbral del 20 % cuenta solo los
+  detalles (y sinopsis EN) de releases tmdb.
+- De `release_dates` solo se usa la región: `releaseNote` (nota tipo 4 cuyo día coincide
+  con `releaseDate`; si ninguna, la primera tipo 4 con nota) y, en llegadas, las fechas
+  tipo 4 para descartar el estreno anunciado. Nunca para inferir el tipo ni para buscar
+  en otras regiones.
+- Regla de duración en las tres fuentes: entra con `runtime >= MIN_RUNTIME` (40) o sin
+  duración (0 = null) pero con `imdb_id`; `MIN_RUNTIME=0` la desactiva. El log lista las
+  eliminadas (líneas normales).
+- Altas manuales (`data/manual-releases.json`, §10): validación por entrada con
+  `::warning::`; si TMDB ya fecha el estreno digital, gana TMDB y la plataforma curada se
+  suma. Nunca cambian el exit code.
+- Llegadas (§11): `/watch/providers/movie` → ids por alias; una discover por plataforma con
+  `watch_region`, `with_watch_providers`, `flatrate`, `with_genres=27`,
+  `primary_release_date.gte` (sin `region`: aquí solo acota la antigüedad) y
+  `sort_by=primary_release_date.desc`; diff contra la foto de `SNAPSHOT_URL` con modo
+  semilla y guardas. Best effort: todo fallo es `::warning::`.
+- Pertenencia a calendarios de plataforma de una release tmdb = unión de
+  `matchPlatform(releaseNote)`, `matchPlatform` de cada `flatrate` (alias en
+  `src/platforms.js`) y la plataforma curada si hay alta manual del mismo id. Las altas
+  manuales van solo a su plataforma curada y las llegadas solo a `arrivalPlatform`. Una
+  nota sin alias se avisa con `::warning::` al final de `npm start`.
 - La ventana empieza hoy (UTC), sin look-back: `WINDOW_DAYS` (1-366, def. 90) y
-  `MAX_PAGES` (1-20, def. 5); un corte de paginación siempre emite `::warning::`.
+  `MAX_PAGES` (1-20, def. 5); un corte de paginación siempre emite `::warning::`. Las
+  llegadas son el único look-back (`ARRIVAL_DAYS`, def. 30).
 - Detalles exactos de queries, reintentos y límites: `docs/data-model.md` §7.
 
 ## Formato .ics
 
 - iCalendar válido (RFC 5545): CRLF, folding a 75 octetos sin partir secuencias UTF-8,
   eventos de día completo, `METHOD:PUBLISH`, refresco de 24 h.
-- UID: `tmdb-<id>-<type>@horror-calendar` (estable ante cambios de fecha o título).
-  No volver a UIDs derivados de título o fecha.
+- UID: `tmdb-<id>-<type>@horror-calendar` (estable ante cambios de fecha o título; una
+  alta manual comparte el UID `digital` con su futuro equivalente de TMDB); llegadas:
+  `tmdb-<id>-arrival-<plataforma>@horror-calendar`. No volver a UIDs derivados de título
+  o fecha.
+- SUMMARY: título + `🎬` (cines), `📺` (digital) o `🆕` (llegada).
 - Un `.ics` por calendario (`cines`, plataformas, `digital`, `all`), todos en cada build,
   vacíos incluidos; `X-WR-CALNAME` = `Terror — <nombre>` (`horror.ics`: `Terror — Todo`).
-- DESCRIPTION: sinopsis; línea "dónde" (`En cines` / `Incluido en:` / `Estreno en:`
-  para plataformas conocidas solo por la nota / `Alquiler o compra:` / `Estreno
-  digital`); `Más info:`. El filtrado vive solo en la capa de datos.
+- DESCRIPTION: sinopsis; línea "dónde" (`En cines` / `Ya disponible en:` para llegadas /
+  `Incluido en:` / `Estreno en:` para plataformas conocidas solo por la nota o el alta
+  manual / `Alquiler o compra:` / `Estreno digital`); `Fuente:` en altas manuales;
+  `Más info:`. El filtrado vive solo en la capa de datos.
 - `horror.ics` es un contrato con los suscriptores existentes: no se renombra ni se
-  elimina y contiene cines + digital. Detalles: `docs/data-model.md` §3 y §6.
+  elimina y contiene cines + digital; las llegadas nunca entran en `horror.ics` ni en
+  `digital`. Detalles: `docs/data-model.md` §3 y §6.
 
 ## Convenciones
 
