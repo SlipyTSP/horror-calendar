@@ -53,6 +53,7 @@
       error: 'No se han podido cargar los estrenos. Inténtalo más tarde.',
       error_schema: 'Los datos publicados tienen un formato que esta página no reconoce. Inténtalo más tarde.',
       badge_rentbuy: 'Alquiler/compra',
+      no_date: 'Sin fecha',
       footer_data: 'Datos de',
       footer_source: 'Código en',
       date_locale: 'es-ES',
@@ -86,6 +87,7 @@
       error: 'Releases could not be loaded. Please try again later.',
       error_schema: 'The published data has a format this page does not recognise. Please try again later.',
       badge_rentbuy: 'Rent/buy',
+      no_date: 'No date',
       footer_data: 'Data from',
       footer_source: 'Source on',
       date_locale: 'en-US',
@@ -559,7 +561,7 @@
         posterNode(release.posterPath, title),
         el('div', { className: 'movie-body' }, [
           el('div', { className: 'movie-header' }, [
-            el('h3', { className: 'movie-title' }, [titleNode]),
+            el('h4', { className: 'movie-title' }, [titleNode]),
             el('div', { className: 'movie-badges' }, badges),
           ]),
           el('div', { className: 'movie-date', text: formatReleaseDate(release.releaseDate, t('date_locale')) }),
@@ -593,7 +595,12 @@
         box.appendChild(message(t('no_movies')));
         return;
       }
-      box.appendChild(el('div', { className: 'movie-list' }, list.map((r) => movieCard(r, all))));
+      for (const group of groupByMonth(list, t('date_locale'))) {
+        box.appendChild(el('section', { className: 'month-group' }, [
+          el('h3', { className: 'month-title', text: group.label || t('no_date') }),
+          el('div', { className: 'movie-list' }, group.releases.map((r) => movieCard(r, all))),
+        ]));
+      }
     }
 
     function renderAll() {
