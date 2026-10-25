@@ -396,3 +396,26 @@ test('E8 arrivals failures are warnings: the run exits 0 and the snapshot carrie
   assert.match(warnings(log).join('\n'), /provider list failed/);
   assert.deepEqual(readJson(outDir, 'providers-snapshot.json').platforms, { filmin: [1, 2] });
 });
+
+test('E2 one detail request per movie id across sources; an announced digital release is not also an arrival', async () => {
+  const first = await runMain({ env: { ...ENV } });
+  const previous = readJson(first.outDir, 'providers-snapshot.json');
+  // 1507696 (Apocalipsis Z, digital on Prime Video by its note) shows up in the Prime Video catalogue
+  const key = '/discover/movie?' + new URLSearchParams({
+    language: 'es-ES', watch_region: 'ES', with_watch_providers: '119|2100', with_watch_monetization_types: 'flatrate',
+    with_genres: '27', 'primary_release_date.gte': '2023-10-23', sort_by: 'primary_release_date.desc', page: '1',
+  });
+  const fetchImpl = createFixtureFetch({
+    routes: {
+      [SNAPSHOT_URL]: { body: previous },
+      [key]: { body: { page: 1, total_pages: 1, results: [...previous.platforms['prime-video'], 1507696].map((id) => ({ id })) } },
+    },
+  });
+  const { code, outDir, log } = await runMain({ fetchImpl, env: { ...ENV, SNAPSHOT_URL } });
+  assert.equal(code, 0);
+  assert.equal(fetchImpl.calls.filter((c) => c.key === fetchImpl.keyFor(detailKey(1507696))).length, 1);
+  const doc = readJson(outDir, 'releases.json');
+  assert.equal(doc.releases.some((r) => r.type === 'arrival'), false);
+  assert.match(log.lines.join('\n'), /\(TMDB 1507696\) on Prime Video is its announced digital release; dropped/);
+  assert.ok(readJson(outDir, 'providers-snapshot.json').platforms['prime-video'].includes(1507696));
+});
