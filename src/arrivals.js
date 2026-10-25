@@ -63,6 +63,36 @@ function parseSnapshot(doc, { region, maxAgeYears }) {
 }
 
 /**
+ * Reads a response body as UTF-8 text, chunk by chunk, and stops as soon as it goes over
+ * `limit` bytes (content-length may be missing or wrong).
+ * @returns {Promise<string|null>} null when the body is larger than the limit
+ */
+async function readLimited(response, limit) {
+  const reader = response.body?.getReader?.();
+  if (!reader) {
+    const text = await response.text();
+    return Buffer.byteLength(text, 'utf-8') > limit ? null : text;
+  }
+  const chunks = [];
+  let size = 0;
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    size += value.byteLength;
+    if (size > limit) {
+      try {
+        await reader.cancel();
+      } catch {
+        // Nothing to release
+      }
+      return null;
+    }
+    chunks.push(Buffer.from(value));
+  }
+  return Buffer.concat(chunks).toString('utf-8');
+}
+
+/**
  * Reads the previous snapshot from SNAPSHOT_URL. Any problem means seed mode (null):
  * a plain log line when the variable is empty, a ::warning:: otherwise.
  * @returns {Promise<{ platforms: Map<string, Set<number>>, arrivals: object[] } | null>}
@@ -87,7 +117,16 @@ async function readSnapshot({ url, fetchImpl, region, maxAgeYears, log, warn }) 
   let body;
   try {
     const signal = typeof AbortSignal?.timeout === 'function' ? AbortSignal.timeout(SNAPSHOT_TIMEOUT_MS) : undefined;
-    const response = await fetchImpl(parsedUrl.href, { signal, headers: { accept: 'application/json' } });
+    const response = await fetchImpl(parsedUrl.href, { signal, redirect: 'error', headers: { accept: 'application/json' } });
+    // A redirect is refused by `redirect: 'error'`; a final URL other than https is refused too
+    if (typeof response?.url === 'string' && response.url !== '' && !response.url.startsWith('https://')) {
+      try {
+        await response.body?.cancel?.();
+      } catch {
+        // Nothing to release
+      }
+      return seed('the response does not come from an https:// URL');
+    }
     if (response?.status !== 200) {
       try {
         await response?.body?.cancel?.();
@@ -97,8 +136,16 @@ async function readSnapshot({ url, fetchImpl, region, maxAgeYears, log, warn }) 
       return seed(`HTTP ${response?.status}`);
     }
     const length = Number(response.headers?.get?.('content-length'));
-    if (Number.isFinite(length) && length > MAX_SNAPSHOT_BYTES) return seed(`larger than ${MAX_SNAPSHOT_BYTES} bytes`);
-    body = await response.text();
+    if (Number.isFinite(length) && length > MAX_SNAPSHOT_BYTES) {
+      try {
+        await response.body?.cancel?.();
+      } catch {
+        // Nothing to release
+      }
+      return seed(`larger than ${MAX_SNAPSHOT_BYTES} bytes`);
+    }
+    body = await readLimited(response, MAX_SNAPSHOT_BYTES);
+    if (body === null) return seed(`larger than ${MAX_SNAPSHOT_BYTES} bytes`);
   } catch (err) {
     return seed(`network error: ${err?.message || err}`);
   }
@@ -220,13 +267,16 @@ function buildSnapshot({ now, region, maxAgeYears, platforms, arrivals }) {
  * @returns {Promise<{ releases: object[], removed: object[], snapshot: object, seed: boolean,
  *   details: { total: number, failed: number } }>}
  */
-async function computeArrivals({ context, fetchImpl, now, digitalReleases = [], manualEntries = [], log, warn }) {
+async function computeArrivals({
+  context, fetchImpl, now, digitalReleases = [], manualEntries = [], log, warn, previous: givenPrevious,
+}) {
   const {
     region, today, snapshotUrl, arrivalMaxAgeYears, arrivalMaxPerPlatform, arrivalMaxPages, arrivalWindow,
-    arrivalDays, minRuntime,
   } = context.settings;
 
-  const previous = await readSnapshot({ url: snapshotUrl, fetchImpl, region, maxAgeYears: arrivalMaxAgeYears, log, warn });
+  // `previous` may be read by the caller (src/index.js keeps it for its fallback); null = seed
+  const previous = givenPrevious !== undefined ? givenPrevious
+    : await readSnapshot({ url: snapshotUrl, fetchImpl, region, maxAgeYears: arrivalMaxAgeYears, log, warn });
   const seed = previous === null;
 
   let providerIds = null;
@@ -292,7 +342,43 @@ async function computeArrivals({ context, fetchImpl, now, digitalReleases = [], 
     candidates.push(a);
   }
 
-  // 3. Detail, announced-release check and runtime rule
+  const { releases, removed, kept, details } = await buildArrivalReleases({
+    context, candidates, digitalReleases, manualEntries, log, warn,
+  });
+  const fromPrevious = releases.filter((r) => r.releaseDate !== today).length;
+  log(`Arrivals: ${releases.length} (${releases.length - fromPrevious} new, ${fromPrevious} carried over)`
+    + `${seed ? ', seed mode' : ''}; detail requests: ${details.total}, failed: ${details.failed}.`);
+
+  return {
+    releases,
+    removed,
+    seed,
+    details,
+    snapshot: buildSnapshot({ now, region, maxAgeYears: arrivalMaxAgeYears, platforms, arrivals: kept }),
+  };
+}
+
+/** Arrivals of the previous snapshot whose detection date is inside the arrival window. */
+function carriedArrivals(previous, arrivalWindow) {
+  const out = [];
+  const keys = new Set();
+  for (const a of previous?.arrivals ?? []) {
+    if (a.detected < arrivalWindow.from || a.detected > arrivalWindow.to) continue;
+    const key = `${a.id}:${a.platform}`;
+    if (keys.has(key)) continue;
+    keys.add(key);
+    out.push(a);
+  }
+  return out;
+}
+
+/**
+ * Detail, announced-release check (§2) and runtime rule for the arrival candidates.
+ * @returns {Promise<{ releases: object[], removed: object[], kept: object[], details: object }>}
+ *   releases with calendars; kept = snapshot arrivals (emitted + transient failures)
+ */
+async function buildArrivalReleases({ context, candidates, digitalReleases = [], manualEntries = [], log, warn }) {
+  const { region, today, arrivalDays, minRuntime } = context.settings;
   const announcedFrom = shiftDate(today, -(arrivalDays + ANNOUNCED_GRACE_DAYS));
   const inAnnouncedRange = (day) => day >= announcedFrom && day <= today;
   await mapPool(candidates, DETAIL_CONCURRENCY, (a) => context.detail(a.id, 'arrivals'));
@@ -330,19 +416,30 @@ async function computeArrivals({ context, fetchImpl, now, digitalReleases = [], 
     kept.push({ ...a, title: release.title });
   }
   await fillEnglishOverviews(context, releases, 'arrivals');
+  return { releases: releases.map((r) => assignCalendars(r)), removed, kept, details: context.counts('arrivals') };
+}
 
-  const details = context.counts('arrivals');
-  const fromPrevious = releases.filter((r) => r.releaseDate !== today).length;
-  log(`Arrivals: ${releases.length} (${releases.length - fromPrevious} new, ${fromPrevious} carried over)`
-    + `${seed ? ', seed mode' : ''}; detail requests: ${details.total}, failed: ${details.failed}.`);
-
-  return {
-    releases: releases.map((r) => assignCalendars(r)),
-    removed,
-    seed,
-    details,
-    snapshot: buildSnapshot({ now, region, maxAgeYears: arrivalMaxAgeYears, platforms, arrivals: kept }),
-  };
+/**
+ * Fallback when computeArrivals crashes (§11: a platform that could not be diffed carries
+ * its previous set forward; best effort, carried-over arrivals included). With a previous
+ * snapshot: its platforms unchanged, its arrivals inside the window, and the releases of
+ * those arrivals that can still be rebuilt. Without one: an empty snapshot, so that the
+ * next build seeds again. Never throws.
+ * @returns {Promise<{ releases: object[], removed: object[], snapshot: object }>}
+ */
+async function carryForwardArrivals({ context, previous, now, digitalReleases = [], manualEntries = [], log, warn }) {
+  const { region, arrivalMaxAgeYears, arrivalWindow } = context.settings;
+  if (!previous) return { releases: [], removed: [], snapshot: emptySnapshot({ now, region, maxAgeYears: arrivalMaxAgeYears }) };
+  const carried = carriedArrivals(previous, arrivalWindow);
+  const snapshot = buildSnapshot({ now, region, maxAgeYears: arrivalMaxAgeYears, platforms: previous.platforms, arrivals: carried });
+  try {
+    const { releases, removed } = await buildArrivalReleases({ context, candidates: carried, digitalReleases, manualEntries, log, warn });
+    log(`Arrivals fallback: previous snapshot carried forward, ${releases.length} carried-over arrivals rebuilt.`);
+    return { releases, removed, snapshot };
+  } catch (err) {
+    warn(`Arrivals fallback could not rebuild the carried-over arrivals (${err?.message || err}); none this build.`);
+    return { releases: [], removed: [], snapshot };
+  }
 }
 
 /**
@@ -355,7 +452,9 @@ function emptySnapshot({ now, region, maxAgeYears }) {
 
 module.exports = {
   computeArrivals,
+  carryForwardArrivals,
   readSnapshot,
+  readLimited,
   parseSnapshot,
   fetchProviderIds,
   fetchCatalogue,

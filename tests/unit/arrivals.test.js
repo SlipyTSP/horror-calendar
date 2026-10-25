@@ -1,7 +1,8 @@
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const {
-  computeArrivals, parseSnapshot, diffPlatform, readSnapshot, buildSnapshot, MAX_SNAPSHOT_BYTES,
+  computeArrivals, carryForwardArrivals, parseSnapshot, diffPlatform, readSnapshot, readLimited, buildSnapshot,
+  MAX_SNAPSHOT_BYTES,
 } = require('../../src/arrivals');
 const { createContext, resolveSettings } = require('../../src/tmdb');
 const { createFixtureFetch } = require('../support/fixture-fetch');
@@ -452,4 +453,67 @@ test('buildSnapshot sorts ids and arrivals (date, platform order, id) and keeps 
     { id: 8, platform: 'netflix', detected: '2026-10-23', title: 'a' },
     { id: 9, platform: 'filmin', detected: '2026-10-23', title: 'b' },
   ]);
+});
+
+// --- Snapshot reading limits (review fixes) ---
+
+test('the snapshot is fetched with redirect: "error"; a non-https final URL is seed mode', async () => {
+  const fetchImpl = createFixtureFetch({ routes: { [SNAPSHOT_URL]: { body: snapshot() } } });
+  await readSnapshot({ url: SNAPSHOT_URL, fetchImpl, region: 'ES', maxAgeYears: 3, log: sink(), warn: sink() });
+  assert.equal(fetchImpl.calls[0].init.redirect, 'error');
+
+  const redirected = async () => ({
+    status: 200, url: 'http://example.org/s.json', headers: new Headers(), text: async () => JSON.stringify(snapshot()),
+  });
+  const warn = sink();
+  const result = await readSnapshot({ url: SNAPSHOT_URL, fetchImpl: redirected, region: 'ES', maxAgeYears: 3, log: sink(), warn });
+  assert.equal(result, null);
+  assert.match(warn.lines[0], /does not come from an https:\/\/ URL.*seed mode/);
+});
+
+test('a snapshot body over the limit without content-length is cut while reading → seed mode', async () => {
+  const big = JSON.stringify(snapshot(CATALOGUE, [{ id: 1, platform: 'netflix', detected: '2026-10-16', title: 'x'.repeat(MAX_SNAPSHOT_BYTES * 2) }]));
+  let pulled = 0;
+  const stream = new ReadableStream({
+    pull(controller) {
+      const chunk = Buffer.from(big.slice(pulled, pulled + 65536));
+      pulled += 65536;
+      if (chunk.length === 0) controller.close(); else controller.enqueue(chunk);
+    },
+  });
+  const response = new Response(stream, { status: 200 });
+  assert.equal(response.headers.get('content-length'), null);
+  const warn = sink();
+  const result = await readSnapshot({ url: SNAPSHOT_URL, fetchImpl: async () => response, region: 'ES', maxAgeYears: 3, log: sink(), warn });
+  assert.equal(result, null);
+  assert.match(warn.lines[0], /larger than \d+ bytes.*seed mode/);
+  assert.ok(pulled < big.length, 'the reader stopped before the end of the body');
+});
+
+test('readLimited returns the text under the limit and null over it, with or without a stream', async () => {
+  assert.equal(await readLimited(new Response('{"a":1}'), 100), '{"a":1}');
+  assert.equal(await readLimited(new Response('ñ'.repeat(60)), 100), null, '120 bytes in UTF-8');
+  assert.equal(await readLimited({ text: async () => 'abc' }, 3), 'abc');
+  assert.equal(await readLimited({ text: async () => 'abcd' }, 3), null);
+});
+
+// --- Fallback when the arrivals step crashes (review fix) ---
+
+test('carryForwardArrivals keeps the previous platforms and in-window arrivals and rebuilds what it can', async () => {
+  const fetchImpl = createFixtureFetch({ routes: { [detailKey(920031)]: detail(920031) } });
+  const log = sink();
+  const warn = sink();
+  const settings = resolveSettings(ENV, NOW, warn);
+  const context = createContext({ fetchImpl, settings, sleep: async () => {}, log });
+  const previous = parseSnapshot(snapshot(CATALOGUE, [
+    { id: 920031, platform: 'movistar-plus', detected: '2026-10-16', title: 'In window' },
+    { id: 920001, platform: 'netflix', detected: '2026-09-01', title: 'Expired' },
+  ]), { region: 'ES', maxAgeYears: 3 });
+  const result = await carryForwardArrivals({ context, previous, now: NOW, log, warn });
+  assert.deepEqual(result.snapshot.platforms, CATALOGUE);
+  assert.deepEqual(result.snapshot.arrivals, [{ id: 920031, platform: 'movistar-plus', detected: '2026-10-16', title: 'In window' }]);
+  assert.deepEqual(ids(result.releases), [[920031, 'movistar-plus', '2026-10-16']]);
+
+  const none = await carryForwardArrivals({ context, previous: null, now: NOW, log, warn });
+  assert.deepEqual([none.snapshot.platforms, none.snapshot.arrivals, none.releases], [{}, [], []]);
 });
