@@ -498,6 +498,22 @@
       return el('span', { className: 'movie-badge badge-' + badge.kind, text: badge.label });
     }
 
+    // Same box as the image (2:3), so a missing or failed poster never moves the layout.
+    function posterFallback() {
+      return el('div', { className: 'movie-poster poster-fallback', 'aria-hidden': 'true' });
+    }
+
+    function posterNode(posterPath, title) {
+      const src = posterUrl(posterPath);
+      if (!src) return posterFallback();
+      const img = el('img', {
+        className: 'movie-poster', src, alt: title, loading: 'lazy', decoding: 'async',
+        width: '92', height: '138',
+      });
+      img.addEventListener('error', () => img.replaceWith(posterFallback()), { once: true });
+      return img;
+    }
+
     function movieCard(release, allCalendars) {
       const title = typeof release.title === 'string' && release.title ? release.title : String(release.id || '');
       const href = safeExternalUrl(release.tmdbUrl);
@@ -508,12 +524,15 @@
       const overview = typeof release.overview === 'string' && release.overview
         ? el('p', { className: 'movie-overview', text: release.overview }) : null;
       return el('article', { className: 'movie-card' }, [
-        el('div', { className: 'movie-header' }, [
-          el('h3', { className: 'movie-title' }, [titleNode]),
-          el('div', { className: 'movie-badges' }, badges),
+        posterNode(release.posterPath, title),
+        el('div', { className: 'movie-body' }, [
+          el('div', { className: 'movie-header' }, [
+            el('h3', { className: 'movie-title' }, [titleNode]),
+            el('div', { className: 'movie-badges' }, badges),
+          ]),
+          el('div', { className: 'movie-date', text: formatReleaseDate(release.releaseDate, t('date_locale')) }),
+          overview,
         ]),
-        el('div', { className: 'movie-date', text: formatReleaseDate(release.releaseDate, t('date_locale')) }),
-        overview,
       ]);
     }
 
