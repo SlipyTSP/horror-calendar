@@ -277,6 +277,12 @@ h1 {
   user-select: all;
 }
 
+.sub-note {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+
 .sub-actions {
   display: flex;
   flex-wrap: wrap;

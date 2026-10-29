@@ -2,9 +2,10 @@
  * Horror calendar selector — plain ES2020, no build step, no dependencies.
  *
  * Reads releases.json (docs/data-model.md §4, schema 2 only) with a relative URL, lets
- * the user pick calendars (cinemas, platforms, digital aggregate), offers a webcal://
- * button and a copyable https URL per selected calendar, and filters the release list
- * (releases and platform arrivals, in the order of releases.json).
+ * the user pick calendars (cinemas, platforms, digital aggregate), offers one webcal://
+ * button and one copyable https URL for the whole selection (its own file for one
+ * calendar, its mix "mix/<slugs>.ics" for two or more, §3 and §8), and filters the
+ * release list (releases and platform arrivals, in the order of releases.json).
  *
  * Local preview (both copies are ignored by git):
  *   cp tests/fixtures/releases.sample.json site/releases.json
@@ -24,12 +25,17 @@
   const SELECTABLE_KINDS = ['cinema', 'platform', 'aggregate'];
   const LEGACY_FILE = 'horror.ics';
   const POSTER_BASE = 'https://image.tmdb.org/t/p/w342';
+  // Mixes (§3): mix/<slugs joined by _>.ics; named after up to three calendars
+  const MIX_DIR = 'mix';
+  const MIX_SLUG = /^[a-z0-9-]+$/;
+  const MIX_NAMED_UP_TO = 3;
+  const MIX_FALLBACK_NAME = 'Mi selección';
 
   // --- Translations ---
   const I18N = {
     es: {
       title: 'Estrenos de Terror',
-      subtitle: 'Estrenos de películas de terror en España, en cines y plataformas. Elige qué quieres seguir: cada opción es un calendario independiente.',
+      subtitle: 'Estrenos de películas de terror en España, en cines y plataformas. Elige qué quieres seguir y suscríbete con un solo enlace.',
       stats_one: '{total} estreno de terror en los próximos meses',
       stats_other: '{total} estrenos de terror en los próximos meses',
       generated: 'Actualizado el {date}',
@@ -40,12 +46,13 @@
       count_other: '{count} títulos',
       subscribe_title: '2 · Suscríbete a lo elegido',
       subscribe_empty: 'Marca arriba al menos un calendario.',
+      subscribe_note: 'Este enlace corresponde a lo que tienes marcado. Si cambias la selección, el enlace cambia: date de baja del anterior y suscríbete al nuevo.',
       subscribe_btn: 'Suscribirse',
       copy_btn: 'Copiar URL',
       copied: 'Copiada',
       copy_manual: 'URL seleccionada: cópiala',
-      ios_instructions: 'Pulsa «Suscribirse» en cada calendario o ve a Ajustes → Calendario → Cuentas → Añadir cuenta → Otro → Añadir calendario suscrito y pega su URL.',
-      android_instructions: 'Descarga una app compatible con calendarios .ics (como ICSx5 o Calendrier ICS) y añade la URL de cada calendario como suscripción.',
+      ios_instructions: 'Pulsa «Suscribirse» o ve a Ajustes → Calendario → Cuentas → Añadir cuenta → Otro → Añadir calendario suscrito y pega la URL.',
+      android_instructions: 'Descarga una app compatible con calendarios .ics (como ICSx5 o Calendrier ICS) y añade la URL como suscripción.',
       gcal_instructions: 'Abre Google Calendar → Otros calendarios (+) → Desde URL → pega la URL y pulsa «Añadir calendario».',
       classic_text: '¿Ya estabas suscrito? El calendario clásico con todos los estrenos (cines y digital) sigue funcionando.',
       classic_link: 'Calendario clásico completo',
@@ -66,7 +73,7 @@
     },
     en: {
       title: 'Horror Releases',
-      subtitle: 'Horror movie releases in Spain, in cinemas and on streaming platforms. Pick what you want to follow: each option is a separate calendar.',
+      subtitle: 'Horror movie releases in Spain, in cinemas and on streaming platforms. Pick what you want to follow and subscribe with a single link.',
       stats_one: '{total} horror release in the coming months',
       stats_other: '{total} horror releases in the coming months',
       generated: 'Updated {date}',
@@ -77,12 +84,13 @@
       count_other: '{count} titles',
       subscribe_title: '2 · Subscribe to your picks',
       subscribe_empty: 'Tick at least one calendar above.',
+      subscribe_note: 'This link matches what you have ticked. If you change your selection, the link changes: unsubscribe from the old one and subscribe to the new one.',
       subscribe_btn: 'Subscribe',
       copy_btn: 'Copy URL',
       copied: 'Copied',
       copy_manual: 'URL selected: copy it',
-      ios_instructions: 'Tap “Subscribe” on each calendar or go to Settings → Calendar → Accounts → Add Account → Other → Add Subscribed Calendar and paste its URL.',
-      android_instructions: 'Download an app that supports .ics calendars (like ICSx5 or Calendrier ICS) and add each calendar URL as a subscription.',
+      ios_instructions: 'Tap “Subscribe” or go to Settings → Calendar → Accounts → Add Account → Other → Add Subscribed Calendar and paste the URL.',
+      android_instructions: 'Download an app that supports .ics calendars (like ICSx5 or Calendrier ICS) and add the URL as a subscription.',
       gcal_instructions: 'Open Google Calendar → Other calendars (+) → From URL → paste the URL and click “Add calendar”.',
       classic_text: 'Already subscribed? The classic calendar with every release (cinemas and digital) keeps working.',
       classic_link: 'Classic full calendar',
@@ -258,6 +266,25 @@
     return badges;
   }
 
+  // --- Single subscription link (§3, §8) ---
+  // The calendar file for the whole selection: nothing → null; one calendar → its own
+  // file; two or more → its mix, built only from the slugs of `calendars` (never from
+  // the stored selection itself), in canonical order. Returns { file, name, slugs }.
+  function subscriptionFile(data, selection) {
+    const selected = new Set(Array.isArray(selection) ? selection : []);
+    const chosen = selectableCalendars(data).filter((c) => selected.has(c.slug));
+    if (chosen.length === 0) return null;
+    const names = chosen.map((c) => (typeof c.name === 'string' && c.name ? c.name : c.slug));
+    if (chosen.length === 1) return { file: chosen[0].file, name: names[0], slugs: [chosen[0].slug] };
+    const slugs = chosen.map((c) => c.slug);
+    if (!slugs.every((slug) => MIX_SLUG.test(slug))) return null;
+    return {
+      file: MIX_DIR + '/' + slugs.join('_') + '.ics',
+      name: names.length <= MIX_NAMED_UP_TO ? names.join(', ') : MIX_FALLBACK_NAME,
+      slugs,
+    };
+  }
+
   // --- URLs ---
   function buildCalendarUrls(file, base) {
     if (!isRelativeFile(file)) return null;
@@ -363,6 +390,7 @@
     loadSelection,
     saveSelection,
     toggleSelection,
+    subscriptionFile,
     filterReleases,
     upcomingCount,
     hasRentBuyOnly,
@@ -521,19 +549,19 @@
       }
     }
 
+    // One row for the whole selection (§8): its own file or its mix
     function renderSubscriptions() {
       const box = $('subs');
       box.replaceChildren();
-      if (state.status === 'loading') return;
-      const chosen = calendars().filter((c) => state.selection.includes(c.slug));
-      if (chosen.length === 0) {
-        if (state.status === 'ready') box.appendChild(message(t('subscribe_empty')));
+      if (state.status !== 'ready') return;
+      const target = subscriptionFile(state.data, state.selection);
+      const row = target ? subscriptionRow(target.name, target.file) : null;
+      if (!row) {
+        box.appendChild(message(t('subscribe_empty')));
         return;
       }
-      for (const cal of chosen) {
-        const row = subscriptionRow(typeof cal.name === 'string' && cal.name ? cal.name : cal.slug, cal.file);
-        if (row) box.appendChild(row);
-      }
+      box.appendChild(row);
+      box.appendChild(el('p', { className: 'sub-note', text: t('subscribe_note') }));
     }
 
     function renderClassic() {
