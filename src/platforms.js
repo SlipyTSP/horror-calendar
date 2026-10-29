@@ -89,4 +89,61 @@ function calendarDefinitions() {
   ];
 }
 
-module.exports = { PLATFORMS, matchPlatform, assignCalendars, calendarDefinitions, platformName };
+// Mixes (single subscription link, §3): one file per combination of two or more
+// selectable calendars, capped so the number of files stays bounded
+const SELECTABLE_KINDS = ['cinema', 'platform', 'aggregate'];
+const MIX_DIR = 'mix';
+const MAX_MIX_CALENDARS = 12;
+const MIX_SLUG = /^[a-z0-9-]+$/;
+const MIX_NAMED_UP_TO = 3;
+const MIX_FALLBACK_NAME = 'Mi selección';
+
+/** Mix file of slugs already in canonical order: "mix/cines_netflix.ics". */
+function mixFile(slugs) {
+  return `${MIX_DIR}/${slugs.join('_')}.ics`;
+}
+
+/** Mix display name (without the "Terror — " prefix): up to three names, else "Mi selección". */
+function mixName(names) {
+  return names.length <= MIX_NAMED_UP_TO ? names.join(', ') : MIX_FALLBACK_NAME;
+}
+
+/**
+ * Every combination of two or more selectable calendars (§3), 2^n − n − 1 of them, each
+ * with its slugs and display names in canonical order.
+ * @param {Array<{ slug: string, name: string, kind: string }>} [definitions] - Canonical calendars
+ * @returns {Array<{ slugs: string[], file: string, name: string }>}
+ * @throws when there are more than MAX_MIX_CALENDARS selectable calendars or a slug is
+ *   not file-name safe (the scheme must then be redesigned, §3)
+ */
+function mixDefinitions(definitions = calendarDefinitions()) {
+  const selectable = definitions.filter((d) => SELECTABLE_KINDS.includes(d.kind));
+  if (selectable.length > MAX_MIX_CALENDARS) {
+    throw new Error(`${selectable.length} selectable calendars: mixes are capped at ${MAX_MIX_CALENDARS} `
+      + '(docs/data-model.md §3), the single-link scheme must be redesigned.');
+  }
+  for (const { slug } of selectable) {
+    if (typeof slug !== 'string' || !MIX_SLUG.test(slug)) throw new Error(`Calendar slug "${slug}" cannot be used in a mix file name.`);
+  }
+  const mixes = [];
+  for (let mask = 1; mask < 2 ** selectable.length; mask += 1) {
+    const chosen = selectable.filter((_, i) => mask & (1 << i));
+    if (chosen.length < 2) continue;
+    const slugs = chosen.map((d) => d.slug);
+    mixes.push({ slugs, file: mixFile(slugs), name: mixName(chosen.map((d) => d.name)) });
+  }
+  return mixes;
+}
+
+module.exports = {
+  PLATFORMS,
+  MIX_DIR,
+  MAX_MIX_CALENDARS,
+  matchPlatform,
+  assignCalendars,
+  calendarDefinitions,
+  platformName,
+  mixDefinitions,
+  mixFile,
+  mixName,
+};

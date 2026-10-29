@@ -3,7 +3,7 @@ const assert = require('node:assert/strict');
 const fs = require('fs');
 const path = require('path');
 const {
-  PLATFORMS, matchPlatform, assignCalendars, calendarDefinitions,
+  PLATFORMS, matchPlatform, assignCalendars, calendarDefinitions, mixDefinitions, mixFile, mixName, MAX_MIX_CALENDARS,
 } = require('../../src/platforms');
 
 const SAMPLE = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'fixtures', 'releases.sample.json'), 'utf-8'));
@@ -136,4 +136,60 @@ test('assignCalendars places calendars right after type, as in the data model', 
   const withSource = assignCalendars({ id: 1, type: 'digital', source: 'tmdb', providers: { flatrate: [], rentBuy: [] } });
   assert.deepEqual(Object.keys(withSource), ['id', 'type', 'source', 'calendars', 'providers']);
   for (const r of SAMPLE.releases) assert.deepEqual(Object.keys(assignCalendars(r)), Object.keys(r));
+});
+
+// --- Mixes (§3, F5) ---
+
+test('G1 mixDefinitions: one mix per combination of two or more selectable calendars (2^n − n − 1)', () => {
+  const mixes = mixDefinitions();
+  const selectable = calendarDefinitions().filter((d) => d.kind !== 'legacy').map((d) => d.slug);
+  assert.equal(selectable.length, 10);
+  assert.equal(mixes.length, 2 ** 10 - 10 - 1);
+  assert.equal(mixes.length, 1013);
+  assert.equal(new Set(mixes.map((m) => m.file)).size, mixes.length, 'file names are unique');
+  for (const m of mixes) {
+    assert.ok(m.slugs.length >= 2, m.file);
+    assert.ok(!m.slugs.includes('all'), 'horror.ics is never a mix');
+    // canonical order, file = mix/<slugs joined by _>.ics
+    assert.deepEqual(m.slugs, selectable.filter((s) => m.slugs.includes(s)), m.file);
+    assert.equal(m.file, `mix/${m.slugs.join('_')}.ics`);
+    assert.match(m.file, /^mix\/[a-z0-9-]+(_[a-z0-9-]+)+\.ics$/);
+  }
+});
+
+test('G2 mix names: up to three display names in canonical order, "Mi selección" otherwise', () => {
+  const byFile = new Map(mixDefinitions().map((m) => [m.file, m]));
+  assert.equal(byFile.get('mix/cines_netflix.ics').name, 'Cines, Netflix');
+  assert.equal(byFile.get('mix/cines_netflix_prime-video.ics').name, 'Cines, Netflix, Prime Video');
+  assert.equal(byFile.get('mix/movistar-plus_disney-plus_digital.ics').name, 'Movistar Plus+, Disney+, Digital');
+  assert.equal(byFile.get('mix/cines_netflix_prime-video_hbo-max.ics').name, 'Mi selección');
+  assert.equal(mixName(['A', 'B']), 'A, B');
+  assert.equal(mixName(['A', 'B', 'C', 'D']), 'Mi selección');
+  assert.equal(mixFile(['cines', 'digital']), 'mix/cines_digital.ics');
+  for (const m of mixDefinitions()) assert.equal(m.name === 'Mi selección', m.slugs.length > 3, m.file);
+});
+
+test('mixDefinitions works on any canonical list and ignores the legacy calendar', () => {
+  const defs = [
+    { slug: 'cines', name: 'Cines', kind: 'cinema' },
+    { slug: 'a', name: 'A', kind: 'platform' },
+    { slug: 'digital', name: 'Digital', kind: 'aggregate' },
+    { slug: 'all', name: 'Todo', kind: 'legacy' },
+  ];
+  assert.deepEqual(mixDefinitions(defs).map((m) => m.file).sort(), [
+    'mix/a_digital.ics', 'mix/cines_a.ics', 'mix/cines_a_digital.ics', 'mix/cines_digital.ics',
+  ]);
+  assert.deepEqual(mixDefinitions(defs.slice(0, 1)), []);
+});
+
+test('mixDefinitions is capped at 12 selectable calendars and rejects unsafe slugs', () => {
+  const platforms = (n) => Array.from({ length: n }, (_, i) => ({ slug: `p${i}`, name: `P${i}`, kind: 'platform' }));
+  assert.equal(MAX_MIX_CALENDARS, 12);
+  assert.equal(mixDefinitions(platforms(12)).length, 4083);
+  assert.throws(() => mixDefinitions(platforms(13)), /13 selectable calendars: mixes are capped at 12.*redesigned/);
+  // the cap counts selectable calendars only
+  assert.equal(mixDefinitions([...platforms(12), { slug: 'all', name: 'Todo', kind: 'legacy' }]).length, 4083);
+  for (const slug of ['a_b', 'A', 'a b', '../x', '']) {
+    assert.throws(() => mixDefinitions([{ slug, name: 'X', kind: 'platform' }, ...platforms(1)]), /cannot be used in a mix/, slug);
+  }
 });

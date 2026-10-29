@@ -3,9 +3,9 @@ const assert = require('node:assert/strict');
 const fs = require('fs');
 const path = require('path');
 const {
-  generateCalendars, generateICS, escapeText, foldLine, generateUID, buildDescription, buildWhereLine, buildSummary,
+  generateCalendars, generateMixes, generateICS, escapeText, foldLine, generateUID, buildDescription, buildWhereLine, buildSummary,
 } = require('../../src/calendar');
-const { assignCalendars } = require('../../src/platforms');
+const { assignCalendars, mixDefinitions } = require('../../src/platforms');
 const { validateICS, assertValidICS, unfoldedLines } = require('../support/ics-validator');
 
 const SAMPLE = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'fixtures', 'releases.sample.json'), 'utf-8'));
@@ -378,5 +378,59 @@ test('with no releases every calendar is still generated as a valid empty VCALEN
   for (const c of calendars) {
     assert.equal(c.count, 0);
     assertValidICS(c.ics, c.file);
+  }
+});
+
+// --- Mixes (§3, F5) ---
+
+test('G1 + G2 every mix is the union of its calendars, each UID once, in releases order, valid and named per §3', () => {
+  const calendars = generateCalendars(SAMPLE.releases, { now: NOW });
+  const single = new Map(calendars.map((c) => [c.slug, new Set(uids(c.ics))]));
+  const order = SAMPLE.releases.map(generateUID);
+  const mixes = generateMixes(SAMPLE.releases, { now: NOW });
+  assert.equal(mixes.length, 1013);
+  for (const m of mixes) {
+    assertValidICS(m.ics, m.file);
+    const union = new Set(m.slugs.flatMap((slug) => [...single.get(slug)]));
+    const got = uids(m.ics);
+    assert.deepEqual(got, order.filter((uid) => union.has(uid)), m.file);
+    assert.equal(new Set(got).size, got.length, `${m.file}: duplicated UID`);
+    assert.equal(m.count, got.length, m.file);
+    assert.ok(unfoldedLines(m.ics).includes(`X-WR-CALNAME:${escapeText(`Terror — ${m.name}`)}`), m.file);
+  }
+});
+
+test('G2 mixes deduplicate releases that belong to several of the chosen calendars', () => {
+  const byFile = new Map(generateMixes(SAMPLE.releases, { now: NOW }).map((m) => [m.file, m]));
+  // 900005 is in prime-video, filmin and digital: once
+  const mix = byFile.get('mix/prime-video_filmin_digital.ics');
+  assert.equal(mix.name, 'Prime Video, Filmin, Digital');
+  assert.equal(uids(mix.ics).filter((u) => u === 'tmdb-900005-digital@horror-calendar').length, 1);
+  assert.equal(mix.count, 7, 'digital already holds every prime-video and filmin release');
+  // cines + digital is the content of horror.ics, under its own name
+  const cd = byFile.get('mix/cines_digital.ics');
+  const all = generateCalendars(SAMPLE.releases, { now: NOW }).find((c) => c.file === 'horror.ics');
+  assert.deepEqual(uids(cd.ics), uids(all.ics));
+  // TEXT value: the comma is escaped (RFC 5545 §3.3.11), clients show "Terror — Cines, Digital"
+  assert.ok(unfoldedLines(cd.ics).includes('X-WR-CALNAME:Terror — Cines\\, Digital'));
+  // netflix + movistar-plus: arrivals included, digital releases of other platforms not
+  assert.deepEqual(uids(byFile.get('mix/netflix_movistar-plus.ics').ics), [
+    'tmdb-900010-arrival-movistar-plus@horror-calendar',
+    'tmdb-900011-arrival-netflix@horror-calendar',
+    'tmdb-900002-digital@horror-calendar',
+  ]);
+  // a second object with the same UID is written once (first occurrence wins)
+  const twice = SAMPLE.releases.find((r) => r.id === 900002);
+  const [m] = generateMixes([twice, { ...twice, title: 'Copia' }], { now: NOW, mixes: [{ slugs: ['netflix', 'digital'], file: 'mix/netflix_digital.ics', name: 'Netflix, Digital' }] });
+  assert.equal(m.count, 1);
+  assert.match(m.ics, /SUMMARY:Ritual Nocturno 📺 Netflix/);
+});
+
+test('mixes with no events are still valid empty VCALENDARs', () => {
+  const mixes = generateMixes([], { now: NOW });
+  assert.equal(mixes.length, mixDefinitions().length);
+  for (const m of mixes) {
+    assert.equal(m.count, 0);
+    assertValidICS(m.ics, m.file);
   }
 });
