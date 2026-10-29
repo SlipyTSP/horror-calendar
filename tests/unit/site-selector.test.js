@@ -379,3 +379,65 @@ test('arrivals are listed under the month of their detection date, before the up
     ['Noviembre de 2026', [900011, 900002]],
   ]);
 });
+
+// --- Single subscription link (F5, §3 and §8) ---
+
+test('G4 subscriptionFile: nothing selected → null, one calendar → its own file', () => {
+  assert.equal(selector.subscriptionFile(SAMPLE, []), null);
+  assert.equal(selector.subscriptionFile(SAMPLE, undefined), null);
+  assert.equal(selector.subscriptionFile(null, ['cines']), null);
+  assert.deepEqual(selector.subscriptionFile(SAMPLE, ['netflix']),
+    { file: 'horror-netflix.ics', name: 'Netflix', slugs: ['netflix'] });
+  assert.deepEqual(selector.subscriptionFile(SAMPLE, ['cines']),
+    { file: 'horror-cines.ics', name: 'Cines', slugs: ['cines'] });
+});
+
+test('G4 subscriptionFile: two or more → mix/<slugs>.ics in canonical order, named per §3', () => {
+  assert.deepEqual(selector.subscriptionFile(SAMPLE, ['digital', 'cines']),
+    { file: 'mix/cines_digital.ics', name: 'Cines, Digital', slugs: ['cines', 'digital'] });
+  assert.deepEqual(selector.subscriptionFile(SAMPLE, ['prime-video', 'netflix', 'cines']),
+    { file: 'mix/cines_netflix_prime-video.ics', name: 'Cines, Netflix, Prime Video', slugs: ['cines', 'netflix', 'prime-video'] });
+  const four = selector.subscriptionFile(SAMPLE, ['filmin', 'netflix', 'cines', 'hbo-max']);
+  assert.equal(four.file, 'mix/cines_netflix_hbo-max_filmin.ics');
+  assert.equal(four.name, 'Mi selección');
+  const all = selector.subscriptionFile(SAMPLE, known);
+  assert.equal(all.file, `mix/${known.join('_')}.ics`);
+  assert.equal(all.name, 'Mi selección');
+});
+
+test('G4 subscriptionFile only uses slugs from calendars: unknown, legacy and unsafe slugs are ignored', () => {
+  assert.equal(selector.subscriptionFile(SAMPLE, ['nope', 'netflix']).file, 'horror-netflix.ics');
+  assert.equal(selector.subscriptionFile(SAMPLE, ['all', 'netflix']).file, 'horror-netflix.ics', 'horror.ics is never a mix');
+  assert.equal(selector.subscriptionFile(SAMPLE, ['../x', 'cines_digital', '<b>', 'all']), null);
+  assert.equal(selector.subscriptionFile(SAMPLE, ['netflix', 'netflix', 'cines']).file, 'mix/cines_netflix.ics');
+  // A slug that cannot be part of a mix file name gives no link (the build has no such mix)
+  const odd = { schema: 2, calendars: [
+    { slug: 'cines', file: 'horror-cines.ics', name: 'Cines', kind: 'cinema' },
+    { slug: 'Bad_Slug', file: 'horror-bad.ics', name: 'Bad', kind: 'platform' },
+  ] };
+  assert.equal(selector.subscriptionFile(odd, ['Bad_Slug']).file, 'horror-bad.ics');
+  assert.equal(selector.subscriptionFile(odd, ['cines', 'Bad_Slug']), null);
+});
+
+test('G4 the mix link is relative to the page and its webcal:// URL is derived at runtime', () => {
+  const { file } = selector.subscriptionFile(SAMPLE, ['cines', 'netflix']);
+  assert.ok(selector.isRelativeFile(file));
+  assert.deepEqual(selector.buildCalendarUrls(file, 'https://example.org/horror-calendar/index.html'), {
+    https: 'https://example.org/horror-calendar/mix/cines_netflix.ics',
+    webcal: 'webcal://example.org/horror-calendar/mix/cines_netflix.ics',
+  });
+  assert.equal(selector.buildCalendarUrls(file, 'http://localhost:8000/').webcal, 'webcal://localhost:8000/mix/cines_netflix.ics');
+});
+
+test('G4 ES/EN note about changing the selection; instructions speak of one link', () => {
+  assert.match(selector.translate('es', 'subscribe_note'), /cambias la selección.*date de baja del anterior y suscríbete al nuevo/);
+  assert.match(selector.translate('en', 'subscribe_note'), /change your selection.*unsubscribe from the old one and subscribe to the new one/);
+  for (const lang of selector.LANGS) {
+    for (const key of ['ios_instructions', 'android_instructions', 'subtitle']) {
+      assert.doesNotMatch(selector.translate(lang, key), /cada calendario|each calendar|calendario independiente|separate calendar/, `${lang}.${key}`);
+    }
+  }
+  const html = fs.readFileSync(path.join(SITE, 'index.html'), 'utf8');
+  assert.doesNotMatch(html, /cada calendario|calendario independiente/);
+  assert.equal(selector.STORAGE_KEY, 'horror-calendar:selection', 'localStorage key unchanged');
+});
