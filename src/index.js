@@ -9,8 +9,8 @@ const path = require('path');
 const {
   fetchHorrorReleases, createContext, resolveSettings, escapeCommand, compareReleases, describeRemoved,
 } = require('./tmdb');
-const { assignCalendars, matchPlatform } = require('./platforms');
-const { generateCalendars } = require('./calendar');
+const { assignCalendars, matchPlatform, MIX_DIR } = require('./platforms');
+const { generateCalendars, generateMixes } = require('./calendar');
 const { loadManualEntries, buildManualReleases } = require('./manual');
 const { computeArrivals, carryForwardArrivals, readSnapshot, SNAPSHOT_FILE } = require('./arrivals');
 
@@ -36,6 +36,13 @@ function buildReleasesDocument({ now, region, window, arrivalWindow, calendars, 
 }
 
 const errorMessage = (err) => String(err?.message || err);
+
+/** Human-readable size: "812 B", "3.2 KB", "4.7 MB". */
+function formatBytes(bytes) {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
 
 /**
  * Runs the whole pipeline. Returns the exit code instead of exiting, for tests.
@@ -130,6 +137,8 @@ async function main({
     for (const r of removed) out(`  - ${describeRemoved(r)}`);
 
     const calendars = generateCalendars(releases, { now });
+    // Mixes (§3) before writing anything: the 12-calendar cap fails the run, not half of it
+    const mixes = generateMixes(releases, { now });
     const doc = buildReleasesDocument({ now, region, window, arrivalWindow: settings.arrivalWindow, calendars, releases });
 
     out(`\n${releases.length} releases in ${region} from ${window.from} to ${window.to} `
@@ -144,9 +153,19 @@ async function main({
     }
     fs.writeFileSync(path.join(outDir, 'releases.json'), `${JSON.stringify(doc, null, 2)}\n`, 'utf-8');
     fs.writeFileSync(path.join(outDir, SNAPSHOT_FILE), `${JSON.stringify(arrivals.snapshot, null, 2)}\n`, 'utf-8');
+    // output/mix/ is emptied first, so a removed platform leaves no stale mixes behind
+    const mixDir = path.join(outDir, MIX_DIR);
+    fs.rmSync(mixDir, { recursive: true, force: true });
+    fs.mkdirSync(mixDir, { recursive: true });
+    let mixBytes = 0;
+    for (const mix of mixes) {
+      fs.writeFileSync(path.join(outDir, mix.file), mix.ics, 'utf-8');
+      mixBytes += Buffer.byteLength(mix.ics, 'utf-8');
+    }
 
     log(`\nWrote ${calendars.length} calendars, releases.json and ${SNAPSHOT_FILE} to ${outDir}:`);
     for (const c of calendars) log(`  ${c.file.padEnd(26)} ${String(c.count).padStart(3)}  ${c.name}`);
+    log(`${mixes.length} mixes in ${mixDir}${path.sep} (${formatBytes(mixBytes)})`);
 
     // Release notes that name no configured platform: the owner may need a new alias
     for (const r of releases) {
@@ -171,4 +190,4 @@ if (require.main === module) {
   });
 }
 
-module.exports = { main, buildReleasesDocument, OUTPUT_DIR, SCHEMA_VERSION };
+module.exports = { main, buildReleasesDocument, formatBytes, OUTPUT_DIR, SCHEMA_VERSION };
