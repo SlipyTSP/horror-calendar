@@ -2,7 +2,7 @@
 // with the rules of §6. No dependencies — the format is built by hand.
 
 const {
-  PLATFORMS, assignCalendars, calendarDefinitions, platformName,
+  PLATFORMS, assignCalendars, calendarDefinitions, platformName, mixDefinitions,
 } = require('./platforms');
 
 const PRODID = '-//Horror Calendar//horror-calendar//ES';
@@ -213,8 +213,34 @@ function generateCalendars(releases, { now = new Date() } = {}) {
   });
 }
 
+/**
+ * One VCALENDAR per mix of §3: the union of the events of its calendars, each UID once,
+ * in the order of `releases`.
+ * @param {object[]} releases - Releases with `calendars`, already ordered
+ * @param {object} [options]
+ * @param {Date} [options.now] - Build time
+ * @param {Array<{ slugs: string[], file: string, name: string }>} [options.mixes] - Defaults to mixDefinitions()
+ * @returns {Array<{ slugs: string[], file: string, name: string, count: number, ics: string }>}
+ */
+function generateMixes(releases, { now = new Date(), mixes = mixDefinitions() } = {}) {
+  return mixes.map((mix) => {
+    const chosen = new Set(mix.slugs);
+    const seen = new Set();
+    const members = [];
+    for (const r of releases) {
+      if (!Array.isArray(r.calendars) || !r.calendars.some((slug) => chosen.has(slug))) continue;
+      const uid = generateUID(r);
+      if (seen.has(uid)) continue;
+      seen.add(uid);
+      members.push(r);
+    }
+    return { ...mix, count: members.length, ics: generateICS(members, { name: mix.name, now }) };
+  });
+}
+
 module.exports = {
   generateCalendars,
+  generateMixes,
   generateICS,
   escapeText,
   foldLine,
