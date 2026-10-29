@@ -20,12 +20,14 @@ en `docs/phases.md`; el modelo de datos, en `docs/data-model.md`.
 ```bash
 npm ci                              # Instalar dependencias (usa el lockfile)
 npm start                           # Ejecuta src/index.js — consulta TMDB y escribe output/
-                                    # (11 .ics + releases.json + providers-snapshot.json);
+                                    # (11 .ics + 1013 mixes en output/mix/ + releases.json
+                                    # + providers-snapshot.json);
                                     # exit 1 solo en los casos de §7 (nunca por altas
                                     # manuales ni llegadas)
 npm test                            # Test runner nativo (node --test): tests/unit/*.test.js
 node scripts/summary.js [archivo]   # Tablas Markdown de output/releases.json (o del archivo dado):
-                                    # títulos y llegadas por calendario; source y duración por release
+                                    # títulos y llegadas por calendario, número de mixes;
+                                    # source y duración por release
 node scripts/capture-fixtures.js    # Captura respuestas reales de TMDB en tests/fixtures/tmdb/
                                     # (necesita key; lo ejecuta el propietario, nunca CI)
 ```
@@ -36,6 +38,8 @@ por `secrets.TMDB_API_KEY`; ambos workflows pasan `SNAPSHOT_URL` con la copia pu
 
 Vista previa local de la web: `cp tests/fixtures/releases.sample.json site/releases.json`
 y cualquier servidor estático sobre `site/` (las copias locales están en `.gitignore`).
+Para seguir los enlaces de suscripción, servir una carpeta temporal con `site/`,
+`output/*.ics` y `output/mix/` (`site/mix/` no está en `.gitignore`).
 
 ## Arquitectura
 
@@ -44,8 +48,10 @@ src/
   index.js       — Entry point. main({ fetchImpl, now, env, outDir, rootDir, … }) devuelve
                    el exit code; solo se ejecuta si require.main === module (carga dotenv
                    ahí). resolveSettings → fetchHorrorReleases → altas manuales →
-                   assignCalendars → llegadas → generateCalendars; escribe los 11 .ics,
-                   releases.json (schema 2, §4) y providers-snapshot.json (§11, siempre),
+                   assignCalendars → llegadas → generateCalendars + generateMixes;
+                   escribe los 11 .ics, vacía y rellena output/mix/ (log: número y tamaño
+                   total, sin listarlos), releases.json (schema 2, §4) y
+                   providers-snapshot.json (§11, siempre),
                    log de la regla de duración, preview por release y ::warning:: por
                    cada releaseNote sin alias. Manual y llegadas van en try/catch
   tmdb.js        — Cliente TMDB: resolveSettings (todas las variables de §7),
@@ -68,15 +74,20 @@ src/
                    Best effort
   platforms.js   — PLATFORMS (§5), matchPlatform, platformName, assignCalendars (unión
                    nota + flatrate + plataformas curadas para tmdb; solo la curada para
-                   manual; arrivalPlatform para llegadas) y calendarDefinitions
+                   manual; arrivalPlatform para llegadas), calendarDefinitions y
+                   mixDefinitions (combinaciones de 2+ seleccionables, §3: mixFile,
+                   mixName; lanza con más de MAX_MIX_CALENDARS = 12)
   calendar.js    — generateCalendars(releases, { now }) → un VCALENDAR por calendario
                    (RFC 5545: folding a 75 octetos, escape, CRLF); horror.ics = cines +
-                   digital, sin llegadas. Exporta también generateICS, escapeText,
-                   foldLine, generateUID, buildDescription y buildWhereLine
+                   digital, sin llegadas. generateMixes → un VCALENDAR por mix (unión,
+                   cada UID una vez, orden de releases). Exporta también generateICS,
+                   escapeText, foldLine, generateUID, buildDescription, buildWhereLine y
+                   buildSummary (plataforma en SUMMARY, §6)
 data/
   manual-releases.json — Altas manuales del propietario (§10). Los tests no lo leen
 scripts/
-  summary.js     — Tablas Markdown de releases.json: contadores por calendario y una
+  summary.js     — Tablas Markdown de releases.json: contadores por calendario, una
+                   línea con el número de mixes (2^n − n − 1, sin listarlos) y una
                    fila por release con calendarios y nota (tolera el formato antiguo);
                    CI la vuelca en el resumen del job
   capture-fixtures.js — Captura única de respuestas TMDB (§7) a tests/fixtures/tmdb/
@@ -90,21 +101,23 @@ site/
   styles.css     — Estilos de la página (Creepster local, resto fuentes del sistema)
   selector.js    — Selector de calendarios (ES2020, sin build): lee releases.json
                    (schema 2) con URL relativa, persiste la selección en localStorage y
-                   pinta suscripciones y lista filtrada en el orden de releases (posters,
-                   meses, insignia de llegada). La lógica pura se exporta para
+                   pinta un único enlace de suscripción (subscriptionFile: su archivo con
+                   uno, mix/<slugs>.ics con dos o más) y la lista filtrada en el orden de
+                   releases (posters, meses, insignia de llegada). La lógica pura se exporta para
                    node --test (guarda module.exports); el DOM solo si existe document
   assets/        — favicon.svg, apple-touch-icon.png (180x180) y og-image.png (1200x630)
   fonts/         — creepster-latin-400-normal.woff2 y su licencia OFL.txt
 output/          — Generado por npm start: horror-cines.ics, horror-<plataforma>.ics,
-                   horror-digital.ics, horror.ics, releases.json y
-                   providers-snapshot.json; ignorado por git
+                   horror-digital.ics, horror.ics, mix/<slugs>.ics (1013), releases.json
+                   y providers-snapshot.json; ignorado por git
 docs/
   data-model.md  — Contrato de datos entre la capa Node y la web (solo lectura)
   phases.md      — Plan de fases, reparto de ficheros y criterios de aceptación
   prototype-selector.html — Maqueta de referencia del selector de calendarios (F2)
 tests/
   unit/*.test.js — Tests (node --test), sin red. site-*.test.js prueban la web sin
-                   DOM importando site/selector.js en Node
+                   DOM importando site/selector.js en Node; site-build.test.js comprueba
+                   que el archivo que ofrece el selector existe en la salida del build
   support/       — Helpers, no son tests: mock-fetch.js (fetch falso que mapea URL
                    sin api_key → fixture, graba llamadas, respuestas en cola),
                    fixture-name.js (nombre determinista de fixture por petición),
@@ -121,7 +134,7 @@ tests/
                    (npm start real con SNAPSHOT_URL publicada, solo lectura; tabla en
                    el resumen, artefacto output/ 14 días)
   update-calendar.yml — Cron lunes 06:00 UTC: npm test, npm start con SNAPSHOT_URL,
-                   copia site/ + output/*.ics + output/releases.json +
+                   copia site/ + output/*.ics + output/mix/ + output/releases.json +
                    output/providers-snapshot.json y deploy a GitHub Pages;
                    job keepalive que rehabilita el workflow vía API (sin commits)
 ```
@@ -176,9 +189,17 @@ Cada fase que cambie la estructura actualiza esta sección en el mismo PR.
   alta manual comparte el UID `digital` con su futuro equivalente de TMDB); llegadas:
   `tmdb-<id>-arrival-<plataforma>@horror-calendar`. No volver a UIDs derivados de título
   o fecha.
-- SUMMARY: título + `🎬` (cines), `📺` (digital) o `🆕` (llegada).
+- SUMMARY: título + `🎬` (cines), `📺` (digital) o `🆕` (llegada) y, en digitales y
+  llegadas, la plataforma: nombres de sus calendarios de plataforma en orden de config
+  unidos por ` / ` (`Título 📺 Netflix / Prime Video`; sin plataforma, `Título 📺`) o el
+  de `arrivalPlatform` (`Título 🆕 HBO Max`). El mismo SUMMARY en todos los calendarios.
 - Un `.ics` por calendario (`cines`, plataformas, `digital`, `all`), todos en cada build,
   vacíos incluidos; `X-WR-CALNAME` = `Terror — <nombre>` (`horror.ics`: `Terror — Todo`).
+- Mixes (enlace único, §3): `mix/<slugs>.ics` para cada combinación de 2+ calendarios
+  seleccionables (slugs en orden canónico unidos por `_`; 1013 con 10); unión de sus
+  calendarios, cada UID una vez, en el orden de `releases`; `X-WR-CALNAME` =
+  `Terror — A, B, C` hasta tres, `Terror — Mi selección` si más. No van en
+  `releases.json`: la web deriva el nombre. Tope de 12 seleccionables (error claro).
 - DESCRIPTION: sinopsis; línea "dónde" (`En cines` / `Ya disponible en:` para llegadas /
   `Incluido en:` / `Estreno en:` para plataformas conocidas solo por la nota o el alta
   manual / `Alquiler o compra:` / `Estreno digital`); `Fuente:` en altas manuales;

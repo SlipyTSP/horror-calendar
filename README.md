@@ -9,7 +9,8 @@ on GitHub Pages together with a small web page to pick the calendars.
 
 ## What you can subscribe to
 
-Every build publishes one calendar per audience, so you subscribe only to what you can
+Every build publishes one calendar per audience, plus one combined calendar (**mix**) for
+every combination of them, so you subscribe with a single link to exactly what you can
 actually watch:
 
 | Calendar | File | Contents |
@@ -18,6 +19,7 @@ actually watch:
 | Netflix, Prime Video, HBO Max, Movistar Plus+, Filmin, Disney+, SkyShowtime, Apple TV+ | `horror-<platform>.ics` | Digital releases announced for that platform (Spanish release note, curated press list) or included in its subscription, plus the horror movies that have just **arrived** in its catalogue (🆕) |
 | Digital | `horror-digital.ics` | Every digital release in Spain, whatever the platform (no arrivals) |
 | Todo | `horror.ics` | Every release (cinemas + digital, no arrivals). Kept for existing subscribers |
+| Your selection | `mix/<slugs>.ics` | The union of the calendars you tick (two or more), each event once, e.g. `mix/cines_netflix_prime-video.ics` |
 
 Rules that shape the calendars:
 
@@ -29,8 +31,12 @@ Rules that shape the calendars:
   id. Shorts and one-off local screenings are left out.
 - A movie released in cinemas and later on a platform gives two events.
 - Rent and buy offers are shown in the description but never count as "included".
-- Events are all-day, with the synopsis, where to watch it (and the press source for
-  curated releases) and a link to TMDB.
+- Events are all-day, titled with the movie, 🎬 / 📺 / 🆕 and, for platform releases and
+  arrivals, the platform (`Good Boy 📺 Movistar Plus+`), with the synopsis, where to watch
+  it (and the press source for curated releases) and a link to TMDB.
+- Mixes exist for every combination of two or more of the 10 calendars above (1013
+  files). A mix is named after its calendars when there are up to three
+  (`Terror — Cines, Netflix`) and `Terror — Mi selección` otherwise.
 - Event identifiers are stable: a date change in TMDB moves the event instead of
   duplicating it.
 
@@ -58,9 +64,15 @@ platform's calendar only, for 30 days.
 ## Usage
 
 Open the [published page](https://slipytsp.github.io/horror-calendar/) and tick the
-calendars you want; each one has a subscribe button
-(`webcal://`) and a copyable URL. On iOS: *Settings → Calendar → Accounts → Add Account →
-Other → Add Subscribed Calendar* and paste the URL. Calendar apps refresh the feeds about
+calendars you want. The page gives you **one link for the whole selection**: the
+calendar's own file when you tick one, its mix when you tick two or more, with a
+subscribe button (`webcal://`) and a copyable URL. On iOS: *Settings → Calendar → Accounts
+→ Add Account → Other → Add Subscribed Calendar* and paste the URL.
+
+Changing the selection gives a **different link**: unsubscribe from the old calendar on
+your device and subscribe to the new one. Links you already use keep working: the
+single calendars (`horror-<platform>.ics`, `horror-cines.ics`, `horror-digital.ics`) and
+the classic `horror.ics` are still published on every build. Calendar apps refresh the feeds about
 once a day; the data itself is rebuilt every Monday at 06:00 UTC. The page also lists the
 upcoming releases and the recent platform arrivals of your selection, grouped by month, with
 their TMDB posters.
@@ -133,8 +145,9 @@ src/tmdb.js       two regional discover/movie queries (theatrical 3|2, digital 4
 src/manual.js     curated manual releases (data/manual-releases.json)
 src/arrivals.js   weekly providers diff → platform arrivals + providers snapshot
 src/platforms.js  platform config; calendar membership of every release
-src/calendar.js   one RFC 5545 VCALENDAR per calendar
-src/index.js      writes output/*.ics, output/releases.json, output/providers-snapshot.json
+src/calendar.js   one RFC 5545 VCALENDAR per calendar and per mix
+src/index.js      writes output/*.ics, output/mix/*.ics, output/releases.json,
+                  output/providers-snapshot.json
 data/             owner's curated manual releases
 site/             static page that reads releases.json (no build, no framework)
 site/assets/      favicon, Apple touch icon and Open Graph image
@@ -155,8 +168,8 @@ Requires Node.js 20 or later (CI uses Node 24).
 npm ci                      # install dependencies from the lockfile
 cp .env.example .env        # then set TMDB_API_KEY in .env (never commit it)
 npm test                    # unit tests (node --test), no network needed
-npm start                   # query TMDB and write output/*.ics, releases.json and providers-snapshot.json
-node scripts/summary.js     # print output/releases.json as Markdown tables (source, runtime, arrivals)
+npm start                   # query TMDB and write output/*.ics, output/mix/*.ics, releases.json and providers-snapshot.json
+node scripts/summary.js     # print output/releases.json as Markdown tables (source, runtime, arrivals, mix count)
 ```
 
 **Capturing TMDB fixtures.** With `TMDB_API_KEY` in `.env` (or exported), run
@@ -178,7 +191,10 @@ cp tests/fixtures/releases.sample.json site/releases.json
 npx --yes serve site        # or: python3 -m http.server -d site
 ```
 
-`site/releases.json` and `site/*.ics` are git-ignored local copies.
+`site/releases.json` and `site/*.ics` are git-ignored local copies. The subscription
+links of the preview point at `.ics` files next to the page (and mixes under `mix/`);
+to follow them, serve a scratch folder with `site/`, `output/*.ics` and `output/mix/`
+instead of `site/` itself (a `site/mix/` copy would not be git-ignored).
 
 ## Data attribution
 
