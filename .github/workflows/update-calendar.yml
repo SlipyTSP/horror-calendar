@@ -63,13 +63,15 @@ jobs:
           SNAPSHOT_URL: https://slipytsp.github.io/horror-calendar/providers-snapshot.json
 
       # Paso 6: Preparar los archivos para GitHub Pages
-      # Copiamos la web (site/), todos los .ics generados (glob), releases.json y la foto
-      # del catálogo de plataformas que leerá el próximo build
+      # Copiamos la web (site/), todos los .ics generados (glob), los mixes de output/mix/
+      # (el glob no copia subcarpetas), releases.json y la foto del catálogo de
+      # plataformas que leerá el próximo build
       - name: Preparar directorio para Pages
         run: |
           mkdir -p _site
           cp -r site/. _site/
           cp output/*.ics _site/
+          cp -r output/mix _site/mix
           cp output/releases.json _site/releases.json
           cp output/providers-snapshot.json _site/providers-snapshot.json
 
