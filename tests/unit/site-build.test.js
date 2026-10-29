@@ -1,6 +1,6 @@
 // Web ↔ build agreement (F5, G6): the subscription file the selector offers for a
 // selection is a file the build writes, and its X-WR-CALNAME follows §3.
-const { test } = require('node:test');
+const { test, after } = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('fs');
 const os = require('os');
@@ -23,6 +23,7 @@ function buildOutput() {
 }
 
 const OUT = buildOutput();
+after(() => fs.rmSync(OUT, { recursive: true, force: true }));
 const known = selector.selectableCalendars(SAMPLE).map((c) => c.slug);
 
 function assertOffered(selection) {
