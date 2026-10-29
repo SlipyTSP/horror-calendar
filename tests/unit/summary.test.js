@@ -3,7 +3,7 @@ const assert = require('node:assert/strict');
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
-const { run, renderSummary } = require('../../scripts/summary');
+const { run, renderSummary, mixCount } = require('../../scripts/summary');
 
 const SAMPLE = path.join(__dirname, '..', 'fixtures', 'releases.sample.json');
 
@@ -141,4 +141,16 @@ test('a file that is not JSON exits with 1 and a clear message', () => {
   assert.equal(run({ file: writeTmp('releases.json', 'not json'), out, err }), 1);
   assert.equal(out.text(), '');
   assert.match(err.text(), /is not valid JSON/);
+});
+
+test('G5 one line counts the mixes without listing them', () => {
+  const doc = JSON.parse(fs.readFileSync(SAMPLE, 'utf-8'));
+  const text = renderSummary(doc);
+  const lines = text.split('\n').filter((l) => l.startsWith('Mixes:'));
+  assert.deepEqual(lines, ['Mixes: 1013 files in `mix/` (every combination of 2+ of the 10 selectable calendars)']);
+  assert.doesNotMatch(text, /mix\/[a-z]/);
+  assert.deepEqual(mixCount(doc), { selectable: 10, mixes: 1013 });
+  assert.deepEqual(mixCount({ calendars: [{ kind: 'cinema' }, { kind: 'legacy' }] }), { selectable: 1, mixes: 0 });
+  assert.equal(mixCount({ releases: [] }), null);
+  assert.doesNotMatch(renderSummary({ releases: [] }), /Mixes:/);
 });
