@@ -1,4 +1,4 @@
-const { test } = require('node:test');
+const { test, after } = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('fs');
 const os = require('os');
@@ -33,7 +33,18 @@ function sink() {
   return fn;
 }
 
-const tmpOut = () => path.join(fs.mkdtempSync(path.join(os.tmpdir(), 'horror-out-')), 'output');
+// Every mkdtemp folder of this file is removed when its tests end
+const tmpDirs = [];
+const makeTmp = (prefix) => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), prefix));
+  tmpDirs.push(dir);
+  return dir;
+};
+after(() => {
+  for (const dir of tmpDirs) fs.rmSync(dir, { recursive: true, force: true });
+});
+
+const tmpOut = () => path.join(makeTmp('horror-out-'), 'output');
 const noSleep = async () => {};
 
 const typeOf = (value) => (value === null ? 'null' : Array.isArray(value) ? 'array' : typeof value);
@@ -220,7 +231,7 @@ const icsUids = (ics) => unfoldedLines(ics).filter((l) => l.startsWith('UID:')).
 const warnings = (log) => log.lines.filter((l) => l.startsWith('::warning::'));
 
 function writeManual(content) {
-  const file = path.join(fs.mkdtempSync(path.join(os.tmpdir(), 'horror-manual-')), 'manual-releases.json');
+  const file = path.join(makeTmp('horror-manual-'), 'manual-releases.json');
   fs.writeFileSync(file, typeof content === 'string' ? content : JSON.stringify(content));
   return file;
 }
