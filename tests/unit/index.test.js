@@ -22,7 +22,7 @@ const discoverKey = (type) => `/discover/movie?${WINDOW}&with_release_type=${enc
 const EXPECTED_FILES = [
   'horror-cines.ics', 'horror-netflix.ics', 'horror-prime-video.ics', 'horror-hbo-max.ics',
   'horror-movistar-plus.ics', 'horror-filmin.ics', 'horror-disney-plus.ics', 'horror-skyshowtime.ics',
-  'horror-apple-tv-plus.ics', 'horror-digital.ics', 'horror.ics', 'releases.json', 'providers-snapshot.json',
+  'horror-apple-tv-plus.ics', 'horror-digital.ics', 'horror.ics', 'releases.json', 'providers-snapshot.json', 'mix',
 ];
 const NULLABLE = new Set(['posterPath', 'releaseNote', 'arrivalPlatform', 'sourceUrl', 'runtime']);
 
@@ -320,7 +320,9 @@ test('E8 first build against the published snapshot URL: seed mode with a warnin
   assert.equal(Object.keys(snap.platforms).length, 8);
   assert.deepEqual(snap.arrivals, []);
   assert.equal(readJson(outDir, 'releases.json').releases.some((r) => r.type === 'arrival'), false);
-  const files = fs.readdirSync(outDir).map((f) => fs.readFileSync(path.join(outDir, f), 'utf-8'));
+  const files = fs.readdirSync(outDir, { recursive: true }).map((f) => path.join(outDir, f))
+    .filter((f) => fs.statSync(f).isFile()).map((f) => fs.readFileSync(f, 'utf-8'));
+  assert.ok(files.length > 1000, 'mixes included');
   assert.ok(files.every((text) => !text.includes(KEY)), 'the key is in no output file');
 });
 
@@ -468,4 +470,43 @@ test('a crash of the arrivals step without a usable snapshot writes an empty one
   assert.match(warnings(log).join('\n'), /no previous snapshot, empty snapshot written/);
   const snap = readJson(outDir, 'providers-snapshot.json');
   assert.deepEqual([snap.platforms, snap.arrivals], [{}, []]);
+});
+
+// --- Mixes (F5) ---
+
+test('G1 + G5 main writes the 1013 mixes to output/mix/, logs their count and size without listing them', async () => {
+  const outDir = tmpOut();
+  // A stale mix from an older build (e.g. a removed platform) is removed
+  fs.mkdirSync(path.join(outDir, 'mix'), { recursive: true });
+  fs.writeFileSync(path.join(outDir, 'mix', 'cines_old-platform.ics'), 'stale');
+  const { code, log } = await runMain({ outDir });
+  assert.equal(code, 0);
+
+  const mixFiles = fs.readdirSync(path.join(outDir, 'mix'));
+  assert.equal(mixFiles.length, 1013);
+  assert.ok(!mixFiles.includes('cines_old-platform.ics'));
+  assert.ok(mixFiles.every((f) => /^[a-z0-9-]+(_[a-z0-9-]+)+\.ics$/.test(f)));
+  for (const f of ['cines_netflix.ics', 'cines_digital.ics', 'netflix_prime-video_hbo-max_movistar-plus.ics']) {
+    assertValidICS(fs.readFileSync(path.join(outDir, 'mix', f), 'utf-8'), f);
+  }
+
+  const bytes = mixFiles.reduce((sum, f) => sum + fs.statSync(path.join(outDir, 'mix', f)).size, 0);
+  const line = log.lines.find((l) => / mixes in /.test(l));
+  assert.match(line, /^1013 mixes in .*mix[\\/] \(\d+(\.\d)? (B|KB|MB)\)$/);
+  assert.ok(line.includes(require('../../src/index').formatBytes(bytes)), line);
+  assert.ok(!log.lines.some((l) => /cines_netflix\.ics/.test(l)), 'mixes are not listed one by one');
+
+  // releases.json keeps its shape: mixes are not listed in it
+  const doc = readJson(outDir, 'releases.json');
+  assert.equal(doc.schema, 2);
+  assert.deepEqual(Object.keys(doc), Object.keys(SAMPLE));
+  assert.equal(doc.calendars.length, 11);
+  assert.ok(!JSON.stringify(doc).includes('mix/'));
+});
+
+test('formatBytes', () => {
+  const { formatBytes } = require('../../src/index');
+  assert.equal(formatBytes(812), '812 B');
+  assert.equal(formatBytes(3277), '3.2 KB');
+  assert.equal(formatBytes(5 * 1024 * 1024), '5.0 MB');
 });
