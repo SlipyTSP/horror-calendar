@@ -6,4 +6,5 @@ output/
 
 # Local preview copies of generated files
 site/releases.json
+site/mix/
 site/*.ics
