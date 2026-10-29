@@ -1,5 +1,6 @@
-// Prints Markdown tables of output/releases.json: titles and arrivals per calendar and one
-// row per release (with its source, runtime and release note in the data model shape).
+// Prints Markdown tables of output/releases.json: titles and arrivals per calendar, the
+// number of mixes (not listed) and one row per release (with its source, runtime and
+// release note in the data model shape).
 // CI appends it to the job summary: node scripts/summary.js >> "$GITHUB_STEP_SUMMARY"
 //
 // Copes with both shapes of releases.json, looking at the fields present:
@@ -73,6 +74,20 @@ function calendarCounts(doc, releases) {
     .concat({ slug: 'all', file: 'horror.ics', count: releases.filter((r) => r?.type !== 'arrival').length });
 }
 
+// Kinds offered by the selector; every combination of two or more is a mix (§3)
+const SELECTABLE_KINDS = ['cinema', 'platform', 'aggregate'];
+
+/**
+ * Number of mix files the build writes for these calendars (2^n − n − 1), or null when
+ * the document has no calendar metadata. Mixes are not listed in releases.json.
+ * @returns {{ selectable: number, mixes: number }|null}
+ */
+function mixCount(doc) {
+  if (!Array.isArray(doc?.calendars)) return null;
+  const n = doc.calendars.filter((c) => c && SELECTABLE_KINDS.includes(c.kind)).length;
+  return { selectable: n, mixes: n < 2 ? 0 : 2 ** n - n - 1 };
+}
+
 /**
  * Builds the Markdown summary for a parsed releases.json.
  * @param {object} doc
@@ -98,6 +113,8 @@ function renderSummary(doc) {
       lines.push(`| ${[c.slug, c.file, c.count, arrivals.get(c.slug) ?? 0].map(cell).join(' | ')} |`);
     }
     lines.push('');
+    const mixes = mixCount(doc);
+    if (mixes) lines.push(`Mixes: ${mixes.mixes} files in \`mix/\` (every combination of 2+ of the ${mixes.selectable} selectable calendars)`, '');
     lines.push(`| Date | Title | Type | Source | Runtime | ${lastColumn} | Release note |`, '|---|---|---|---|---|---|---|');
   } else {
     lines.push(`| Date | Title | Type | ${lastColumn} |`, '|---|---|---|---|');
@@ -141,4 +158,4 @@ if (require.main === module) {
   process.exitCode = run({ file: process.argv[2] ? path.resolve(process.argv[2]) : DEFAULT_FILE });
 }
 
-module.exports = { run, renderSummary, DEFAULT_FILE };
+module.exports = { run, renderSummary, mixCount, DEFAULT_FILE };
