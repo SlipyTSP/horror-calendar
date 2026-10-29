@@ -7,8 +7,9 @@
  * calendar, its mix "mix/<slugs>.ics" for two or more, §3 and §8), and filters the
  * release list (releases and platform arrivals, in the order of releases.json).
  *
- * Local preview (both copies are ignored by git):
+ * Local preview (all copies are ignored by git):
  *   cp tests/fixtures/releases.sample.json site/releases.json
+ *   cp output/*.ics site/ && mkdir -p site/mix && cp -r output/mix/. site/mix/   # optional: subscription links
  *   npx --yes serve site      # or: python3 -m http.server -d site 8000
  *
  * The pure logic is exported for node --test (tests/unit/site-selector.test.js); the

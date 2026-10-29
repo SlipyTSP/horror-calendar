@@ -38,8 +38,9 @@ por `secrets.TMDB_API_KEY`; ambos workflows pasan `SNAPSHOT_URL` con la copia pu
 
 Vista previa local de la web: `cp tests/fixtures/releases.sample.json site/releases.json`
 y cualquier servidor estático sobre `site/` (las copias locales están en `.gitignore`).
-Para seguir los enlaces de suscripción, servir una carpeta temporal con `site/`,
-`output/*.ics` y `output/mix/` (`site/mix/` no está en `.gitignore`).
+Para seguir los enlaces de suscripción, copiar también una salida del build:
+`cp output/*.ics site/ && mkdir -p site/mix && cp -r output/mix/. site/mix/` (`site/*.ics`
+y `site/mix/` también están en `.gitignore`).
 
 ## Arquitectura
 

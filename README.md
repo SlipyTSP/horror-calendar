@@ -191,10 +191,10 @@ cp tests/fixtures/releases.sample.json site/releases.json
 npx --yes serve site        # or: python3 -m http.server -d site
 ```
 
-`site/releases.json` and `site/*.ics` are git-ignored local copies. The subscription
-links of the preview point at `.ics` files next to the page (and mixes under `mix/`);
-to follow them, serve a scratch folder with `site/`, `output/*.ics` and `output/mix/`
-instead of `site/` itself (a `site/mix/` copy would not be git-ignored).
+`site/releases.json`, `site/*.ics` and `site/mix/` are git-ignored local copies. The
+subscription links of the preview point at `.ics` files next to the page (and mixes under
+`mix/`); to follow them, copy a build output next to the page too:
+`cp output/*.ics site/ && mkdir -p site/mix && cp -r output/mix/. site/mix/`.
 
 ## Data attribution
 
