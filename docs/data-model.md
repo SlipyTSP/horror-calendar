@@ -112,6 +112,7 @@ then `id`.
 | `cines` | `horror-cines.ics` | `cinema` | every release with `type === "theatrical"` | `Terror — Cines` |
 | `<platform>` | `horror-<platform>.ics` | `platform` | `type === "digital"` mapped to that platform (§2), plus every `arrival` whose `arrivalPlatform` is that platform | `Terror — <Platform name>` |
 | `digital` | `horror-digital.ics` | `aggregate` | every release with `type === "digital"` (`tmdb` and `manual`) | `Terror — Digital` |
+| `mix` | `mix/<slugs>.ics` | — (not listed in `releases.json`) | union of the calendars named in the file, each `UID` once | see below |
 | `all` | `horror.ics` | `legacy` | every `theatrical` and `digital` release | `Terror — Todo` |
 
 Rules:
@@ -127,6 +128,20 @@ Rules:
   for arrivals.
 - Order of calendars everywhere (JSON, web, summaries): `cines`, platforms in config order,
   `digital`, `all`.
+- **Mixes (single subscription link).** For every combination of two or more
+  selectable calendars (`kind` `cinema`, `platform` or `aggregate`), the build writes
+  `mix/<slugs>.ics`, where `<slugs>` are the chosen slugs in canonical order joined by
+  `_` (slugs match `^[a-z0-9-]+$` and never contain `_`). Example:
+  `mix/cines_netflix_prime-video.ics`. With `n` selectable calendars there are
+  `2^n − n − 1` mixes (1013 with the 10 of 2026-10-29). A mix holds the union of the
+  events of its calendars, each `UID` once, in the order of `releases` (§2).
+  `X-WR-CALNAME`: `Terror — ` plus the display names in canonical order joined by
+  `, ` when there are up to three; `Terror — Mi selección` otherwise.
+- Mixes are not listed in `releases.json` (its shape does not change): the web derives
+  the file name with the rule above. A single selection uses its own calendar file;
+  `horror.ics` is never a mix. Adding a platform adds mixes without renaming existing
+  ones; removing one removes the mixes that include it. The scheme is capped at 12
+  selectable calendars (4083 mixes); beyond that it must be redesigned.
 
 ## 4. `releases.json`
 
@@ -201,14 +216,20 @@ module.exports.PLATFORMS = [
   `CALSCALE:GREGORIAN`, `REFRESH-INTERVAL;VALUE=DURATION:P1D` and `X-PUBLISHED-TTL:P1D`.
 - `PRODID:-//Horror Calendar//horror-calendar//ES`.
 - `X-WR-CALNAME` per calendar (`Terror — Cines`, `Terror — Netflix`, …). The legacy
-  `horror.ics` keeps a stable name too (`Terror — Todo`).
+  `horror.ics` keeps a stable name too (`Terror — Todo`). Mixes: see §3.
 - One `VEVENT` per release, all-day: `DTSTART;VALUE=DATE:YYYYMMDD`, `TRANSP:TRANSPARENT`.
 - `UID:tmdb-<id>-<type>@horror-calendar` for theatrical and digital releases (e.g.
   `tmdb-900004-digital@horror-calendar`; a manual release uses the same `digital` UID as
   its future TMDB counterpart). Arrivals: `UID:tmdb-<id>-arrival-<platform>@horror-calendar`.
   Stable across builds: a date or title change in TMDB updates the event instead of
   duplicating it. Never derive UIDs from title or date.
-- `SUMMARY`: title plus a type marker (`🎬` theatrical, `📺` digital, `🆕` arrival).
+- `SUMMARY`: title, type marker (`🎬` theatrical, `📺` digital, `🆕` arrival) and, for
+  digital releases and arrivals, the platform: `Good Boy 📺 Movistar Plus+`,
+  `Bitelchús Bitelchús 🆕 HBO Max`. Digital: display names of the platform calendars
+  the release belongs to, in config order, joined by ` / `
+  (`Title 📺 Netflix / Prime Video`); a digital release with no platform calendar keeps
+  `Title 📺`. Arrival: display name of `arrivalPlatform`. Theatrical: `Title 🎬`. The
+  same `SUMMARY` in every calendar, mixes included.
 - `DESCRIPTION`, in this order, separated by blank lines: synopsis (if any); a "where"
   line, first rule that applies — `En cines` for theatrical; `Ya disponible en: Netflix`
   for an arrival (platform display name); `Incluido en: Netflix, Filmin` when `flatrate`
@@ -296,16 +317,22 @@ after their date (decision of 2026-10-23, no look-back). Arrivals are the only l
 
 ## 8. Web contract — `site/`
 
-- The web reads `releases.json` with a relative URL and builds every calendar link from
-  `calendars[].file`, relative to the page. No absolute URLs anywhere (the site may be
-  served under a sub-path in the future), except the Open Graph/Twitter meta authorised
-  in F3.
+- The web reads `releases.json` with a relative URL and builds the subscription link,
+  relative to the page, from `calendars[].file` (one calendar selected) or from the
+  mix rule of §3 (two or more). No absolute URLs anywhere (the site may be served under
+  a sub-path in the future), except the Open Graph/Twitter meta authorised in F3.
 - The web accepts `schema: 2` only (it shows its "unknown format" message otherwise).
 - `webcal://` links are derived from the resolved absolute URL at runtime
   (`new URL(file, location.href)`), replacing the scheme.
 - Selector: one checkbox per calendar with `kind` `cinema`, `platform` or `aggregate`, in
   the order given by `calendars`, showing `count`. The `legacy` calendar is not a
   checkbox; it stays reachable as the "classic" full calendar link.
+- Subscription: the subscribe section shows one link for the whole selection: nothing
+  selected → the empty message; one calendar → its own file; two or more → its mix
+  (`mix/<slugs>.ics`), named as in §3, with one "Subscribe" (`webcal://`) button and one
+  "Copy URL" button. A short note (ES/EN) says that changing the selection gives a
+  different link: unsubscribe from the old one and subscribe to the new one.
+  Per-calendar links are no longer listed; the classic `horror.ics` link stays.
 - Selection persisted in `localStorage` under the key `horror-calendar:selection` as a
   JSON array of slugs. Default when nothing is stored: `["cines"]`. Unknown slugs in
   storage are ignored.
@@ -339,6 +366,10 @@ History:
   `arrivalPlatform`, `sourceUrl` and `runtime`; new type `arrival`; `arrivalWindow`;
   JustWatch attribution. `schema` goes to `2` (the web rejects other versions, so data
   and web change in the same PR).
+- 2026-10-29 — Single subscription link (F5): mixes `mix/<slugs>.ics` for every
+  combination of two or more selectable calendars (§3), platform in `SUMMARY` (§6) and
+  one subscription link in the web (§8). `releases.json` does not change shape:
+  `schema` stays `2`.
 
 ## 10. Manual releases — `data/manual-releases.json`
 

@@ -32,6 +32,7 @@ planning folder; this file is what a coding session needs.
 | F2 — Web selector | `feat/f2-web-selector` | [#3](https://github.com/SlipyTSP/horror-calendar/pull/3) | merged |
 | F3 light — Visual polish | `feat/f3-visual-polish` | [#4](https://github.com/SlipyTSP/horror-calendar/pull/4) | merged |
 | F4 — Coverage: runtime rule, manual releases, platform arrivals | `feat/f4-coverage` | [#5](https://github.com/SlipyTSP/horror-calendar/pull/5) | in review |
+| F5 — Single subscription link | `feat/f5-single-link` | — | in progress |
 
 Each phase updates its own row when it opens its PR.
 
@@ -423,3 +424,41 @@ arrivals); arrivals start on the second build. Manual releases work from the fir
 **Out of scope.** Automating the press review (it is a scheduled task outside the
 repository that opens pull requests against `data/manual-releases.json`); dates from
 other countries; scraping JustWatch or the press; redesign.
+
+## 6. F5 — Single subscription link
+
+**Goal.** One subscription link for whatever the user ticks, instead of one per
+calendar (contract change of 2026-10-29: `docs/data-model.md` §3, §6, §8, §9).
+
+**Branch.** `feat/f5-single-link`, created by the session from `main`. Its first
+commit is the owner's contract change, applied verbatim from the prompt.
+
+**Owns.** `src/**`, `site/**`, `tests/unit/**`, `tests/support/**` (new helpers or
+backwards-compatible additions), `scripts/summary.js`, `README.md`, `CLAUDE.md`
+(architecture, commands and ICS sections), `docs/phases.md` (F5 status row),
+`.github/workflows/update-calendar.yml` (only the copy of `output/mix/`).
+
+**Must not touch.** `docs/data-model.md` after the contract commit,
+`tests/fixtures/releases.sample.json`, `data/manual-releases.json`, `CLAUDE.md`
+"Decisiones vigentes", `tests/fixtures/tmdb/**`, `scripts/capture-fixtures.js`,
+`package.json` and `package-lock.json`, `.github/workflows/ci.yml`.
+
+**Acceptance criteria.**
+
+- G1. Every combination of two or more selectable calendars has its
+  `mix/<slugs>.ics` (`2^n − n − 1` files); single files and `horror.ics` keep their
+  names and membership.
+- G2. A mix is the union of its calendars, each `UID` once, in `releases` order; valid
+  RFC 5545; `X-WR-CALNAME` per §3.
+- G3. `SUMMARY` with the platform per §6 in every calendar; UIDs unchanged; theatrical
+  unchanged.
+- G4. Web: one subscription row (0 → empty message, 1 → its file, 2+ → its mix),
+  `webcal://` derived at runtime, relative URL, ES/EN note about changing the
+  selection, classic link kept, `localStorage` unchanged.
+- G5. The deploy publishes `mix/`; `releases.json` keeps its shape (`schema` 2, sample
+  fixture untouched); log and summary count mixes without listing them.
+- G6. Offline tests: number and names of mixes, deduplication, the name rule, the
+  `SUMMARY` rule, and web↔build agreement (the file the selector offers exists in the
+  build output).
+- G7. All tests green; C1-C4, D1-D6 (F3) and E1-E10 still hold; visual check at 320,
+  390 and 1440 px without horizontal overflow or console errors.
