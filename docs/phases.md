@@ -32,7 +32,7 @@ planning folder; this file is what a coding session needs.
 | F2 — Web selector | `feat/f2-web-selector` | [#3](https://github.com/SlipyTSP/horror-calendar/pull/3) | merged |
 | F3 light — Visual polish | `feat/f3-visual-polish` | [#4](https://github.com/SlipyTSP/horror-calendar/pull/4) | merged |
 | F4 — Coverage: runtime rule, manual releases, platform arrivals | `feat/f4-coverage` | [#5](https://github.com/SlipyTSP/horror-calendar/pull/5) | in review |
-| F5 — Single subscription link | `feat/f5-single-link` | — | in progress |
+| F5 — Single subscription link | `feat/f5-single-link` | [#6](https://github.com/SlipyTSP/horror-calendar/pull/6) | in review |
 
 Each phase updates its own row when it opens its PR.
 
