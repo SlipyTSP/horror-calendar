@@ -71,7 +71,7 @@ jobs:
           mkdir -p _site
           cp -r site/. _site/
           cp output/*.ics _site/
-          cp -r output/mix _site/mix
+          mkdir -p _site/mix && cp -r output/mix/. _site/mix/
           cp output/releases.json _site/releases.json
           cp output/providers-snapshot.json _site/providers-snapshot.json
 
