@@ -95,10 +95,33 @@ function buildDescription(release) {
   return escapeText(parts.join('\n\n'));
 }
 
-/** SUMMARY: title plus the type marker. */
+/**
+ * Platform display names of a release in config order: the platform calendars of a
+ * digital release, the `arrivalPlatform` of an arrival, none otherwise (§6).
+ * @param {object} release - Release with calendars
+ * @returns {string[]}
+ */
+function summaryPlatforms(release) {
+  if (release.type === 'arrival') {
+    const name = platformName(release.arrivalPlatform) ?? release.arrivalPlatform;
+    return name ? [name] : [];
+  }
+  if (release.type !== 'digital') return [];
+  const calendars = Array.isArray(release.calendars) ? release.calendars : assignCalendars(release).calendars;
+  return PLATFORMS.filter((p) => calendars.includes(p.slug)).map((p) => p.name);
+}
+
+/**
+ * SUMMARY: title, type marker and, for digital releases and arrivals, the platform
+ * (`Title 📺 Netflix / Prime Video`, `Title 🆕 HBO Max`). Same text in every calendar.
+ * @param {object} release
+ * @returns {string}
+ */
 function buildSummary(release) {
   const emoji = RELEASE_EMOJI[release.type];
-  return emoji ? `${release.title} ${emoji}` : release.title;
+  if (!emoji) return release.title;
+  const platforms = summaryPlatforms(release);
+  return platforms.length > 0 ? `${release.title} ${emoji} ${platforms.join(' / ')}` : `${release.title} ${emoji}`;
 }
 
 /**
@@ -198,4 +221,5 @@ module.exports = {
   generateUID,
   buildDescription,
   buildWhereLine,
+  buildSummary,
 };

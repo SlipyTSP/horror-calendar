@@ -3,7 +3,7 @@ const assert = require('node:assert/strict');
 const fs = require('fs');
 const path = require('path');
 const {
-  generateCalendars, generateICS, escapeText, foldLine, generateUID, buildDescription, buildWhereLine,
+  generateCalendars, generateICS, escapeText, foldLine, generateUID, buildDescription, buildWhereLine, buildSummary,
 } = require('../../src/calendar');
 const { assignCalendars } = require('../../src/platforms');
 const { validateICS, assertValidICS, unfoldedLines } = require('../support/ics-validator');
@@ -161,7 +161,7 @@ test('generateICS writes one all-day event per release with UID, SUMMARY, DESCRI
   assert.equal(lines.filter((l) => l === 'TRANSP:TRANSPARENT').length, 2);
   assert.deepEqual(uids(ics), ['tmdb-900001-theatrical@horror-calendar', 'tmdb-900002-digital@horror-calendar']);
   assert.ok(lines.includes('SUMMARY:La Casa Vacía 🎬'));
-  assert.ok(lines.includes('SUMMARY:Ritual\\, Nocturno 📺'));
+  assert.ok(lines.includes('SUMMARY:Ritual\\, Nocturno 📺 Netflix / Filmin'));
   assert.ok(lines.includes('URL:https://www.themoviedb.org/movie/900002'));
   assert.ok(lines.includes('DESCRIPTION:Una familia hereda una casa.\\n\\nIncluido en: Netflix\\, Filmin'
     + '\\n\\nMás info: https://www.themoviedb.org/movie/900002'));
@@ -220,6 +220,54 @@ test('DESCRIPTION: synopsis, where line and TMDB link; where line follows the fi
 test('DESCRIPTION uses the release calendars for the Estreno en line, in config order', () => {
   const r = { ...release({ type: 'digital', overview: '' }), calendars: ['digital', 'netflix', 'filmin'] };
   assert.match(buildDescription(r), /^Estreno en: Netflix\\, Filmin\\n\\n/);
+});
+
+// --- SUMMARY rules (§6) ---
+
+test('G3 SUMMARY: theatrical keeps "Title 🎬", digital adds its platforms, arrivals their platform', () => {
+  const digital = (overrides) => release({ type: 'digital', ...overrides });
+  assert.equal(buildSummary(release()), 'La Casa Vacía 🎬');
+  // theatrical never gets a platform, even with providers
+  assert.equal(buildSummary(release({ providers: { flatrate: ['Netflix'], rentBuy: [] } })), 'La Casa Vacía 🎬');
+  assert.equal(buildSummary(digital({ releaseNote: 'Movistar Plus' })), 'La Casa Vacía 📺 Movistar Plus+');
+  // config order, joined by " / ", whatever the order of flatrate and note
+  assert.equal(buildSummary(digital({ releaseNote: 'Prime Video', providers: { flatrate: ['Filmin', 'Netflix'], rentBuy: [] } })),
+    'La Casa Vacía 📺 Netflix / Prime Video / Filmin');
+  // no platform calendar: rent/buy only, unmatched note, nothing
+  assert.equal(buildSummary(digital({ providers: { flatrate: [], rentBuy: ['Apple TV'] } })), 'La Casa Vacía 📺');
+  assert.equal(buildSummary(digital({ releaseNote: 'Atresplayer' })), 'La Casa Vacía 📺');
+  assert.equal(buildSummary(digital({})), 'La Casa Vacía 📺');
+  // arrival: display name of arrivalPlatform
+  const arrival = { ...release({ type: 'arrival', title: 'Bitelchús Bitelchús' }), arrivalPlatform: 'hbo-max', calendars: ['hbo-max'] };
+  assert.equal(buildSummary(arrival), 'Bitelchús Bitelchús 🆕 HBO Max');
+});
+
+test('G3 SUMMARY of the sample: platform names from release.calendars, same text in every calendar', () => {
+  const expected = [
+    'SUMMARY:Noche de Lobos 🆕 Movistar Plus+',
+    'SUMMARY:La Niña del Pantano 🆕 Netflix',
+    'SUMMARY:La Casa Vacía 🎬',
+    'SUMMARY:Ritual Nocturno 📺 Netflix',
+    'SUMMARY:Voces en el Sótano 📺',
+    'SUMMARY:El Pozo 📺 Disney+',
+    'SUMMARY:Sombras del Ayer 🎬',
+    'SUMMARY:La Cosecha 📺 Prime Video / Filmin',
+    'SUMMARY:La Marea Roja 📺 Prime Video',
+    'SUMMARY:El Faro del Fin 📺',
+    'SUMMARY:Sombras del Ayer 📺 HBO Max',
+    'SUMMARY:El Último Tren 🎬',
+  ];
+  const byUid = new Map();
+  for (const c of generateCalendars(SAMPLE.releases, { now: NOW })) {
+    const lines = unfoldedLines(c.ics);
+    for (const [i, line] of lines.entries()) {
+      if (!line.startsWith('UID:')) continue;
+      const summary = lines.slice(i).find((l) => l.startsWith('SUMMARY:'));
+      if (byUid.has(line)) assert.equal(summary, byUid.get(line), `${line} in ${c.file}`);
+      byUid.set(line, summary);
+    }
+  }
+  assert.deepEqual(SAMPLE.releases.map((r) => byUid.get(`UID:${generateUID(r)}`)), expected);
 });
 
 // --- Multi-calendar ---
@@ -299,7 +347,7 @@ test('E5 arrival event: UID with the platform, 🆕 marker and "Ya disponible en
   assert.equal(generateUID(arrival), 'tmdb-900010-arrival-movistar-plus@horror-calendar');
   const lines = unfoldedLines(generateICS([arrival], { name: 'Movistar Plus+', now: NOW }));
   assert.ok(lines.includes('UID:tmdb-900010-arrival-movistar-plus@horror-calendar'));
-  assert.ok(lines.includes('SUMMARY:Noche de Lobos 🆕'));
+  assert.ok(lines.includes('SUMMARY:Noche de Lobos 🆕 Movistar Plus+'));
   assert.ok(lines.includes('DTSTART;VALUE=DATE:20261026'));
   assert.ok(lines.includes(`DESCRIPTION:${escapeText(arrival.overview)}\\n\\nYa disponible en: Movistar Plus+`
     + '\\n\\nMás info: https://www.themoviedb.org/movie/900010'));
