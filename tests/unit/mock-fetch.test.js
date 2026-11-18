@@ -1,4 +1,4 @@
-const { test } = require('node:test');
+const { test, after } = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('fs');
 const os = require('os');
@@ -7,8 +7,19 @@ const { createMockFetch, requestKey, fixtureName } = require('../support/mock-fe
 
 const BASE = 'https://api.themoviedb.org/3';
 
+// Every mkdtemp folder of this file is removed when its tests end
+const tmpDirs = [];
+const makeTmp = (prefix) => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), prefix));
+  tmpDirs.push(dir);
+  return dir;
+};
+after(() => {
+  for (const dir of tmpDirs) fs.rmSync(dir, { recursive: true, force: true });
+});
+
 function tmpDir() {
-  return fs.mkdtempSync(path.join(os.tmpdir(), 'mock-fetch-'));
+  return makeTmp('mock-fetch-');
 }
 
 test('requestKey drops api_key, the /3 prefix and sorts parameters', () => {

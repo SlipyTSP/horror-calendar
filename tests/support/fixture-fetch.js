@@ -25,6 +25,8 @@ function jsonFiles(dir) {
 function mergedFixturesDir() {
   if (mergedDir) return mergedDir;
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'tmdb-fixtures-'));
+  // Removed when the test process exits (each test file runs in its own process)
+  process.once('exit', removeMergedFixturesDir);
   const captured = new Set(jsonFiles(DEFAULT_FIXTURES_DIR));
   for (const name of captured) fs.copyFileSync(path.join(DEFAULT_FIXTURES_DIR, name), path.join(dir, name));
   for (const name of jsonFiles(SYNTHETIC_DIR)) {
@@ -36,6 +38,13 @@ function mergedFixturesDir() {
   }
   mergedDir = dir;
   return dir;
+}
+
+/** Removes the merged fixtures directory, if any; the next use creates a new one. */
+function removeMergedFixturesDir() {
+  if (!mergedDir) return;
+  fs.rmSync(mergedDir, { recursive: true, force: true });
+  mergedDir = null;
 }
 
 /**
@@ -52,4 +61,6 @@ function readFixture(name) {
   return JSON.parse(fs.readFileSync(path.join(mergedFixturesDir(), name), 'utf-8'));
 }
 
-module.exports = { createFixtureFetch, readFixture, mergedFixturesDir, SYNTHETIC_DIR };
+module.exports = {
+  createFixtureFetch, readFixture, mergedFixturesDir, removeMergedFixturesDir, SYNTHETIC_DIR,
+};
