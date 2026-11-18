@@ -5,6 +5,7 @@ const {
   fetchProviderIds, MAX_SNAPSHOT_BYTES,
 } = require('../../src/arrivals');
 const { createContext, resolveSettings } = require('../../src/tmdb');
+const { PLATFORMS } = require('../../src/platforms');
 const { createFixtureFetch } = require('../support/fixture-fetch');
 const { PROVIDER_LIST_KEY, ES_PROVIDERS, providerListBody } = require('../support/providers-es');
 
@@ -30,10 +31,22 @@ const catalogueKey = (slug, page = 1) => `/discover/movie?${new URLSearchParams(
   with_genres: '27', 'primary_release_date.gte': '2023-10-23', sort_by: 'primary_release_date.desc', page: String(page),
 })}`;
 const detailKey = (id) => `/movie/${id}?language=es-ES&append_to_response=${encodeURIComponent('release_dates,watch/providers')}`;
+// ES watch/providers of a detail: flatrate, plus optional ads/free/rent/buy tiers
+const esProviders = (flatrate = [], tiers = {}) => ({
+  results: { ES: { flatrate: flatrate.map((provider_name) => ({ provider_name })),
+    ...Object.fromEntries(Object.entries(tiers).map(([k, names]) => [k, names.map((provider_name) => ({ provider_name }))])) } },
+});
+// By default an arrival detail is a real one: its ES flatrate has the platform whose
+// synthetic catalogue holds the id (inclusion check, §11) and it has an audience
+// (noise filter, §11)
+const FLATRATE_NAME = Object.fromEntries(PLATFORMS.map((p) => [p.slug, p.providerNames[0]]));
+const platformOf = (id) => Object.keys(CATALOGUE).find((slug) => CATALOGUE[slug].includes(id));
 const detail = (id, overrides = {}) => ({
   body: {
     id, title: `Llegada ${id}`, original_title: `Arrival ${id}`, overview: `Sinopsis ${id}.`, poster_path: `/a${id}.jpg`,
-    runtime: 95, imdb_id: `tt${id}`, release_dates: { results: [] }, 'watch/providers': { results: {} }, ...overrides,
+    runtime: 95, imdb_id: `tt${id}`, vote_count: 120, popularity: 8.5, release_dates: { results: [] },
+    'watch/providers': esProviders(platformOf(id) ? [FLATRATE_NAME[platformOf(id)]] : []),
+    ...overrides,
   },
 });
 const page = (ids, totalPages = 1) => ({ body: { page: 1, total_pages: totalPages, total_results: ids.length, results: ids.map((id) => ({ id })) } });
@@ -349,6 +362,123 @@ test('E1 the runtime rule applies to arrivals; removed ones leave the snapshot a
   assert.deepEqual(snap.arrivals.map((a) => a.id), [920032]);
 });
 
+// --- Inclusion check (§11, H2) ---
+
+test('H2 a new candidate whose platform is only in rent/buy is dropped, left out of arrivals and of the set', async () => {
+  const previous = snapshot({ ...CATALOGUE, netflix: [920001] });
+  const { releases, snapshot: snap, log, warn, details } = await run({
+    previous,
+    routes: {
+      // Only rent/buy on the store: the false positive seen with Apple TV Store on 2026-10-31
+      [detailKey(920002)]: detail(920002, { 'watch/providers': esProviders(['Movistar Plus+'], { rent: ['Netflix'], buy: ['Apple TV Store'] }) }),
+      [detailKey(920003)]: detail(920003),
+    },
+  });
+  assert.deepEqual(ids(releases), [[920003, 'netflix', '2026-10-23']]);
+  assert.deepEqual(snap.arrivals.map((a) => a.id), [920003]);
+  assert.deepEqual(snap.platforms.netflix, [920001, 920003], '920002 leaves the set so a later build evaluates it again');
+  const lines = log.lines.filter((l) => /is not in its ES flatrate/.test(l));
+  assert.equal(lines.length, 1);
+  assert.match(lines[0], /^Arrival "Llegada 920002" \(TMDB 920002\) on Netflix is not in its ES flatrate \(Movistar Plus\+\); dropped/);
+  assert.deepEqual(warn.lines, [], 'a plain log line, not a warning');
+  assert.deepEqual(details, { total: 2, failed: 0 }, 'one detail per candidate, no extra request');
+  assert.match(log.lines.join('\n'), /Arrivals: 1 \(1 new, 0 carried over\); 1 not in their platform's flatrate/);
+
+  // Next build: the id is new again and gets evaluated again (here it is now included)
+  const next = await run({ previous: snap, routes: { [detailKey(920002)]: detail(920002), [detailKey(920003)]: detail(920003) } });
+  assert.deepEqual(ids(next.releases).sort(), [[920002, 'netflix', '2026-10-23'], [920003, 'netflix', '2026-10-23']]);
+});
+
+test('H2 the platform reached through an alias tier (ads) is included; an unaliased tier is not', async () => {
+  const previous = snapshot({ ...CATALOGUE, netflix: [920001] });
+  const { releases, snapshot: snap } = await run({
+    previous,
+    routes: {
+      [detailKey(920002)]: detail(920002, { 'watch/providers': esProviders([], { ads: ['Netflix basic with Ads'] }) }),
+      [detailKey(920003)]: detail(920003, { 'watch/providers': esProviders(['netflix ']) }),
+    },
+  });
+  assert.deepEqual(ids(releases).map(([id]) => id), [920002, 920003]);
+  assert.deepEqual(snap.platforms.netflix, [920001, 920002, 920003]);
+
+  const free = await run({
+    previous,
+    routes: {
+      [detailKey(920002)]: detail(920002, { 'watch/providers': esProviders([], { free: ['Pluto TV'] }) }),
+      [detailKey(920003)]: detail(920003, { 'watch/providers': esProviders(['HBO Max Amazon Channel']) }),
+    },
+  });
+  assert.deepEqual(free.releases, []);
+  assert.deepEqual(free.snapshot.platforms.netflix, [920001]);
+});
+
+test('H2 a carried-over arrival that is no longer in the platform flatrate is dropped and leaves the set', async () => {
+  const previous = snapshot(CATALOGUE, [
+    { id: 920031, platform: 'movistar-plus', detected: '2026-10-16', title: 'Gone' },
+    { id: 920041, platform: 'filmin', detected: '2026-10-16', title: 'Still there' },
+  ]);
+  const { releases, snapshot: snap, log } = await run({
+    previous,
+    routes: {
+      [detailKey(920031)]: detail(920031, { 'watch/providers': esProviders(['Netflix']) }),
+      [detailKey(920041)]: detail(920041),
+    },
+  });
+  assert.deepEqual(ids(releases), [[920041, 'filmin', '2026-10-16']]);
+  assert.deepEqual(snap.arrivals.map((a) => a.id), [920041]);
+  assert.deepEqual(snap.platforms['movistar-plus'], [920032]);
+  assert.match(log.lines.join('\n'), /"Llegada 920031" \(TMDB 920031\) on Movistar Plus\+ is not in its ES flatrate \(Netflix\)/);
+});
+
+test('H2 odd watch/providers data counts as "not included" and never throws', async () => {
+  const previous = snapshot({ ...CATALOGUE, netflix: [] });
+  const odd = [null, 'x', { results: null }, { results: { ES: 'x' } }, { results: { ES: { flatrate: 'Netflix', ads: 5 } } },
+    { results: { US: { flatrate: [{ provider_name: 'Netflix' }] } } }];
+  for (const providers of odd) {
+    const { releases, snapshot: snap, warn } = await run({
+      previous,
+      routes: {
+        [detailKey(920001)]: detail(920001, { 'watch/providers': providers }),
+        [detailKey(920002)]: detail(920002),
+        [detailKey(920003)]: detail(920003),
+      },
+    });
+    assert.deepEqual(ids(releases).map(([id]) => id), [920002, 920003], JSON.stringify(providers));
+    assert.deepEqual(snap.platforms.netflix, [920002, 920003]);
+    assert.deepEqual(warn.lines, []);
+  }
+});
+
+test('H2 a failed detail keeps the current behaviour: skipped this build, kept in the snapshot and in the set', async () => {
+  const previous = snapshot({ ...CATALOGUE, netflix: [920001, 920002] });
+  const { releases, snapshot: snap, warn } = await run({ previous, routes: { [detailKey(920003)]: { status: 503, body: {} } } });
+  assert.deepEqual(releases, []);
+  assert.match(warn.lines.join('\n'), /920003.*skipped in this build only/);
+  assert.deepEqual(snap.arrivals.map((a) => a.id), [920003]);
+  assert.deepEqual(snap.platforms.netflix, [920001, 920002, 920003]);
+});
+
+test('H2 carryForwardArrivals applies the inclusion check: dropped arrival out of the snapshot and of its set', async () => {
+  const fetchImpl = createFixtureFetch({
+    routes: {
+      [detailKey(920031)]: detail(920031, { 'watch/providers': esProviders([], { rent: ['Movistar Plus+'] }) }),
+      [detailKey(920041)]: detail(920041),
+    },
+  });
+  const log = sink();
+  const settings = resolveSettings(ENV, NOW, sink());
+  const context = createContext({ fetchImpl, settings, sleep: async () => {}, log });
+  const previous = parseSnapshot(snapshot(CATALOGUE, [
+    { id: 920031, platform: 'movistar-plus', detected: '2026-10-16', title: 'x' },
+    { id: 920041, platform: 'filmin', detected: '2026-10-16', title: 'y' },
+  ]), { region: 'ES', maxAgeYears: 3 });
+  const result = await carryForwardArrivals({ context, previous, now: NOW, log, warn: sink() });
+  assert.deepEqual(ids(result.releases), [[920041, 'filmin', '2026-10-16']]);
+  assert.deepEqual(result.snapshot.arrivals.map((a) => a.id), [920041]);
+  assert.deepEqual(result.snapshot.platforms, { ...CATALOGUE, 'movistar-plus': [920032] });
+  assert.deepEqual([...previous.platforms.get('movistar-plus')], [920031, 920032], 'the previous snapshot is not mutated');
+});
+
 // --- Best effort (§11) ---
 
 test('detail failures: 404 drops the arrival, other failures keep it in the snapshot for the next build', async () => {
@@ -547,7 +677,8 @@ test('carryForwardArrivals keeps the previous platforms and in-window arrivals a
   ]), { region: 'ES', maxAgeYears: 3 });
   const result = await carryForwardArrivals({ context, previous, now: NOW, log, warn });
   assert.deepEqual(result.snapshot.platforms, CATALOGUE);
-  assert.deepEqual(result.snapshot.arrivals, [{ id: 920031, platform: 'movistar-plus', detected: '2026-10-16', title: 'In window' }]);
+  // Same rules as computeArrivals: the snapshot keeps the rebuilt arrivals, with their current title
+  assert.deepEqual(result.snapshot.arrivals, [{ id: 920031, platform: 'movistar-plus', detected: '2026-10-16', title: 'Llegada 920031' }]);
   assert.deepEqual(ids(result.releases), [[920031, 'movistar-plus', '2026-10-16']]);
 
   const none = await carryForwardArrivals({ context, previous: null, now: NOW, log, warn });

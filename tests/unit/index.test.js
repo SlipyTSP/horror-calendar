@@ -243,6 +243,12 @@ const manualDetail = (id, overrides = {}) => ({
   },
 });
 
+// An arrival detail: in the ES flatrate of its platform (inclusion check) and with an
+// audience (noise filter), §11
+const arrivalDetail = (id, providerName, overrides = {}) => manualDetail(id, {
+  vote_count: 120, popularity: 8.5, 'watch/providers': { results: { ES: { flatrate: [{ provider_name: providerName }] } } }, ...overrides,
+});
+
 test('E1 the runtime rule removes shorts and logs the count and titles as plain lines', async () => {
   const fetchImpl = createFixtureFetch({
     routes: { [detailKey(1739309)]: { body: { ...detailFixture(1739309), runtime: 20 } } },
@@ -347,9 +353,9 @@ test('E4 + E5 second build: arrivals only in their platform calendar, horror.ics
   const fetchImpl = createFixtureFetch({
     routes: {
       [SNAPSHOT_URL]: { body: previous },
-      [detailKey(920003)]: manualDetail(920003, { title: 'Llegada Netflix' }),
-      [detailKey(920032)]: manualDetail(920032, { title: 'Llegada Movistar' }),
-      [detailKey(920041)]: manualDetail(920041, { title: 'Llegada Filmin' }),
+      [detailKey(920003)]: arrivalDetail(920003, 'Netflix', { title: 'Llegada Netflix' }),
+      [detailKey(920032)]: arrivalDetail(920032, 'Movistar Plus+', { title: 'Llegada Movistar' }),
+      [detailKey(920041)]: arrivalDetail(920041, 'Filmin', { title: 'Llegada Filmin' }),
     },
   });
   const { code, outDir, log } = await runMain({ fetchImpl, env: { ...ENV, SNAPSHOT_URL } });
@@ -459,7 +465,7 @@ test('a crash of the arrivals step after reading a valid snapshot carries it for
     ],
   };
   const fetchImpl = createFixtureFetch({
-    routes: { [SNAPSHOT_URL]: { body: previous }, [detailKey(920041)]: manualDetail(920041, { title: 'Llegada Filmin' }) },
+    routes: { [SNAPSHOT_URL]: { body: previous }, [detailKey(920041)]: arrivalDetail(920041, 'Filmin', { title: 'Llegada Filmin' }) },
   });
   const computeArrivalsImpl = async () => { throw new Error('boom'); };
   const { code, outDir, log } = await runMain({ fetchImpl, env: { ...ENV, SNAPSHOT_URL }, computeArrivalsImpl });
@@ -468,7 +474,7 @@ test('a crash of the arrivals step after reading a valid snapshot carries it for
 
   const snap = readJson(outDir, 'providers-snapshot.json');
   assert.deepEqual(snap.platforms, previous.platforms);
-  assert.deepEqual(snap.arrivals, [{ id: 920041, platform: 'filmin', detected: '2026-10-16', title: 'Carried' }]);
+  assert.deepEqual(snap.arrivals, [{ id: 920041, platform: 'filmin', detected: '2026-10-16', title: 'Llegada Filmin' }]);
   const doc = readJson(outDir, 'releases.json');
   assert.deepEqual(doc.releases.filter((r) => r.type === 'arrival').map((r) => [r.id, r.releaseDate, r.calendars]),
     [[920041, '2026-10-16', ['filmin']]]);

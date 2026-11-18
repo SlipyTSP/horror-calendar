@@ -9,7 +9,7 @@
 
 const { PLATFORMS, matchPlatform, assignCalendars, platformName } = require('./platforms');
 const {
-  HORROR_GENRE_ID, DETAIL_CONCURRENCY, isIsoDate, mapPool, parseTypeDates, passesRuntimeRule,
+  HORROR_GENRE_ID, DETAIL_CONCURRENCY, isIsoDate, mapPool, parseProviders, parseTypeDates, passesRuntimeRule,
   releaseFromDetail, fillEnglishOverviews,
 } = require('./tmdb');
 
@@ -234,6 +234,26 @@ function diffPlatform({ previous, seed, current, cut, maxNew }) {
   return { set, arrivals: fresh, status: 'diff' };
 }
 
+/**
+ * Inclusion check (§11): the ES flatrate providers of the movie's own detail, split and
+ * matched as for membership (alias tiers included), must map to the arrival platform.
+ * Odd data counts as "not included"; never throws.
+ * @returns {{ included: boolean, flatrate: string[] }}
+ */
+function checkInclusion(detail, region, platform) {
+  try {
+    const { flatrate } = parseProviders(detail?.providers, region);
+    return { included: flatrate.some((name) => matchPlatform(name) === platform), flatrate };
+  } catch {
+    return { included: false, flatrate: [] };
+  }
+}
+
+/** Removes the ids that failed the inclusion check from their platform's set (in place). */
+function removeExcluded(platforms, excluded) {
+  for (const { id, platform } of excluded) platforms.get(platform)?.delete(id);
+}
+
 /** Snapshot document (§11): platforms in config order, sorted ids; arrivals sorted. */
 function buildSnapshot({ now, region, maxAgeYears, platforms, arrivals }) {
   const out = {};
@@ -342,12 +362,18 @@ async function computeArrivals({
     candidates.push(a);
   }
 
-  const { releases, removed, kept, details } = await buildArrivalReleases({
+  const {
+    releases, removed, kept, excluded, details,
+  } = await buildArrivalReleases({
     context, candidates, digitalReleases, manualEntries, log, warn,
   });
+  // A candidate that is not really in its platform's flatrate leaves the set, so that a
+  // later build evaluates it again (§11)
+  removeExcluded(platforms, excluded);
   const fromPrevious = releases.filter((r) => r.releaseDate !== today).length;
   log(`Arrivals: ${releases.length} (${releases.length - fromPrevious} new, ${fromPrevious} carried over)`
-    + `${seed ? ', seed mode' : ''}; detail requests: ${details.total}, failed: ${details.failed}.`);
+    + `${seed ? ', seed mode' : ''}; ${excluded.length} not in their platform's flatrate; `
+    + `detail requests: ${details.total}, failed: ${details.failed}.`);
 
   return {
     releases,
@@ -373,9 +399,12 @@ function carriedArrivals(previous, arrivalWindow) {
 }
 
 /**
- * Detail, announced-release check (§2) and runtime rule for the arrival candidates.
- * @returns {Promise<{ releases: object[], removed: object[], kept: object[], details: object }>}
- *   releases with calendars; kept = snapshot arrivals (emitted + transient failures)
+ * Detail, announced-release check (§2), runtime rule and inclusion check (§11) for the
+ * arrival candidates. No request besides the (cached) detail.
+ * @returns {Promise<{ releases: object[], removed: object[], kept: object[],
+ *   excluded: Array<{ id: number, platform: string }>, details: object }>}
+ *   releases with calendars; kept = snapshot arrivals (emitted + transient failures);
+ *   excluded = candidates whose id must leave their platform's set
  */
 async function buildArrivalReleases({ context, candidates, digitalReleases = [], manualEntries = [], log, warn }) {
   const { region, today, arrivalDays, minRuntime } = context.settings;
@@ -385,6 +414,7 @@ async function buildArrivalReleases({ context, candidates, digitalReleases = [],
   const releases = [];
   const removed = [];
   const kept = [];
+  const excluded = [];
   for (const a of candidates) {
     const label = `${a.title ? `"${a.title}" ` : ''}(TMDB ${a.id}) on ${platformName(a.platform)}`;
     const result = await context.detail(a.id, 'arrivals');
@@ -412,11 +442,20 @@ async function buildArrivalReleases({ context, candidates, digitalReleases = [],
       removed.push(release);
       continue;
     }
+    const inclusion = checkInclusion(detail, region, a.platform);
+    if (!inclusion.included) {
+      log(`Arrival "${release.title}" (TMDB ${a.id}) on ${platformName(a.platform)} is not in its ${region} flatrate `
+        + `(${inclusion.flatrate.length > 0 ? inclusion.flatrate.join(', ') : 'none'}); dropped, id left out of the set.`);
+      excluded.push({ id: a.id, platform: a.platform });
+      continue;
+    }
     releases.push(release);
     kept.push({ ...a, title: release.title });
   }
   await fillEnglishOverviews(context, releases, 'arrivals');
-  return { releases: releases.map((r) => assignCalendars(r)), removed, kept, details: context.counts('arrivals') };
+  return {
+    releases: releases.map((r) => assignCalendars(r)), removed, kept, excluded, details: context.counts('arrivals'),
+  };
 }
 
 /**
@@ -433,9 +472,16 @@ async function carryForwardArrivals({ context, previous, now, digitalReleases = 
   const carried = carriedArrivals(previous, arrivalWindow);
   const snapshot = buildSnapshot({ now, region, maxAgeYears: arrivalMaxAgeYears, platforms: previous.platforms, arrivals: carried });
   try {
-    const { releases, removed } = await buildArrivalReleases({ context, candidates: carried, digitalReleases, manualEntries, log, warn });
+    const {
+      releases, removed, kept, excluded,
+    } = await buildArrivalReleases({ context, candidates: carried, digitalReleases, manualEntries, log, warn });
+    // Same rules as computeArrivals: only the kept arrivals stay, excluded ids leave their set
+    const platforms = new Map([...previous.platforms].map(([slug, set]) => [slug, new Set(set)]));
+    removeExcluded(platforms, excluded);
     log(`Arrivals fallback: previous snapshot carried forward, ${releases.length} carried-over arrivals rebuilt.`);
-    return { releases, removed, snapshot };
+    return {
+      releases, removed, snapshot: buildSnapshot({ now, region, maxAgeYears: arrivalMaxAgeYears, platforms, arrivals: kept }),
+    };
   } catch (err) {
     warn(`Arrivals fallback could not rebuild the carried-over arrivals (${err?.message || err}); none this build.`);
     return { releases: [], removed: [], snapshot };
@@ -459,6 +505,7 @@ module.exports = {
   fetchProviderIds,
   fetchCatalogue,
   diffPlatform,
+  checkInclusion,
   buildSnapshot,
   emptySnapshot,
   SNAPSHOT_FILE,
