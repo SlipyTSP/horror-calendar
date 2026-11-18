@@ -61,7 +61,8 @@ src/
                    categoría), getHorrorReleases / fetchHorrorReleases (dos discover
                    regionales, un GET /movie/{id}?append_to_response=release_dates,
                    watch/providers por id, regla de duración, sinopsis EN de respaldo,
-                   pool de 5, umbral del 20 % solo sobre releases tmdb), parseDetail,
+                   pool de 5, umbral del 20 % solo sobre releases tmdb), parseDetail
+                   (incluye voteCount y popularity, 0 si faltan), parseProviders,
                    passesRuntimeRule, compareReleases. fetch, now, env y sleep inyectables
   manual.js      — Altas manuales (§10): loadManualEntries (validación, nunca lanza),
                    buildManualReleases (ventana, detalle, regla de duración, TMDB gana
@@ -70,10 +71,13 @@ src/
                    leídos por trozos, JSON inválido → semilla), fetchProviderIds,
                    fetchCatalogue, diffPlatform (guardas), computeArrivals (arrastre,
                    ventana ARRIVAL_DAYS, descarte del estreno anunciado, regla de
-                   duración), carryForwardArrivals (si computeArrivals falla: foto
-                   anterior arrastrada, vacía solo sin foto válida) y buildSnapshot.
-                   Best effort
-  platforms.js   — PLATFORMS (§5), matchPlatform, platformName, assignCalendars (unión
+                   duración, comprobación de inclusión checkInclusion y filtro de
+                   ruido checkAudience), carryForwardArrivals (si computeArrivals
+                   falla: foto anterior arrastrada con las mismas reglas, vacía solo
+                   sin foto válida) y buildSnapshot. Best effort
+  platforms.js   — PLATFORMS (§5; `Apple TV` es alias de apple-tv-plus desde el cambio
+                   de nombre, la tienda `Apple TV Store` y los canales no), matchPlatform,
+                   platformName, assignCalendars (unión
                    nota + flatrate + plataformas curadas para tmdb; solo la curada para
                    manual; arrivalPlatform para llegadas), calendarDefinitions y
                    mixDefinitions (combinaciones de 2+ seleccionables, §3: mixFile,
@@ -123,7 +127,12 @@ tests/
                    sin api_key → fixture, graba llamadas, respuestas en cola),
                    fixture-name.js (nombre determinista de fixture por petición),
                    fixture-fetch.js (mock-fetch sobre capturadas + synthetic/, sin
-                   colisiones) e ics-validator.js (validador estructural de .ics)
+                   colisiones; sirve por defecto la lista de proveedores de
+                   providers-es.js y borra su carpeta temporal al salir),
+                   providers-es.js (lista ES de proveedores observada el 2026-10-31,
+                   tras el cambio de Apple TV+ a Apple TV) e ics-validator.js
+                   (validador estructural de .ics). Todo mkdtemp de los tests se
+                   borra al terminar
   fixtures/releases.sample.json — Ejemplo completo y válido de releases.json (contrato)
   fixtures/tmdb/ — Respuestas TMDB capturadas + manifest.json (solo las recaptura el
                    propietario)
@@ -171,7 +180,16 @@ Cada fase que cambie la estructura actualiza esta sección en el mismo PR.
   `watch_region`, `with_watch_providers`, `flatrate`, `with_genres=27`,
   `primary_release_date.gte` (sin `region`: aquí solo acota la antigüedad) y
   `sort_by=primary_release_date.desc`; diff contra la foto de `SNAPSHOT_URL` con modo
-  semilla y guardas. Best effort: todo fallo es `::warning::`.
+  semilla y guardas. TMDB aplica `flatrate` a la película, no al proveedor, así que cada
+  candidata (nueva o arrastrada) pasa la **comprobación de inclusión** con su propio
+  detalle: su `arrivalPlatform` debe estar en el `flatrate` ES (alias y tiers como en la
+  pertenencia); si no, fuera de la emisión, de `arrivals` de la foto y del conjunto de su
+  plataforma. Después, **filtro de ruido**: se emite solo con
+  `vote_count >= ARRIVAL_MIN_VOTES` o `popularity >= ARRIVAL_MIN_POPULARITY` (def. 5 y 5,
+  0–100000 y 0–1000; cualquiera a 0 lo desactiva); si no, fuera de la emisión y de
+  `arrivals`, pero el id **se queda** en el conjunto. Ambos son líneas de log normales,
+  sin peticiones extra y fuera del informe de la regla de duración. Best effort: todo
+  fallo es `::warning::`.
 - Pertenencia a calendarios de plataforma de una release tmdb = unión de
   `matchPlatform(releaseNote)`, `matchPlatform` de cada `flatrate` (alias en
   `src/platforms.js`) y la plataforma curada si hay alta manual del mismo id. Las altas
