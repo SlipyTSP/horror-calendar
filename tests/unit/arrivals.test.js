@@ -2,10 +2,11 @@ const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const {
   computeArrivals, carryForwardArrivals, parseSnapshot, diffPlatform, readSnapshot, readLimited, buildSnapshot,
-  MAX_SNAPSHOT_BYTES,
+  fetchProviderIds, MAX_SNAPSHOT_BYTES,
 } = require('../../src/arrivals');
 const { createContext, resolveSettings } = require('../../src/tmdb');
 const { createFixtureFetch } = require('../support/fixture-fetch');
+const { PROVIDER_LIST_KEY, ES_PROVIDERS, providerListBody } = require('../support/providers-es');
 
 // Same day as the synthetic catalogue fixtures (primary_release_date.gte=2023-10-23)
 const NOW = new Date('2026-10-23T06:00:00.000Z');
@@ -396,6 +397,41 @@ test('a platform whose aliases match no TMDB provider is reported and not diffed
   const { warn, snapshot: snap } = await run({ env: { TMDB_API_KEY: KEY }, routes });
   assert.equal(warn.lines.filter((l) => /matches the aliases of/.test(l)).length, 7);
   assert.deepEqual(snap.platforms, { netflix: [920001] });
+});
+
+test('H1 with the ES provider list of 2026-10-31, Apple TV+ resolves id 350 only (not the store nor the channels)', async () => {
+  assert.ok(ES_PROVIDERS.some(([, name]) => name === 'Apple TV Store'));
+  const fetchImpl = createFixtureFetch();
+  const settings = resolveSettings(ENV, NOW, sink());
+  const context = createContext({ fetchImpl, settings, sleep: async () => {}, log: sink() });
+  const resolved = await fetchProviderIds(context);
+  assert.deepEqual(resolved.get('apple-tv-plus'), [350]);
+  assert.deepEqual(Object.fromEntries([...resolved].map(([slug, list]) => [slug, list.join('|')])), PROVIDERS);
+});
+
+test('H1 the build no longer warns about Apple TV+ and diffs its catalogue (with_watch_providers=350)', async () => {
+  const { warn, fetchImpl, snapshot: snap } = await run({ previous: snapshot() });
+  assert.deepEqual(warn.lines, []);
+  assert.ok(fetchImpl.calls.some((c) => c.key === fetchImpl.keyFor(catalogueKey('apple-tv-plus'))));
+  assert.deepEqual(snap.platforms['apple-tv-plus'], [920071]);
+
+  // The list as it was before the rename (no "Apple TV" subscription) still warns
+  const old = await run({
+    previous: snapshot(),
+    routes: { [PROVIDER_LIST_KEY]: { body: providerListBody(ES_PROVIDERS.filter(([id]) => id !== 350)) } },
+  });
+  assert.equal(old.warn.lines.length, 1);
+  assert.match(old.warn.lines[0], /matches the aliases of Apple TV\+/);
+});
+
+test('H1 a platform with 0 ids read and 0 in the previous snapshot: no arrivals and no warning', async () => {
+  // The synthetic SkyShowtime catalogue is empty
+  const { releases, warn, snapshot: snap } = await run({ previous: snapshot({ ...CATALOGUE, skyshowtime: [] }) });
+  assert.deepEqual(releases, []);
+  assert.deepEqual(warn.lines, []);
+  assert.deepEqual(snap.platforms.skyshowtime, []);
+  assert.deepEqual(diffPlatform({ previous: new Set(), seed: false, current: new Set(), cut: false, maxNew: 25 }),
+    { set: new Set(), arrivals: [], status: 'diff' });
 });
 
 // --- Pure helpers ---

@@ -10,7 +10,7 @@ const PLATFORMS = [
   { slug: 'filmin',        name: 'Filmin',         providerNames: ['Filmin'] },
   { slug: 'disney-plus',   name: 'Disney+',        providerNames: ['Disney Plus', 'Disney+'] },
   { slug: 'skyshowtime',   name: 'SkyShowtime',    providerNames: ['SkyShowtime'] },
-  { slug: 'apple-tv-plus', name: 'Apple TV+',      providerNames: ['Apple TV Plus', 'Apple TV+'] },
+  { slug: 'apple-tv-plus', name: 'Apple TV+',      providerNames: ['Apple TV Plus', 'Apple TV+', 'Apple TV'] },
 ];
 
 const normalize = (name) => (typeof name === 'string' ? name.trim().toLowerCase() : '');

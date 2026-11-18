@@ -2,11 +2,14 @@
 // ones in tests/fixtures/tmdb/synthetic/. mock-fetch.js reads a single directory, so
 // both folders are merged into one temporary directory (once per process). A file name
 // present in both folders is an error: synthetic fixtures add data, never replace it.
+// The regional provider list is served from tests/support/providers-es.js by default
+// (the synthetic file predates the Apple TV rename); a test route overrides it.
 
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
 const { createMockFetch, DEFAULT_FIXTURES_DIR } = require('./mock-fetch');
+const { PROVIDER_LIST_KEY, providerListBody } = require('./providers-es');
 
 const SYNTHETIC_DIR = path.join(DEFAULT_FIXTURES_DIR, 'synthetic');
 
@@ -40,7 +43,8 @@ function mergedFixturesDir() {
  * @param {object} [options] - Same options as createMockFetch except fixturesDir
  */
 function createFixtureFetch(options = {}) {
-  return createMockFetch({ ...options, fixturesDir: mergedFixturesDir() });
+  const routes = { [PROVIDER_LIST_KEY]: { body: providerListBody() }, ...options.routes };
+  return createMockFetch({ ...options, routes, fixturesDir: mergedFixturesDir() });
 }
 
 /** Reads a fixture body (captured or synthetic) as parsed JSON. */
