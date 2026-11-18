@@ -618,13 +618,46 @@ test('passesRuntimeRule and parseDetail are null-safe', () => {
   for (const body of [null, undefined, 'x', 42, [], {}]) {
     assert.deepEqual(parseDetail(body), {
       id: null, title: '', originalTitle: '', overview: '', posterPath: null, runtime: null, imdbId: null,
-      releaseDates: null, providers: null,
+      voteCount: 0, popularity: 0, releaseDates: null, providers: null,
     });
   }
   assert.equal(parseDetail({ runtime: -5 }).runtime, null);
   assert.equal(parseDetail({ runtime: '95' }).runtime, 95);
   assert.equal(parseDetail({ runtime: '' }).runtime, null);
   assert.equal(parseDetail({ imdb_id: '  ' }).imdbId, null);
+});
+
+test('H6 parseDetail reads vote_count and popularity: finite numbers, anything else is 0', () => {
+  const pick = (body) => (({ voteCount, popularity }) => [voteCount, popularity])(parseDetail(body));
+  assert.deepEqual(pick({ vote_count: 12, popularity: 0.412 }), [12, 0.412]);
+  assert.deepEqual(pick({ vote_count: 0, popularity: 0 }), [0, 0]);
+  assert.deepEqual(pick({}), [0, 0]);
+  for (const garbage of [null, '7', 'x', NaN, Infinity, -3, [], {}, true]) {
+    assert.deepEqual(pick({ vote_count: garbage, popularity: garbage }), [0, 0], String(garbage));
+  }
+});
+
+test('H6 ARRIVAL_MIN_VOTES and ARRIVAL_MIN_POPULARITY: defaults, 0, limits and invalid values', () => {
+  const w = sink();
+  const s = resolveSettings({}, NOW, w);
+  assert.deepEqual([s.arrivalMinVotes, s.arrivalMinPopularity], [5, 5]);
+  const zero = resolveSettings({ ARRIVAL_MIN_VOTES: '0', ARRIVAL_MIN_POPULARITY: '0' }, NOW, w);
+  assert.deepEqual([zero.arrivalMinVotes, zero.arrivalMinPopularity], [0, 0]);
+  const max = resolveSettings({ ARRIVAL_MIN_VOTES: '100000', ARRIVAL_MIN_POPULARITY: ' 1000 ' }, NOW, w);
+  assert.deepEqual([max.arrivalMinVotes, max.arrivalMinPopularity], [100000, 1000]);
+  assert.deepEqual(w.lines, []);
+
+  for (const [name, value, key] of [
+    ['ARRIVAL_MIN_VOTES', '-1', 'arrivalMinVotes'], ['ARRIVAL_MIN_VOTES', '100001', 'arrivalMinVotes'],
+    ['ARRIVAL_MIN_VOTES', '2.5', 'arrivalMinVotes'], ['ARRIVAL_MIN_VOTES', 'many', 'arrivalMinVotes'],
+    ['ARRIVAL_MIN_POPULARITY', '-1', 'arrivalMinPopularity'], ['ARRIVAL_MIN_POPULARITY', '1001', 'arrivalMinPopularity'],
+    ['ARRIVAL_MIN_POPULARITY', '0.5', 'arrivalMinPopularity'], ['ARRIVAL_MIN_POPULARITY', '1e2', 'arrivalMinPopularity'],
+  ]) {
+    const warn = sink();
+    assert.equal(resolveSettings({ [name]: value }, NOW, warn)[key], 5, `${name}=${value}`);
+    assert.equal(warn.lines.length, 1, `${name}=${value}`);
+    assert.match(warn.lines[0], new RegExp(`${name}=.*using 5`));
+  }
 });
 
 test('parseTypeDates reads the regional dates of one type and ignores garbage', () => {

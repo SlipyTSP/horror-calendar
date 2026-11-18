@@ -32,6 +32,8 @@ const DEFAULT_ARRIVAL_DAYS = 30;
 const DEFAULT_ARRIVAL_MAX_AGE_YEARS = 3;
 const DEFAULT_ARRIVAL_MAX_PAGES = 50;
 const DEFAULT_ARRIVAL_MAX_PER_PLATFORM = 25;
+const DEFAULT_ARRIVAL_MIN_VOTES = 5;
+const DEFAULT_ARRIVAL_MIN_POPULARITY = 5;
 const DETAIL_CONCURRENCY = 5;
 const MAX_RETRIES = 3;
 const BASE_BACKOFF_MS = 1000;
@@ -110,8 +112,8 @@ function isIsoDate(value) {
  * @returns {{ apiKey: string, language: string, region: string, windowDays: number,
  *   maxPages: number, from: string, to: string, today: string, minRuntime: number,
  *   manualFile: string, snapshotUrl: string, arrivalDays: number, arrivalMaxAgeYears: number,
- *   arrivalMaxPages: number, arrivalMaxPerPlatform: number,
- *   arrivalWindow: { from: string, to: string }, catalogueFrom: string }}
+ *   arrivalMaxPages: number, arrivalMaxPerPlatform: number, arrivalMinVotes: number,
+ *   arrivalMinPopularity: number, arrivalWindow: { from: string, to: string }, catalogueFrom: string }}
  */
 function resolveSettings(env = {}, now = new Date(), warn = console.warn) {
   const int = (name, fallback, min, max) => parseIntSetting(env[name], fallback, { min, max, name }, warn);
@@ -122,6 +124,9 @@ function resolveSettings(env = {}, now = new Date(), warn = console.warn) {
   const arrivalMaxAgeYears = int('ARRIVAL_MAX_AGE_YEARS', DEFAULT_ARRIVAL_MAX_AGE_YEARS, 1, 20);
   const arrivalMaxPages = int('ARRIVAL_MAX_PAGES', DEFAULT_ARRIVAL_MAX_PAGES, 1, 100);
   const arrivalMaxPerPlatform = int('ARRIVAL_MAX_PER_PLATFORM', DEFAULT_ARRIVAL_MAX_PER_PLATFORM, 1, 500);
+  // Noise filter of arrivals (§11); either at 0 disables it
+  const arrivalMinVotes = int('ARRIVAL_MIN_VOTES', DEFAULT_ARRIVAL_MIN_VOTES, 0, 100000);
+  const arrivalMinPopularity = int('ARRIVAL_MIN_POPULARITY', DEFAULT_ARRIVAL_MIN_POPULARITY, 0, 1000);
   const today = isoDate(now);
   return {
     apiKey: String(env.TMDB_API_KEY ?? '').trim(),
@@ -139,6 +144,8 @@ function resolveSettings(env = {}, now = new Date(), warn = console.warn) {
     arrivalMaxAgeYears,
     arrivalMaxPages,
     arrivalMaxPerPlatform,
+    arrivalMinVotes,
+    arrivalMinPopularity,
     arrivalWindow: { from: isoDate(addDays(now, -arrivalDays)), to: today },
     catalogueFrom: subtractYears(now, arrivalMaxAgeYears),
   };
@@ -283,12 +290,17 @@ function parseRuntime(value) {
   return value !== null && value !== '' && Number.isFinite(n) && n > 0 ? Math.round(n) : null;
 }
 
+/** A finite, non-negative number from TMDB; missing, non-numeric or negative → 0. */
+function parseCount(value) {
+  return typeof value === 'number' && Number.isFinite(value) && value > 0 ? value : 0;
+}
+
 /**
  * The fields used from `GET /movie/{id}?append_to_response=release_dates,watch/providers`.
  * Every TMDB field is optional; garbage gives empty values, never an exception.
  * @returns {{ id: number|null, title: string, originalTitle: string, overview: string,
- *   posterPath: string|null, runtime: number|null, imdbId: string|null,
- *   releaseDates: object|null, providers: object|null }}
+ *   posterPath: string|null, runtime: number|null, imdbId: string|null, voteCount: number,
+ *   popularity: number, releaseDates: object|null, providers: object|null }}
  */
 function parseDetail(body) {
   const b = body && typeof body === 'object' && !Array.isArray(body) ? body : {};
@@ -300,6 +312,8 @@ function parseDetail(body) {
     posterPath: text(b.poster_path) || null,
     runtime: parseRuntime(b.runtime),
     imdbId: text(b.imdb_id) || null,
+    voteCount: parseCount(b.vote_count),
+    popularity: parseCount(b.popularity),
     releaseDates: b.release_dates ?? null,
     providers: b['watch/providers'] ?? null,
   };
