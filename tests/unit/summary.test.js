@@ -1,4 +1,4 @@
-const { test } = require('node:test');
+const { test, after } = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('fs');
 const os = require('os');
@@ -12,8 +12,19 @@ function capture() {
   return { write: (chunk) => chunks.push(String(chunk)), text: () => chunks.join('') };
 }
 
+// Every mkdtemp folder of this file is removed when its tests end
+const tmpDirs = [];
+const makeTmp = (prefix) => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), prefix));
+  tmpDirs.push(dir);
+  return dir;
+};
+after(() => {
+  for (const dir of tmpDirs) fs.rmSync(dir, { recursive: true, force: true });
+});
+
 function writeTmp(name, content) {
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'summary-'));
+  const dir = makeTmp('summary-');
   const file = path.join(dir, name);
   fs.writeFileSync(file, content);
   return file;
