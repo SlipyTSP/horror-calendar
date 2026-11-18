@@ -60,6 +60,12 @@ platform's calendar only, for 30 days.
 - Safety nets: an empty catalogue keeps the previous one, more than 25 new titles on a
   platform in one week publishes none (a TMDB glitch is more likely than a real flood),
   and a catalogue that cannot be read in full is only diffed on what was read.
+- Each candidate is checked against the movie's own Spanish providers: it only becomes an
+  arrival if its platform really lists it as included in the subscription (TMDB's
+  catalogue query can return movies that are only on another platform). One that fails
+  is left out and evaluated again the next week.
+- Catalogue titles with almost no audience (fewer than 5 votes **and** popularity below 5
+  in TMDB) are recorded but not announced.
 
 ## Usage
 
@@ -95,6 +101,8 @@ Environment variables (`.env` locally, repository secrets and workflow `env` in 
 | `ARRIVAL_MAX_AGE_YEARS` | `3` | Age limit of the catalogue watched for arrivals (integer 1–20) |
 | `ARRIVAL_MAX_PAGES` | `50` | Discover pages read per platform for arrivals (integer 1–100) |
 | `ARRIVAL_MAX_PER_PLATFORM` | `25` | More new titles than this on one platform in one build → none published (integer 1–500) |
+| `ARRIVAL_MIN_VOTES` | `5` | Noise filter: an arrival needs this many TMDB votes or the popularity below (integer 0–100000; `0` disables the filter) |
+| `ARRIVAL_MIN_POPULARITY` | `5` | Noise filter: TMDB popularity that is enough on its own (integer 0–1000; `0` disables the filter) |
 
 Invalid numbers fall back to the default with a warning. Platforms and their TMDB
 provider aliases live in `src/platforms.js`. Both workflows set `SNAPSHOT_URL` to the
