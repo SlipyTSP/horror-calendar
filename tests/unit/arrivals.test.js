@@ -15,7 +15,8 @@ const KEY = 'fake-key-0123456789abcdef';
 const SNAPSHOT_URL = 'https://example.org/horror-calendar/providers-snapshot.json';
 const ENV = { TMDB_API_KEY: KEY, SNAPSHOT_URL };
 
-// Provider ids of tests/fixtures/tmdb/synthetic/watch_providers_movie__…json
+// Provider ids of the ES provider list in tests/support/providers-es.js (served by default
+// by tests/support/fixture-fetch.js)
 const PROVIDERS = {
   netflix: '8|1796', 'prime-video': '119|2100', 'hbo-max': '1899', 'movistar-plus': '149',
   filmin: '63', 'disney-plus': '337', skyshowtime: '1773', 'apple-tv-plus': '350',
