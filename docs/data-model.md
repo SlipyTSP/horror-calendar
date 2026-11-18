@@ -193,7 +193,7 @@ module.exports.PLATFORMS = [
   { slug: 'filmin',        name: 'Filmin',         providerNames: ['Filmin'] },
   { slug: 'disney-plus',   name: 'Disney+',        providerNames: ['Disney Plus', 'Disney+'] },
   { slug: 'skyshowtime',   name: 'SkyShowtime',    providerNames: ['SkyShowtime'] },
-  { slug: 'apple-tv-plus', name: 'Apple TV+',      providerNames: ['Apple TV Plus', 'Apple TV+'] },
+  { slug: 'apple-tv-plus', name: 'Apple TV+',      providerNames: ['Apple TV Plus', 'Apple TV+', 'Apple TV'] },
 ];
 ```
 
@@ -208,6 +208,11 @@ module.exports.PLATFORMS = [
   strings. Observed `flatrate` names in ES on 2026-10-25 include
   `Movistar Plus+ Ficción Total ` (trailing space, trimmed before matching; it is not an
   alias today) and `HBO Max Amazon Channel` (not an alias: channels are not platforms).
+- Apple renamed Apple TV+ to Apple TV. Observed in ES on 2026-10-31: `Apple TV`
+  (id 350, the subscription, an alias), `Apple TV Store` (id 2, rent and buy, not an
+  alias), `AMC Plus Apple TV channel` and `Apple TV Amazon Channel` (channels, not
+  aliases). Exact matching keeps them apart. Slug `apple-tv-plus` and display name
+  `Apple TV+` do not change (subscriber URLs and mix names).
 
 ## 6. iCalendar rules
 
@@ -310,6 +315,8 @@ default with a warning):
 | `ARRIVAL_MAX_AGE_YEARS` | `3` | 1–20 | age limit of the catalogue watched for arrivals |
 | `ARRIVAL_MAX_PAGES` | `50` | 1–100 | pages per platform in the arrivals query |
 | `ARRIVAL_MAX_PER_PLATFORM` | `25` | 1–500 | flood guard (§11) |
+| `ARRIVAL_MIN_VOTES` | `5` | 0–100000 | noise filter (§11); 0 disables the filter |
+| `ARRIVAL_MIN_POPULARITY` | `5` | 0–1000 | noise filter (§11); 0 disables the filter |
 
 The release window always starts today: releases leave every calendar on the first build
 after their date (decision of 2026-10-23, no look-back). Arrivals are the only look-back
@@ -370,6 +377,11 @@ History:
   combination of two or more selectable calendars (§3), platform in `SUMMARY` (§6) and
   one subscription link in the web (§8). `releases.json` does not change shape:
   `schema` stays `2`.
+- 2026-11-18 — Apple TV alias, arrivals inclusion check and noise filter (F6): alias
+  `Apple TV` for `apple-tv-plus` (§5); per-movie `flatrate` check of arrival
+  candidates and votes/popularity filter, with `ARRIVAL_MIN_VOTES` and
+  `ARRIVAL_MIN_POPULARITY` (§7, §11). `releases.json` (`schema` 2) and the providers
+  snapshot (`schema` 1) do not change shape.
 
 ## 10. Manual releases — `data/manual-releases.json`
 
@@ -433,6 +445,27 @@ as already available, never as an announcement.
   diff for that platform: new arrivals only among the ids actually read, and its new set
   is the union of the previous set and the ids read (unread ids are never treated as
   removed).
+- **Inclusion check.** TMDB applies `with_watch_monetization_types=flatrate`
+  to the movie, not to the provider filter (verified 2026-10-31: the query for
+  `Apple TV Store` returned a movie whose only ES `flatrate` provider was Netflix).
+  So every arrival candidate, new or carried over, is checked against its own detail
+  (already requested, `watch/providers` appended): it is kept only if the ES
+  `flatrate` list of the detail, split and matched exactly as for membership (§2, §5,
+  alias tiers included), maps to its `arrivalPlatform`. A candidate that fails is not
+  emitted, is not kept in `arrivals` of the snapshot, and its id is removed from that
+  platform's set, so that a later build evaluates it again. One plain log line per
+  dropped candidate. No extra requests. A failed detail request keeps the current
+  behaviour (skipped in this build only).
+- **Noise filter.** Catalogue titles with almost no audience (verified 2026-11-18: 6
+  of 31 published arrivals had 0 or 1 votes and popularity below 1) are seen but not
+  announced. A candidate that passes the inclusion check is emitted only if the
+  detail has `vote_count >= ARRIVAL_MIN_VOTES` or `popularity >= ARRIVAL_MIN_POPULARITY`
+  (either setting at 0 disables the filter; missing or non-numeric values count as 0).
+  A candidate that fails is not emitted and is not kept in `arrivals` of the
+  snapshot, but its id **stays** in that platform's set: it was in the catalogue, and
+  a later announcement would carry a wrong detection date. Applies to new and
+  carried-over candidates. One plain log line per filtered candidate, with its votes
+  and popularity. Not part of the runtime-rule report. No extra requests.
 - **Snapshot** `output/providers-snapshot.json`, published next to `releases.json`:
 
   ```json
