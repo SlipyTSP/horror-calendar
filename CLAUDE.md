@@ -70,9 +70,9 @@ src/
   arrivals.js    — Llegadas (§11): readSnapshot (solo https, sin redirecciones, 5 MB
                    leídos por trozos, JSON inválido → semilla), fetchProviderIds,
                    fetchCatalogue, diffPlatform (guardas), computeArrivals (arrastre,
-                   ventana ARRIVAL_DAYS, descarte del estreno anunciado, regla de
-                   duración, comprobación de inclusión checkInclusion y filtro de
-                   ruido checkAudience), carryForwardArrivals (si computeArrivals
+                   ventana ARRIVAL_DAYS; por candidata, en este orden: descarte del
+                   estreno anunciado, comprobación de inclusión checkInclusion, regla
+                   de duración y filtro de ruido checkAudience), carryForwardArrivals (si computeArrivals
                    falla: foto anterior arrastrada con las mismas reglas, vacía solo
                    sin foto válida) y buildSnapshot. Best effort
   platforms.js   — PLATFORMS (§5; `Apple TV` es alias de apple-tv-plus desde el cambio
@@ -181,10 +181,12 @@ Cada fase que cambie la estructura actualiza esta sección en el mismo PR.
   `primary_release_date.gte` (sin `region`: aquí solo acota la antigüedad) y
   `sort_by=primary_release_date.desc`; diff contra la foto de `SNAPSHOT_URL` con modo
   semilla y guardas. TMDB aplica `flatrate` a la película, no al proveedor, así que cada
-  candidata (nueva o arrastrada) pasa la **comprobación de inclusión** con su propio
+  candidata (nueva o arrastrada), tras el descarte del estreno anunciado y antes de la
+  regla de duración (una llegada falsa nunca sale en su informe), pasa la
+  **comprobación de inclusión** con su propio
   detalle: su `arrivalPlatform` debe estar en el `flatrate` ES (alias y tiers como en la
   pertenencia); si no, fuera de la emisión, de `arrivals` de la foto y del conjunto de su
-  plataforma. Después, **filtro de ruido**: se emite solo con
+  plataforma. Después de la regla de duración, **filtro de ruido**: se emite solo con
   `vote_count >= ARRIVAL_MIN_VOTES` o `popularity >= ARRIVAL_MIN_POPULARITY` (def. 5 y 5,
   0–100000 y 0–1000; cualquiera a 0 lo desactiva); si no, fuera de la emisión y de
   `arrivals`, pero el id **se queda** en el conjunto. Ambos son líneas de log normales,
