@@ -31,8 +31,9 @@ planning folder; this file is what a coding session needs.
 | F1 — Regional data core + calendars | `feat/f1-regional-data` | [#2](https://github.com/SlipyTSP/horror-calendar/pull/2) | merged |
 | F2 — Web selector | `feat/f2-web-selector` | [#3](https://github.com/SlipyTSP/horror-calendar/pull/3) | merged |
 | F3 light — Visual polish | `feat/f3-visual-polish` | [#4](https://github.com/SlipyTSP/horror-calendar/pull/4) | merged |
-| F4 — Coverage: runtime rule, manual releases, platform arrivals | `feat/f4-coverage` | [#5](https://github.com/SlipyTSP/horror-calendar/pull/5) | in review |
-| F5 — Single subscription link | `feat/f5-single-link` | [#6](https://github.com/SlipyTSP/horror-calendar/pull/6) | in review |
+| F4 — Coverage: runtime rule, manual releases, platform arrivals | `feat/f4-coverage` | [#5](https://github.com/SlipyTSP/horror-calendar/pull/5) | merged |
+| F5 — Single subscription link | `feat/f5-single-link` | [#6](https://github.com/SlipyTSP/horror-calendar/pull/6) | merged |
+| F6 — Apple TV alias, arrivals inclusion check and noise filter | `feat/f6-arrivals-check` | — | in progress |
 
 Each phase updates its own row when it opens its PR.
 
@@ -462,3 +463,53 @@ backwards-compatible additions), `scripts/summary.js`, `README.md`, `CLAUDE.md`
   build output).
 - G7. All tests green; C1-C4, D1-D6 (F3) and E1-E10 still hold; visual check at 320,
   390 and 1440 px without horizontal overflow or console errors.
+
+## 7. F6 — Apple TV alias, arrivals inclusion check and noise filter
+
+**Goal.** Resolve Apple TV+ after its rename to Apple TV, keep false arrivals out of
+the providers diff and stop announcing catalogue titles with almost no audience
+(contract change of 2026-11-18: `docs/data-model.md` §5, §7, §9, §11). Plus two small
+leftovers: decorative poster `alt` and temp folders left by tests.
+
+**Branch.** `feat/f6-arrivals-check`, created from `main` in a local Claude Code
+session (WSL). Its first commit is the owner's contract change, applied verbatim from
+the prompt.
+
+**Owns.** `src/platforms.js`, `src/arrivals.js`, `src/tmdb.js` (detail fields, the
+two settings and exporting existing helpers), `site/selector.js` (only the poster
+`alt`), `tests/unit/**`, `tests/support/**` (backwards-compatible additions),
+`CLAUDE.md` (architecture, arrivals and settings sections), `README.md` (only if it
+names Apple TV+ aliases or lists the settings), `docs/phases.md` (F4, F5 and F6
+status rows).
+
+**Must not touch.** `docs/data-model.md` after the contract commit,
+`tests/fixtures/releases.sample.json`, `tests/fixtures/tmdb/**`,
+`data/manual-releases.json`, `CLAUDE.md` "Decisiones vigentes",
+`scripts/capture-fixtures.js`, `package.json` and `package-lock.json`,
+`.github/**`, `site/` other than the poster `alt`.
+
+**Acceptance criteria.**
+
+- H1. `matchPlatform('Apple TV')` is `apple-tv-plus`; `Apple TV Store`,
+  `AMC Plus Apple TV channel` and `Apple TV Amazon Channel` match nothing. With the ES
+  provider list, Apple TV+ resolves id 350 and the build no longer warns about it. A
+  platform with 0 ids read and 0 in the previous snapshot gives no arrivals and no
+  `::warning::`.
+- H2. Inclusion check (§11): a candidate whose platform is not in the ES `flatrate` of
+  its detail is not emitted, not kept in the snapshot `arrivals`, and its id leaves
+  that platform's set; with the platform in `flatrate` (alias tiers included) it is
+  emitted as before. One log line per drop; detail request count unchanged.
+- H3. The poster image has `alt=""` (the title is already in the card); the rest of D1
+  unchanged.
+- H4. No test leaves new folders in `os.tmpdir()` (checked with `TMPDIR` pointing to
+  an empty folder: after `npm test` it only holds what Node itself creates, such as
+  `node-compile-cache`).
+- H5. All tests green; C1-C4, D1-D6 (F3), E1-E10 and G1-G7 still hold;
+  `releases.json` and the providers snapshot keep their shape; sample fixture
+  untouched.
+- H6. Noise filter (§11): a candidate that passes the inclusion check is emitted only
+  with `vote_count >= ARRIVAL_MIN_VOTES` or `popularity >= ARRIVAL_MIN_POPULARITY`
+  (defaults 5 and 5; either at 0 disables it). A filtered candidate is not emitted,
+  not kept in the snapshot `arrivals`, and its id stays in that platform's set; one
+  log line with votes and popularity; not reported as a runtime-rule removal. New and
+  carried-over candidates alike. Settings validated like the others.
