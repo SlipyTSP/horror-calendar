@@ -413,8 +413,8 @@ function carriedArrivals(previous, arrivalWindow) {
 }
 
 /**
- * Detail, announced-release check (§2), runtime rule, inclusion check and noise filter
- * (§11) for the arrival candidates. No request besides the (cached) detail.
+ * Detail, announced-release check (§2), inclusion check (§11), runtime rule (§2) and
+ * noise filter (§11) for the arrival candidates, in that order. No request besides the (cached) detail.
  * @returns {Promise<{ releases: object[], removed: object[], kept: object[],
  *   excluded: Array<{ id: number, platform: string }>, filtered: object[], details: object }>}
  *   releases with calendars; kept = snapshot arrivals (emitted + transient failures);
@@ -456,15 +456,16 @@ async function buildArrivalReleases({ context, candidates, digitalReleases = [],
       log(`Arrival "${release.title}" (TMDB ${a.id}) on ${platformName(a.platform)} is its announced digital release; dropped.`);
       continue;
     }
-    if (!passesRuntimeRule(detail, minRuntime)) {
-      removed.push(release);
-      continue;
-    }
+    // Inclusion before the runtime rule: a false arrival never shows up in its report
     const inclusion = checkInclusion(detail, region, a.platform);
     if (!inclusion.included) {
       log(`Arrival "${release.title}" (TMDB ${a.id}) on ${platformName(a.platform)} is not in its ${region} flatrate `
         + `(${inclusion.flatrate.length > 0 ? inclusion.flatrate.join(', ') : 'none'}); dropped, id left out of the set.`);
       excluded.push({ id: a.id, platform: a.platform });
+      continue;
+    }
+    if (!passesRuntimeRule(detail, minRuntime)) {
+      removed.push(release);
       continue;
     }
     const audience = checkAudience(detail, arrivalMinVotes, arrivalMinPopularity);
