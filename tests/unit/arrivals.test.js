@@ -389,6 +389,24 @@ test('H2 a new candidate whose platform is only in rent/buy is dropped, left out
   assert.deepEqual(ids(next.releases).sort(), [[920002, 'netflix', '2026-10-23'], [920003, 'netflix', '2026-10-23']]);
 });
 
+test('H2 order: a 20-min candidate outside its platform flatrate is an inclusion drop, not a runtime-rule removal', async () => {
+  const previous = snapshot({ ...CATALOGUE, netflix: [920001, 920002] });
+  const { releases, removed, snapshot: snap, log } = await run({
+    previous,
+    routes: { [detailKey(920003)]: detail(920003, { runtime: 20, 'watch/providers': esProviders(['Filmin']) }) },
+  });
+  assert.deepEqual(releases, []);
+  assert.deepEqual(removed, [], 'absent from the runtime-rule report');
+  assert.deepEqual(snap.arrivals, []);
+  assert.deepEqual(snap.platforms.netflix, [920001, 920002], 'id out of the set');
+  assert.ok(log.lines.some((l) => /^Arrival "Llegada 920003" \(TMDB 920003\) on Netflix is not in its ES flatrate \(Filmin\)/.test(l)));
+
+  // In its flatrate, the same 20-min candidate is a runtime-rule removal (id stays in the set)
+  const short = await run({ previous, routes: { [detailKey(920003)]: detail(920003, { runtime: 20 }) } });
+  assert.deepEqual(short.removed.map((r) => [r.id, r.runtime]), [[920003, 20]]);
+  assert.deepEqual(short.snapshot.platforms.netflix, [920001, 920002, 920003]);
+});
+
 test('H2 the platform reached through an alias tier (ads) is included; an unaliased tier is not', async () => {
   const previous = snapshot({ ...CATALOGUE, netflix: [920001] });
   const { releases, snapshot: snap } = await run({
