@@ -40,9 +40,28 @@ test('matchPlatform is exact, case-insensitive and trims', () => {
 });
 
 test('matchPlatform returns null for unknown names, partial matches and non-strings', () => {
-  for (const name of ['Atresplayer', 'Apple TV', 'Netflix España', 'Prime', '', '   ', null, undefined, 42]) {
+  for (const name of ['Atresplayer', 'Apple TV Store', 'Netflix España', 'Prime', '', '   ', null, undefined, 42]) {
     assert.equal(matchPlatform(name), null, String(name));
   }
+});
+
+test('H1 Apple TV is the renamed Apple TV+; the store and the channels match nothing', () => {
+  assert.equal(matchPlatform('Apple TV'), 'apple-tv-plus');
+  assert.equal(matchPlatform(' apple tv '), 'apple-tv-plus');
+  assert.equal(matchPlatform('Apple TV Plus'), 'apple-tv-plus');
+  for (const name of ['Apple TV Store', 'AMC Plus Apple TV channel', 'Apple TV Amazon Channel']) {
+    assert.equal(matchPlatform(name), null, name);
+  }
+  const apple = PLATFORMS.find((p) => p.slug === 'apple-tv-plus');
+  assert.equal(apple.name, 'Apple TV+', 'display name unchanged (mix names)');
+  assert.ok(calendarDefinitions().some((d) => d.file === 'horror-apple-tv-plus.ics'), 'file name unchanged');
+});
+
+test('H1 Apple TV in flatrate gives apple-tv-plus membership; in rent/buy it never does', () => {
+  assert.deepEqual(assignCalendars(digital({ providers: { flatrate: ['Apple TV'], rentBuy: [] } })).calendars,
+    ['digital', 'apple-tv-plus']);
+  assert.deepEqual(assignCalendars(digital({ providers: { flatrate: ['Apple TV Store', 'Apple TV Amazon Channel'], rentBuy: ['Apple TV'] } })).calendars,
+    ['digital']);
 });
 
 test('assignCalendars puts theatrical releases in cines only, ignoring providers and notes', () => {
