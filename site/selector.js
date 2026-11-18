@@ -584,11 +584,12 @@
       return el('div', { className: 'movie-poster poster-fallback', 'aria-hidden': 'true' });
     }
 
-    function posterNode(posterPath, title) {
+    // Decorative: the title is already in the card, so screen readers skip the image
+    function posterNode(posterPath) {
       const src = posterUrl(posterPath);
       if (!src) return posterFallback();
       const img = el('img', {
-        className: 'movie-poster', src, alt: title, loading: 'lazy', decoding: 'async',
+        className: 'movie-poster', src, alt: '', loading: 'lazy', decoding: 'async',
         width: '92', height: '138',
       });
       img.addEventListener('error', () => img.replaceWith(posterFallback()), { once: true });
@@ -605,7 +606,7 @@
       const overview = typeof release.overview === 'string' && release.overview
         ? el('p', { className: 'movie-overview', text: release.overview }) : null;
       return el('article', { className: 'movie-card' }, [
-        posterNode(release.posterPath, title),
+        posterNode(release.posterPath),
         el('div', { className: 'movie-body' }, [
           el('div', { className: 'movie-header' }, [
             el('h4', { className: 'movie-title' }, [titleNode]),

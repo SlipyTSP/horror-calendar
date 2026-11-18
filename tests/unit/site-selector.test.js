@@ -273,6 +273,16 @@ test('every translate() key used in selector.js exists in the tables', () => {
   for (const key of [...direct, ...plurals]) assert.ok(Object.hasOwn(selector.I18N.es, key), key);
 });
 
+test('H3 + D1 the poster is decorative (alt=""), lazy, with reserved dimensions and a neutral fallback', () => {
+  const js = fs.readFileSync(path.join(SITE, 'selector.js'), 'utf8');
+  const poster = js.slice(js.indexOf('function posterNode('), js.indexOf('function movieCard('));
+  assert.match(poster, /el\('img', \{[^}]*\balt: '',/);
+  assert.doesNotMatch(poster, /alt: title/);
+  for (const attr of [/loading: 'lazy'/, /width: '92'/, /height: '138'/]) assert.match(poster, attr);
+  assert.match(poster, /if \(!src\) return posterFallback\(\)/);
+  assert.match(poster, /addEventListener\('error', \(\) => img\.replaceWith\(posterFallback\(\)\)/);
+});
+
 test('translate substitutes variables and falls back to Spanish, then the key', () => {
   assert.equal(selector.translate('en', 'count_other', { count: 3 }), '3 titles');
   assert.equal(selector.plural('es', 'count', 1, { count: 1 }), '1 título');
