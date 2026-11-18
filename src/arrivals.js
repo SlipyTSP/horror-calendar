@@ -249,6 +249,19 @@ function checkInclusion(detail, region, platform) {
   }
 }
 
+/**
+ * Noise filter (§11): an audience of at least minVotes votes or minPopularity popularity.
+ * Either setting at 0 disables it; missing or non-numeric values count as 0.
+ * @returns {{ passes: boolean, votes: number, popularity: number }}
+ */
+function checkAudience(detail, minVotes, minPopularity) {
+  const count = (value) => (typeof value === 'number' && Number.isFinite(value) && value > 0 ? value : 0);
+  const votes = count(detail?.voteCount);
+  const popularity = count(detail?.popularity);
+  const disabled = minVotes === 0 || minPopularity === 0;
+  return { passes: disabled || votes >= minVotes || popularity >= minPopularity, votes, popularity };
+}
+
 /** Removes the ids that failed the inclusion check from their platform's set (in place). */
 function removeExcluded(platforms, excluded) {
   for (const { id, platform } of excluded) platforms.get(platform)?.delete(id);
@@ -363,7 +376,7 @@ async function computeArrivals({
   }
 
   const {
-    releases, removed, kept, excluded, details,
+    releases, removed, kept, excluded, filtered, details,
   } = await buildArrivalReleases({
     context, candidates, digitalReleases, manualEntries, log, warn,
   });
@@ -372,7 +385,8 @@ async function computeArrivals({
   removeExcluded(platforms, excluded);
   const fromPrevious = releases.filter((r) => r.releaseDate !== today).length;
   log(`Arrivals: ${releases.length} (${releases.length - fromPrevious} new, ${fromPrevious} carried over)`
-    + `${seed ? ', seed mode' : ''}; ${excluded.length} not in their platform's flatrate; `
+    + `${seed ? ', seed mode' : ''}; ${excluded.length} not in their platform's flatrate, `
+    + `${filtered.length} filtered as noise; `
     + `detail requests: ${details.total}, failed: ${details.failed}.`);
 
   return {
@@ -399,15 +413,18 @@ function carriedArrivals(previous, arrivalWindow) {
 }
 
 /**
- * Detail, announced-release check (§2), runtime rule and inclusion check (§11) for the
- * arrival candidates. No request besides the (cached) detail.
+ * Detail, announced-release check (§2), runtime rule, inclusion check and noise filter
+ * (§11) for the arrival candidates. No request besides the (cached) detail.
  * @returns {Promise<{ releases: object[], removed: object[], kept: object[],
- *   excluded: Array<{ id: number, platform: string }>, details: object }>}
+ *   excluded: Array<{ id: number, platform: string }>, filtered: object[], details: object }>}
  *   releases with calendars; kept = snapshot arrivals (emitted + transient failures);
- *   excluded = candidates whose id must leave their platform's set
+ *   excluded = candidates whose id must leave their platform's set; filtered = noise
+ *   (out of releases and kept, id stays in its set)
  */
 async function buildArrivalReleases({ context, candidates, digitalReleases = [], manualEntries = [], log, warn }) {
-  const { region, today, arrivalDays, minRuntime } = context.settings;
+  const {
+    region, today, arrivalDays, minRuntime, arrivalMinVotes, arrivalMinPopularity,
+  } = context.settings;
   const announcedFrom = shiftDate(today, -(arrivalDays + ANNOUNCED_GRACE_DAYS));
   const inAnnouncedRange = (day) => day >= announcedFrom && day <= today;
   await mapPool(candidates, DETAIL_CONCURRENCY, (a) => context.detail(a.id, 'arrivals'));
@@ -415,6 +432,7 @@ async function buildArrivalReleases({ context, candidates, digitalReleases = [],
   const removed = [];
   const kept = [];
   const excluded = [];
+  const filtered = [];
   for (const a of candidates) {
     const label = `${a.title ? `"${a.title}" ` : ''}(TMDB ${a.id}) on ${platformName(a.platform)}`;
     const result = await context.detail(a.id, 'arrivals');
@@ -449,12 +467,22 @@ async function buildArrivalReleases({ context, candidates, digitalReleases = [],
       excluded.push({ id: a.id, platform: a.platform });
       continue;
     }
+    const audience = checkAudience(detail, arrivalMinVotes, arrivalMinPopularity);
+    if (!audience.passes) {
+      // Seen in the catalogue but not announced: its id stays in the set, so that a later
+      // build never announces it with a wrong detection date
+      log(`Arrival "${release.title}" (TMDB ${a.id}) on ${platformName(a.platform)} filtered as noise: `
+        + `${audience.votes} votes, popularity ${audience.popularity} (ARRIVAL_MIN_VOTES=${arrivalMinVotes}, `
+        + `ARRIVAL_MIN_POPULARITY=${arrivalMinPopularity}); not announced, id kept in the set.`);
+      filtered.push(release);
+      continue;
+    }
     releases.push(release);
     kept.push({ ...a, title: release.title });
   }
   await fillEnglishOverviews(context, releases, 'arrivals');
   return {
-    releases: releases.map((r) => assignCalendars(r)), removed, kept, excluded, details: context.counts('arrivals'),
+    releases: releases.map((r) => assignCalendars(r)), removed, kept, excluded, filtered, details: context.counts('arrivals'),
   };
 }
 
@@ -506,6 +534,7 @@ module.exports = {
   fetchCatalogue,
   diffPlatform,
   checkInclusion,
+  checkAudience,
   buildSnapshot,
   emptySnapshot,
   SNAPSHOT_FILE,

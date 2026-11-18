@@ -479,6 +479,132 @@ test('H2 carryForwardArrivals applies the inclusion check: dropped arrival out o
   assert.deepEqual([...previous.platforms.get('movistar-plus')], [920031, 920032], 'the previous snapshot is not mutated');
 });
 
+// --- Noise filter (§11, H6) ---
+
+test('H6 a new candidate with 0 votes and popularity 0.4 is filtered: not emitted, not in arrivals, id kept in the set', async () => {
+  const previous = snapshot({ ...CATALOGUE, netflix: [920001] });
+  const { releases, removed, snapshot: snap, log, warn, details } = await run({
+    previous,
+    routes: {
+      [detailKey(920002)]: detail(920002, { vote_count: 0, popularity: 0.4 }),
+      [detailKey(920003)]: detail(920003),
+    },
+  });
+  assert.deepEqual(ids(releases), [[920003, 'netflix', '2026-10-23']]);
+  assert.deepEqual(snap.arrivals.map((a) => a.id), [920003]);
+  assert.deepEqual(snap.platforms.netflix, [920001, 920002, 920003], 'the filtered id stays in the set');
+  assert.deepEqual(removed, [], 'not a runtime-rule removal');
+  const lines = log.lines.filter((l) => /filtered as noise:/.test(l));
+  assert.deepEqual(lines, ['Arrival "Llegada 920002" (TMDB 920002) on Netflix filtered as noise: 0 votes, popularity 0.4 '
+    + '(ARRIVAL_MIN_VOTES=5, ARRIVAL_MIN_POPULARITY=5); not announced, id kept in the set.']);
+  assert.ok(!log.lines.some((l) => /Runtime rule/.test(l)));
+  assert.deepEqual(warn.lines, []);
+  assert.deepEqual(details, { total: 2, failed: 0 }, 'no extra request');
+  assert.match(log.lines.join('\n'), /0 not in their platform's flatrate, 1 filtered as noise/);
+
+  // Next build: the id is in the previous set, so it is never announced late
+  const next = await run({ previous: snap, routes: { [detailKey(920003)]: detail(920003) } });
+  assert.deepEqual(ids(next.releases), [[920003, 'netflix', '2026-10-23']]);
+  assert.ok(!next.fetchImpl.calls.some((c) => c.key.startsWith('/movie/920002')));
+});
+
+test('H6 either threshold is enough: 5 votes and popularity 0, or 0 votes and popularity 5, are published', async () => {
+  const previous = snapshot({ ...CATALOGUE, netflix: [920001] });
+  const { releases, log } = await run({
+    previous,
+    routes: {
+      [detailKey(920002)]: detail(920002, { vote_count: 5, popularity: 0 }),
+      [detailKey(920003)]: detail(920003, { vote_count: 0, popularity: 5 }),
+    },
+  });
+  assert.deepEqual(ids(releases).map(([id]) => id), [920002, 920003]);
+  assert.ok(!log.lines.some((l) => /filtered as noise:/.test(l)));
+
+  const below = await run({
+    previous,
+    routes: {
+      [detailKey(920002)]: detail(920002, { vote_count: 4, popularity: 4.99 }),
+      [detailKey(920003)]: detail(920003, { vote_count: 1 }),
+    },
+  });
+  assert.deepEqual(ids(below.releases).map(([id]) => id), [920003], 'popularity 8.5 is enough');
+});
+
+test('H6 a carried-over arrival that no longer passes the filter leaves the calendars and the snapshot arrivals', async () => {
+  const previous = snapshot(CATALOGUE, [
+    { id: 920031, platform: 'movistar-plus', detected: '2026-10-16', title: 'Noise' },
+    { id: 920041, platform: 'filmin', detected: '2026-10-16', title: 'Fine' },
+  ]);
+  const { releases, snapshot: snap } = await run({
+    previous,
+    routes: {
+      [detailKey(920031)]: detail(920031, { vote_count: 1, popularity: 0.6 }),
+      [detailKey(920041)]: detail(920041),
+    },
+  });
+  assert.deepEqual(ids(releases), [[920041, 'filmin', '2026-10-16']]);
+  assert.deepEqual(snap.arrivals.map((a) => a.id), [920041]);
+  assert.deepEqual(snap.platforms['movistar-plus'], [920031, 920032]);
+});
+
+test('H6 ARRIVAL_MIN_VOTES=0 or ARRIVAL_MIN_POPULARITY=0 disables the filter', async () => {
+  const previous = snapshot({ ...CATALOGUE, netflix: [920001] });
+  const routes = {
+    [detailKey(920002)]: detail(920002, { vote_count: 0, popularity: 0 }),
+    [detailKey(920003)]: detail(920003, { vote_count: undefined, popularity: undefined }),
+  };
+  for (const env of [{ ARRIVAL_MIN_VOTES: '0' }, { ARRIVAL_MIN_POPULARITY: '0' }]) {
+    const { releases, log } = await run({ previous, routes, env: { ...ENV, ...env } });
+    assert.deepEqual(ids(releases).map(([id]) => id), [920002, 920003], JSON.stringify(env));
+    assert.ok(!log.lines.some((l) => /filtered as noise:/.test(l)));
+  }
+  const strict = await run({ previous, routes, env: { ...ENV, ARRIVAL_MIN_VOTES: '1', ARRIVAL_MIN_POPULARITY: '1' } });
+  assert.deepEqual(strict.releases, []);
+});
+
+test('H6 missing or non-numeric votes and popularity count as 0, without exceptions', async () => {
+  const previous = snapshot({ ...CATALOGUE, netflix: [920001] });
+  const { releases, log, warn } = await run({
+    previous,
+    routes: {
+      [detailKey(920002)]: detail(920002, { vote_count: '50', popularity: null }),
+      [detailKey(920003)]: detail(920003, { vote_count: NaN, popularity: { x: 1 } }),
+    },
+  });
+  assert.deepEqual(releases, []);
+  assert.equal(log.lines.filter((l) => /filtered as noise: 0 votes, popularity 0 /.test(l)).length, 2);
+  assert.deepEqual(warn.lines, []);
+});
+
+test('H2 + H6 order: a candidate failing both checks is an inclusion drop (id out of the set), not noise', async () => {
+  const previous = snapshot({ ...CATALOGUE, netflix: [920001, 920002] });
+  const { releases, snapshot: snap, log } = await run({
+    previous,
+    routes: { [detailKey(920003)]: detail(920003, { vote_count: 0, popularity: 0, 'watch/providers': esProviders(['Filmin']) }) },
+  });
+  assert.deepEqual(releases, []);
+  assert.deepEqual(snap.platforms.netflix, [920001, 920002]);
+  assert.ok(log.lines.some((l) => /920003.*is not in its ES flatrate/.test(l)));
+  assert.ok(!log.lines.some((l) => /filtered as noise:/.test(l)));
+});
+
+test('H6 carryForwardArrivals applies the noise filter too', async () => {
+  const fetchImpl = createFixtureFetch({
+    routes: { [detailKey(920031)]: detail(920031, { vote_count: 0, popularity: 0.1 }), [detailKey(920041)]: detail(920041) },
+  });
+  const log = sink();
+  const settings = resolveSettings(ENV, NOW, sink());
+  const context = createContext({ fetchImpl, settings, sleep: async () => {}, log });
+  const previous = parseSnapshot(snapshot(CATALOGUE, [
+    { id: 920031, platform: 'movistar-plus', detected: '2026-10-16', title: 'x' },
+    { id: 920041, platform: 'filmin', detected: '2026-10-16', title: 'y' },
+  ]), { region: 'ES', maxAgeYears: 3 });
+  const result = await carryForwardArrivals({ context, previous, now: NOW, log, warn: sink() });
+  assert.deepEqual(ids(result.releases), [[920041, 'filmin', '2026-10-16']]);
+  assert.deepEqual(result.snapshot.arrivals.map((a) => a.id), [920041]);
+  assert.deepEqual(result.snapshot.platforms, CATALOGUE, 'filtered ids stay in their set');
+});
+
 // --- Best effort (§11) ---
 
 test('detail failures: 404 drops the arrival, other failures keep it in the snapshot for the next build', async () => {

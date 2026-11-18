@@ -400,6 +400,36 @@ test('E4 + E5 second build: arrivals only in their platform calendar, horror.ics
   assert.ok(snap.platforms.netflix.includes(920003));
 });
 
+test('H2 + H6 end to end: dropped and filtered arrivals are plain log lines, outside the runtime-rule report', async () => {
+  const first = await runMain({ env: { ...ENV } });
+  const previous = readJson(first.outDir, 'providers-snapshot.json');
+  previous.platforms.netflix = previous.platforms.netflix.filter((id) => id !== 920003);
+  previous.platforms['movistar-plus'] = previous.platforms['movistar-plus'].filter((id) => id !== 920032);
+  const fetchImpl = createFixtureFetch({
+    routes: {
+      [SNAPSHOT_URL]: { body: previous },
+      [detailKey(920003)]: arrivalDetail(920003, 'Filmin', { title: 'Falsa llegada' }),
+      [detailKey(920032)]: arrivalDetail(920032, 'Movistar Plus+', { title: 'Sin público', vote_count: 0, popularity: 0.4 }),
+    },
+  });
+  const { code, outDir, log } = await runMain({ fetchImpl, env: { ...ENV, SNAPSHOT_URL } });
+  assert.equal(code, 0, log.lines.join('\n'));
+  assert.equal(warnings(log).length, 0);
+  assert.ok(log.lines.some((l) => /^Arrival "Falsa llegada" \(TMDB 920003\) on Netflix is not in its ES flatrate \(Filmin\)/.test(l)));
+  assert.ok(log.lines.some((l) => /^Arrival "Sin público" \(TMDB 920032\) on Movistar Plus\+ filtered as noise: 0 votes, popularity 0\.4/.test(l)));
+  const runtimeReport = log.lines.findIndex((l) => /Runtime rule \(MIN_RUNTIME=40\)/.test(l));
+  assert.match(log.lines[runtimeReport], /removed 0 releases/);
+
+  const doc = readJson(outDir, 'releases.json');
+  assert.deepEqual(doc.releases.filter((r) => r.type === 'arrival'), []);
+  assert.equal(doc.schema, 2);
+  const snap = readJson(outDir, 'providers-snapshot.json');
+  assert.deepEqual(Object.keys(snap), ['schema', 'generated', 'region', 'maxAgeYears', 'platforms', 'arrivals']);
+  assert.deepEqual(snap.arrivals, []);
+  assert.ok(!snap.platforms.netflix.includes(920003), 'inclusion drop: id out of the set');
+  assert.ok(snap.platforms['movistar-plus'].includes(920032), 'noise: id stays in the set');
+});
+
 test('E8 arrivals failures are warnings: the run exits 0 and the snapshot carries the previous sets', async () => {
   const previous = {
     schema: 1, generated: '2026-10-16T06:00:00.000Z', region: 'ES', maxAgeYears: 3, platforms: { filmin: [1, 2] }, arrivals: [],
